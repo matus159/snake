@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Had – sbírej kostky</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: 'JetBrains Mono', monospace;
+      color: #e8e8e8;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .info {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 1rem;
+    }
+
+    .game-wrapper {
+      background: #0a0a12;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 0 40px rgba(0, 217, 255, 0.15), inset 0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    canvas {
+      display: block;
+      border-radius: 8px;
+      background: #12121a;
+    }
+
+    .controls {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-row, .diamond-row {
+      font-size: 0.9rem;
+      color: #00d9ff;
+    }
+
+    .score-row span, .diamond-row span {
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 10, 18, 0.92);
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .overlay h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #ff6b6b;
+    }
+
+    .overlay p {
+      color: #888;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.5rem 1.25rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #00d9ff, #00ff88);
+      color: #0a0a12;
+      font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .canvas-container {
+      position: relative;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Had – sbírej kostky</h1>
+  <p class="info">Šipky nebo WASD · sbírej kostky, narůstáš · neudeř se do sebe ani do okraje</p>
+
+  <div class="game-wrapper">
+    <div class="canvas-container">
+      <canvas id="game" width="960" height="720"></canvas>
+      <div id="startOverlay" class="overlay visible">
+        <h2>Připraven?</h2>
+        <p>Stiskni mezerník nebo klikni na tlačítko</p>
+        <button class="btn" id="startBtn">Začít hru</button>
+      </div>
+      <div id="gameOverOverlay" class="overlay">
+        <h2>Konec hry</h2>
+        <p>Skóre: <span id="finalScore">0</span></p>
+        <p>Diamanty: <span id="finalDiamanty">0</span></p>
+        <button class="btn" id="restartBtn">Hrát znovu</button>
+      </div>
+    </div>
+    <div class="controls">
+      <p class="score-row">Skóre: <span id="score">0</span></p>
+      <p class="diamond-row">Diamanty: <span id="diamanty">0</span></p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+
+      const CELL = 20;
+      const COLS = Math.floor(960 / CELL);
+      const ROWS = Math.floor(720 / CELL);
+
+      let snake = [];
+      let direction = { x: 1, y: 0 };
+      let nextDirection = { x: 1, y: 0 };
+      let kostky = [];
+      let score = 0;
+      let diamanty = 0;
+      let running = false;
+      let lastTick = 0;
+      let lastKostkaSpawn = 0;
+      let hueCounter = 0;
+      const SPEED_MS = 120;
+      const KOSTKA_SPAWN_MS = 2000;
+      const MAX_KOSTKY = 23;
+
+      const startOverlay = document.getElementById('startOverlay');
+      const gameOverOverlay = document.getElementById('gameOverOverlay');
+      const scoreEl = document.getElementById('score');
+      const diamantyEl = document.getElementById('diamanty');
+
+      function updateScoreDisplay() {
+        if (score >= 5) {
+          diamanty += Math.floor(score / 5);
+          score = score % 5;
+        }
+        scoreEl.textContent = score;
+        diamantyEl.textContent = diamanty;
+      }
+      const finalScoreEl = document.getElementById('finalScore');
+      const startBtn = document.getElementById('startBtn');
+      const restartBtn = document.getElementById('restartBtn');
+
+      function randInt(min, max) {
+        return min + Math.floor(Math.random() * (max - min));
+      }
+
+      function initGame() {
+        const startX = Math.floor(COLS / 2);
+        const startY = Math.floor(ROWS / 2);
+        // snake[0] = hlava (směr doprava), zbytek = tělo za ní
+        snake = [
+          { x: startX, y: startY },
+          { x: startX - 1, y: startY },
+          { x: startX - 2, y: startY },
+        ];
+        direction = { x: 1, y: 0 };
+        nextDirection = { x: 1, y: 0 };
+        score = 0;
+        diamanty = 0;
+        hueCounter = 0;
+        spawnKostky();
+        lastKostkaSpawn = 0;
+        updateScoreDisplay();
+      }
+
+      function getFreeCells(excludeKostky = true) {
+        const set = new Set(snake.map(s => `${s.x},${s.y}`));
+        if (excludeKostky) kostky.forEach(k => set.add(`${k.x},${k.y}`));
+        const free = [];
+        for (let x = 0; x < COLS; x++) {
+          for (let y = 0; y < ROWS; y++) {
+            if (!set.has(`${x},${y}`)) free.push({ x, y });
+          }
+        }
+        return free;
+      }
+
+      function spawnOneKostka() {
+        if (kostky.length >= MAX_KOSTKY) return;
+        const free = getFreeCells(true);
+        if (free.length === 0) return;
+        const cell = free[randInt(0, free.length)];
+        const hue = (hueCounter++ * 360 / 24) % 360;
+        kostky.push({ x: cell.x, y: cell.y, hue });
+      }
+
+      function spawnKostky() {
+        kostky = [];
+        spawnOneKostka();
+        spawnOneKostka();
+      }
+
+      function drawRect(x, y, color, gap = 0) {
+        const px = x * CELL + gap;
+        const py = y * CELL + gap;
+        const size = CELL - 2 * gap;
+        ctx.fillStyle = color;
+        ctx.fillRect(px, py, size, size);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#12121a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const border = 2;
+        ctx.strokeStyle = '#2a2a3a';
+        ctx.lineWidth = border;
+        ctx.strokeRect(border / 2, border / 2, canvas.width - border, canvas.height - border);
+
+        kostky.forEach(k => drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1));
+
+        snake.forEach((seg, i) => {
+          const t = i / Math.max(snake.length - 1, 1);
+          const r = Math.round(0 + t * 180);
+          const g = Math.round(217 + t * 38);
+          const b = Math.round(255 - t * 167);
+          drawRect(seg.x, seg.y, `rgb(${r},${g},${b})`, 1);
+        });
+
+        const head = snake[0];
+        ctx.fillStyle = '#0a0a12';
+        ctx.beginPath();
+        ctx.arc(head.x * CELL + CELL / 2, head.y * CELL + CELL / 2, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function move() {
+        direction = { ...nextDirection };
+        const head = snake[0];
+        const newHead = {
+          x: head.x + direction.x,
+          y: head.y + direction.y,
+        };
+
+        if (newHead.x < 0 || newHead.x >= COLS || newHead.y < 0 || newHead.y >= ROWS) {
+          gameOver();
+          return;
+        }
+
+        if (snake.some(s => s.x === newHead.x && s.y === newHead.y)) {
+          gameOver();
+          return;
+        }
+
+        snake.unshift(newHead);
+
+        const eatenIndex = kostky.findIndex(k => k.x === newHead.x && k.y === newHead.y);
+        if (eatenIndex !== -1) {
+          kostky.splice(eatenIndex, 1);
+          score += 1;
+          updateScoreDisplay();
+          spawnOneKostka();
+        } else {
+          snake.pop();
+        }
+      }
+
+      const finalDiamantyEl = document.getElementById('finalDiamanty');
+
+      function gameOver() {
+        running = false;
+        finalScoreEl.textContent = score;
+        finalDiamantyEl.textContent = diamanty;
+        gameOverOverlay.classList.add('visible');
+      }
+
+      function loop(now) {
+        if (!running) return requestAnimationFrame(loop);
+        if (now - lastKostkaSpawn >= KOSTKA_SPAWN_MS) {
+          lastKostkaSpawn = now;
+          spawnOneKostka();
+        }
+        if (now - lastTick >= SPEED_MS) {
+          lastTick = now;
+          move();
+          if (running) draw();
+        }
+        requestAnimationFrame(loop);
+      }
+
+      function start() {
+        startOverlay.classList.remove('visible');
+        gameOverOverlay.classList.remove('visible');
+        initGame();
+        running = true;
+        const now = performance.now();
+        lastTick = now;
+        lastKostkaSpawn = now;
+        draw();
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (!running) {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            start();
+          }
+          return;
+        }
+        e.preventDefault();
+        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+          if (direction.y !== 1) nextDirection = { x: 0, y: -1 };
+        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+          if (direction.y !== -1) nextDirection = { x: 0, y: 1 };
+        } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+          if (direction.x !== 1) nextDirection = { x: -1, y: 0 };
+        } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+          if (direction.x !== -1) nextDirection = { x: 1, y: 0 };
+        }
+      });
+
+      startBtn.addEventListener('click', () => {
+        if (!running) start();
+      });
+      restartBtn.addEventListener('click', start);
+
+      initGame();
+      draw();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
