@@ -43,6 +43,7 @@
     }
 
     .game-wrapper {
+      position: relative;
       background: #0a0a12;
       border-radius: 12px;
       padding: 16px;
@@ -130,6 +131,516 @@
       position: relative;
       display: inline-block;
     }
+
+    .gems-menu {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      font-size: 0.9rem;
+      color: #00d9ff;
+    }
+
+    .gems-menu span {
+      font-weight: 700;
+      color: #ba55ff;
+    }
+
+    .player-name {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      font-size: 0.9rem;
+      color: #00d9ff;
+    }
+
+    .player-name span {
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .owner-panel {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: rgba(10, 10, 18, 0.9);
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      font-size: 0.85rem;
+      color: #00d9ff;
+    }
+
+    .owner-panel.visible {
+      display: flex;
+    }
+
+    .owner-panel label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .owner-panel input {
+      font-family: inherit;
+      font-size: 0.85rem;
+      width: 70px;
+      padding: 4px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      background: #12121a;
+      color: #00ff88;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .owner-panel input:focus {
+      outline: none;
+      border-color: #00d9ff;
+    }
+
+    .name-input {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      background: #12121a;
+      color: #e8e8e8;
+      width: 200px;
+      text-align: center;
+    }
+
+    .name-input:focus {
+      outline: none;
+      border-color: #00d9ff;
+      box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
+    }
+
+    .menu-btns {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #shopOverlay {
+      background: rgba(20, 16, 8, 0.95);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      box-shadow: inset 0 0 60px rgba(255, 193, 7, 0.08);
+      justify-content: flex-start;
+      align-items: stretch;
+      padding: 0;
+      flex-direction: column;
+    }
+
+    .shop-top-bar {
+      width: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 14px 16px;
+      box-sizing: border-box;
+      background: rgba(255, 215, 0, 0.08);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+      flex-shrink: 0;
+    }
+
+    .shop-top-bar h2 {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      font-size: 1.4rem;
+      color: #ffd700;
+      text-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+    }
+
+    .shop-currencies {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1.5rem;
+    }
+
+    .shop-body {
+      flex: 1;
+      display: flex;
+      width: 100%;
+      position: relative;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shop-sidebar {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .shop-sidebar .shop-stat {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 2px solid;
+      box-sizing: border-box;
+    }
+
+    .shop-sidebar .shop-stat-diamond {
+      background: rgba(0, 217, 255, 0.12);
+      border-color: #00d9ff;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .shop-sidebar .shop-stat-diamond:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(0, 217, 255, 0.4);
+    }
+
+    .shop-sidebar .shop-stat-gems {
+      background: rgba(186, 85, 255, 0.12);
+      border-color: #ba55ff;
+    }
+
+    .shop-sidebar .shop-stat-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .shop-sidebar .shop-stat-diamond .shop-stat-label {
+      color: #00d9ff;
+    }
+
+    .shop-sidebar .shop-stat-gems .shop-stat-label {
+      color: #ba55ff;
+    }
+
+    .shop-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .shop-stat-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .shop-stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .shop-stat-diamond .shop-stat-label,
+    .shop-stat-diamond .shop-stat-value {
+      color: #00d9ff;
+    }
+
+    .shop-stat-gems .shop-stat-label,
+    .shop-stat-gems .shop-stat-value {
+      color: #ba55ff;
+    }
+
+    .shop-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .shop-skins-row {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 1rem;
+      transform: translateX(-35px);
+    }
+
+    .shop-footer {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      padding: 14px 16px;
+      box-sizing: border-box;
+    }
+
+    .shop-view {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .shop-view.hidden {
+      display: none;
+    }
+
+    .shop-diamond-offer {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shop-diamond-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 16px 24px;
+      min-width: 140px;
+      background: rgba(0, 217, 255, 0.12);
+      border: 2px solid #00d9ff;
+      border-radius: 8px;
+      box-shadow: 0 0 16px rgba(0, 217, 255, 0.2);
+    }
+
+    #shopOverlay .shop-diamond-box .offer-main {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #00d9ff;
+      text-align: center;
+      margin-top: -6px;
+      margin-left: -8px;
+    }
+
+    #shopOverlay .shop-diamond-box .offer-price {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .shop-skin-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: rgba(10, 10, 18, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .shop-skin-box:hover {
+      box-shadow: 0 0 12px rgba(255, 68, 68, 0.35);
+    }
+
+    .shop-skin-box.shop-skin-white:hover {
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+    }
+
+    .shop-skin-preview {
+      width: 72px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: #12121a;
+      border-radius: 4px;
+      padding: 6px;
+    }
+
+    .shop-skin-preview span {
+      width: 12px;
+      height: 12px;
+      background: #e63946;
+      border-radius: 2px;
+    }
+
+    .shop-skin-preview span:first-child {
+      position: relative;
+      background: #ff4444;
+      box-shadow: 0 0 4px rgba(255, 68, 68, 0.6);
+    }
+
+    .shop-skin-preview span:first-child::after {
+      content: '';
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #0a0a12;
+      border-radius: 50%;
+    }
+
+    .shop-skin-preview.white-skin span {
+      background: #d8d8d8;
+    }
+
+    .shop-skin-preview.white-skin span:first-child {
+      background: #ffffff;
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+    }
+
+    .shop-skin-preview.gold-skin span {
+      background: #c9a227;
+    }
+
+    .shop-skin-preview.gold-skin span:first-child {
+      background: #ffd700;
+      box-shadow: 0 0 4px rgba(255, 215, 0, 0.6);
+    }
+
+    .shop-skin-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #e8e8e8;
+      text-align: center;
+    }
+
+    .shop-skin-label .diamanty-word {
+      color: #00d9ff;
+    }
+
+    .shop-wardrobe-box {
+      position: absolute;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid rgba(255, 215, 0, 0.45);
+      border-radius: 6px;
+      background: rgba(255, 215, 0, 0.1);
+      cursor: pointer;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #ffd700;
+      text-align: center;
+      line-height: 1.2;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .shop-wardrobe-box:hover {
+      transform: translateY(-50%) scale(1.05);
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+    }
+
+    .wardrobe-content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      overflow: auto;
+    }
+
+    .shop-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 10px 16px;
+      background: rgba(255, 107, 107, 0.95);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      z-index: 30;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .shop-message.visible {
+      opacity: 1;
+    }
+
+    .wardrobe-skins {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .wardrobe-empty {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .wardrobe-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px;
+      background: rgba(10, 10, 18, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .wardrobe-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .wardrobe-actions .btn {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.6rem;
+    }
+
+    .shop-skin-preview.default-skin span {
+      background: #00d9ff;
+    }
+
+    .shop-skin-preview.default-skin span:first-child {
+      background: #00ff88;
+      box-shadow: none;
+    }
+
+    #shopOverlay h2 {
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    #shopOverlay p {
+      color: #c9a227;
+    }
+
+    #shopOverlay span {
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    #shopOverlay .btn,
+    #shopBtn {
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #1a1200;
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.35);
+    }
+
+    #shopOverlay .btn:hover,
+    #shopBtn:hover {
+      box-shadow: 0 0 24px rgba(255, 215, 0, 0.55);
+    }
   </style>
 </head>
 <body>
@@ -139,8 +650,13 @@
   <div class="game-wrapper">
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
-      <div id="startOverlay" class="overlay visible">
-        <h2>Připraven?</h2>
+      <div id="nameOverlay" class="overlay visible">
+        <h2>Zadej jméno</h2>
+        <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Tvé jméno" autocomplete="off">
+        <button class="btn" id="nameBtn">Pokračovat</button>
+      </div>
+      <div id="startOverlay" class="overlay">
+        <h2 id="startGreeting">Připraven?</h2>
         <p>Stiskni mezerník nebo klikni na tlačítko</p>
         <button class="btn" id="startBtn">Začít hru</button>
       </div>
@@ -148,12 +664,88 @@
         <h2>Konec hry</h2>
         <p>Skóre: <span id="finalScore">0</span></p>
         <p>Diamanty: <span id="finalDiamanty">0</span></p>
+        <p>Gems: <span id="finalGems">0</span></p>
         <button class="btn" id="restartBtn">Hrát znovu</button>
+      </div>
+      <div id="pauseOverlay" class="overlay">
+        <h2>Pauza</h2>
+        <div class="menu-btns">
+          <button class="btn" id="quitBtn">Ukončit hru</button>
+          <button class="btn" id="shopBtn">Obchod</button>
+        </div>
+      </div>
+      <div id="shopOverlay" class="overlay">
+        <div class="shop-top-bar">
+          <h2>Obchod</h2>
+          <div class="shop-currencies">
+            <div class="shop-stat shop-stat-diamond">
+              <div class="shop-stat-label">Diamanty</div>
+              <div class="shop-stat-value" id="shopDiamantyTop">0</div>
+            </div>
+            <div class="shop-stat shop-stat-gems">
+              <div class="shop-stat-label">Gems</div>
+              <div class="shop-stat-value" id="shopGemsTop">0</div>
+            </div>
+          </div>
+        </div>
+        <div id="shopMainView" class="shop-view">
+          <div class="shop-body">
+            <div id="shopMessage" class="shop-message"></div>
+            <div class="shop-sidebar">
+              <div class="shop-stat shop-stat-diamond" id="shopDiamondBtn">
+                <div class="shop-stat-label">Diamanty</div>
+              </div>
+              <div class="shop-stat shop-stat-gems">
+                <div class="shop-stat-label">Gems</div>
+              </div>
+            </div>
+            <div class="shop-content">
+              <div class="shop-skins-row">
+                <div class="shop-skin-box" id="shopSkinBtn">
+                  <div class="shop-skin-preview">
+                    <span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="shop-skin-label">50 <span class="diamanty-word">diamanty</span></div>
+                </div>
+                <div class="shop-skin-box shop-skin-white" id="shopWhiteSkinBtn">
+                  <div class="shop-skin-preview white-skin">
+                    <span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="shop-skin-label">10 <span class="diamanty-word">diamanty</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="shop-wardrobe-box" id="shopWardrobeBtn">Šatna</div>
+          </div>
+        </div>
+        <div id="shopWardrobeView" class="shop-view hidden">
+          <div class="wardrobe-content">
+            <div id="wardrobeSkinsList" class="wardrobe-skins"></div>
+          </div>
+        </div>
+        <div id="shopDiamondView" class="shop-view hidden">
+          <div class="shop-diamond-offer">
+            <div class="shop-diamond-box">
+              <p class="offer-main">5 diamanty</p>
+              <p class="offer-price">55 czk</p>
+            </div>
+          </div>
+        </div>
+        <div class="shop-footer">
+          <button class="btn" id="shopBackBtn">Zpět</button>
+        </div>
       </div>
     </div>
     <div class="controls">
       <p class="score-row">Skóre: <span id="score">0</span></p>
       <p class="diamond-row">Diamanty: <span id="diamanty">0</span></p>
+    </div>
+    <div class="gems-menu">Gems: <span id="gems">0</span></div>
+    <div class="player-name"><span id="playerNameDisplay">—</span></div>
+    <div id="ownerPanel" class="owner-panel">
+      <label>Skóre: <input type="number" id="ownerScore" min="0" value="0"></label>
+      <label>Diamanty: <input type="number" id="ownerDiamanty" min="0" value="0"></label>
+      <label>Gems: <input type="number" id="ownerGems" min="0" value="0"></label>
     </div>
   </div>
 
@@ -171,27 +763,239 @@
       let nextDirection = { x: 1, y: 0 };
       let kostky = [];
       let score = 0;
-      let diamanty = 0;
       let running = false;
+      let paused = false;
       let lastTick = 0;
       let lastKostkaSpawn = 0;
       let hueCounter = 0;
       const SPEED_MS = 120;
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
+      const PLAYER_NAME_KEY = 'snake-player-name';
+      const PROFILES_KEY = 'snake-profiles';
+      const DIAMANTY_KEY = 'snake-diamanty';
+      const GEMS_KEY = 'snake-gems';
+      const WARDROBE_KEY = 'snake-wardrobe';
+      const EQUIPPED_SKIN_KEY = 'snake-equipped-skin';
+      const SKIN_PRICES = { red: 50, white: 10 };
 
+      let playerName = localStorage.getItem(PLAYER_NAME_KEY) || '';
+      let equippedSkin = 'default';
+      let wardrobe = [];
+      let diamanty = 0;
+      let gems = 0;
+
+      const nameOverlay = document.getElementById('nameOverlay');
+      const playerNameInput = document.getElementById('playerNameInput');
+      const nameBtn = document.getElementById('nameBtn');
+      const startGreeting = document.getElementById('startGreeting');
+      const playerNameDisplay = document.getElementById('playerNameDisplay');
       const startOverlay = document.getElementById('startOverlay');
       const gameOverOverlay = document.getElementById('gameOverOverlay');
+      const pauseOverlay = document.getElementById('pauseOverlay');
+      const shopOverlay = document.getElementById('shopOverlay');
+      const quitBtn = document.getElementById('quitBtn');
+      const shopBtn = document.getElementById('shopBtn');
+      const shopBackBtn = document.getElementById('shopBackBtn');
+      const shopDiamantyTopEl = document.getElementById('shopDiamantyTop');
+      const shopGemsTopEl = document.getElementById('shopGemsTop');
+      const shopMainView = document.getElementById('shopMainView');
+      const shopDiamondView = document.getElementById('shopDiamondView');
+      const shopWardrobeView = document.getElementById('shopWardrobeView');
+      const shopWardrobeBtn = document.getElementById('shopWardrobeBtn');
+      const wardrobeSkinsList = document.getElementById('wardrobeSkinsList');
+      const shopMessage = document.getElementById('shopMessage');
+      let shopMessageTimer = null;
+      const shopDiamondBtn = document.getElementById('shopDiamondBtn');
+      const shopSkinBtn = document.getElementById('shopSkinBtn');
+      const shopWhiteSkinBtn = document.getElementById('shopWhiteSkinBtn');
+      let shopView = 'main';
       const scoreEl = document.getElementById('score');
       const diamantyEl = document.getElementById('diamanty');
+      const gemsEl = document.getElementById('gems');
+      const ownerPanel = document.getElementById('ownerPanel');
+      const ownerScoreInput = document.getElementById('ownerScore');
+      const ownerDiamantyInput = document.getElementById('ownerDiamanty');
+      const ownerGemsInput = document.getElementById('ownerGems');
+
+      function getProfileId(name) {
+        return (name || '').trim().toLowerCase();
+      }
+
+      function defaultProfile() {
+        return { diamanty: 0, gems: 0, wardrobe: [], equippedSkin: 'default' };
+      }
+
+      function readProfiles() {
+        try {
+          return JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
+        } catch {
+          return {};
+        }
+      }
+
+      function writeProfiles(profiles) {
+        localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+      }
+
+      function migrateLegacyToProfiles(profiles) {
+        const legacyDiamanty = localStorage.getItem(DIAMANTY_KEY);
+        const legacyGems = localStorage.getItem(GEMS_KEY);
+        const legacyWardrobe = localStorage.getItem(WARDROBE_KEY);
+        const legacySkin = localStorage.getItem(EQUIPPED_SKIN_KEY);
+        if (legacyDiamanty === null && legacyGems === null && legacyWardrobe === null && legacySkin === null) {
+          return profiles;
+        }
+        const id = getProfileId(playerName) || 'hrac';
+        if (!profiles[id]) profiles[id] = defaultProfile();
+        if (legacyDiamanty !== null) profiles[id].diamanty = parseInt(legacyDiamanty, 10) || 0;
+        if (legacyGems !== null) profiles[id].gems = parseInt(legacyGems, 10) || 0;
+        if (legacyWardrobe !== null) {
+          try {
+            profiles[id].wardrobe = JSON.parse(legacyWardrobe) || [];
+          } catch {
+            profiles[id].wardrobe = [];
+          }
+        }
+        if (legacySkin !== null) profiles[id].equippedSkin = legacySkin || 'default';
+        localStorage.removeItem(DIAMANTY_KEY);
+        localStorage.removeItem(GEMS_KEY);
+        localStorage.removeItem(WARDROBE_KEY);
+        localStorage.removeItem(EQUIPPED_SKIN_KEY);
+        writeProfiles(profiles);
+        return profiles;
+      }
+
+      function loadPlayerProfile() {
+        let profiles = migrateLegacyToProfiles(readProfiles());
+        const id = getProfileId(playerName);
+        if (!id) {
+          diamanty = 0;
+          gems = 0;
+          wardrobe = [];
+          equippedSkin = 'default';
+          return;
+        }
+        const profile = profiles[id] || defaultProfile();
+        diamanty = profile.diamanty || 0;
+        gems = profile.gems || 0;
+        wardrobe = Array.isArray(profile.wardrobe) ? [...profile.wardrobe] : [];
+        equippedSkin = profile.equippedSkin || 'default';
+        ensureOwnerGoldSkin();
+      }
+
+      function ensureOwnerGoldSkin() {
+        if (!isOwner()) return;
+        if (!wardrobe.includes('gold')) {
+          wardrobe.push('gold');
+          saveProgress();
+        }
+      }
+
+      function isOwner() {
+        return playerName.toLowerCase().includes('owner');
+      }
+
+      function syncOwnerInputs() {
+        ownerScoreInput.value = score;
+        ownerDiamantyInput.value = diamanty;
+        ownerGemsInput.value = gems;
+      }
+
+      function applyOwnerInputs() {
+        score = Math.max(0, parseInt(ownerScoreInput.value, 10) || 0);
+        diamanty = Math.max(0, parseInt(ownerDiamantyInput.value, 10) || 0);
+        gems = Math.max(0, parseInt(ownerGemsInput.value, 10) || 0);
+        updateScoreDisplay();
+      }
+
+      function updateOwnerPanel() {
+        ownerPanel.classList.toggle('visible', isOwner());
+        if (isOwner()) syncOwnerInputs();
+      }
+
+      function updateShopCurrencyDisplay() {
+        if (shopOverlay.classList.contains('visible')) {
+          shopDiamantyTopEl.textContent = diamanty;
+          shopGemsTopEl.textContent = gems;
+        }
+      }
+
+      function showShopMessage(text) {
+        shopMessage.textContent = text;
+        shopMessage.classList.add('visible');
+        clearTimeout(shopMessageTimer);
+        shopMessageTimer = setTimeout(() => shopMessage.classList.remove('visible'), 2500);
+      }
+
+      function saveProgress() {
+        const id = getProfileId(playerName);
+        if (!id) return;
+        const profiles = readProfiles();
+        profiles[id] = {
+          diamanty,
+          gems,
+          wardrobe: [...wardrobe],
+          equippedSkin,
+        };
+        writeProfiles(profiles);
+      }
+
+      function refreshCurrencyUI() {
+        scoreEl.textContent = score;
+        diamantyEl.textContent = diamanty;
+        gemsEl.textContent = gems;
+        saveProgress();
+        updateShopCurrencyDisplay();
+        if (isOwner()) syncOwnerInputs();
+      }
 
       function updateScoreDisplay() {
         if (score >= 5) {
           diamanty += Math.floor(score / 5);
           score = score % 5;
         }
+        if (diamanty >= 100) {
+          gems += Math.floor(diamanty / 100);
+          diamanty = diamanty % 100;
+        }
         scoreEl.textContent = score;
         diamantyEl.textContent = diamanty;
+        gemsEl.textContent = gems;
+        saveProgress();
+        updateShopCurrencyDisplay();
+        if (isOwner()) syncOwnerInputs();
+      }
+
+      function updatePlayerNameDisplay() {
+        playerNameDisplay.textContent = playerName || '—';
+        updateOwnerPanel();
+      }
+
+      function showStartScreen() {
+        if (playerName) {
+          nameOverlay.classList.remove('visible');
+          startGreeting.textContent = `Ahoj, ${playerName}!`;
+          startOverlay.classList.add('visible');
+        } else {
+          nameOverlay.classList.add('visible');
+          startOverlay.classList.remove('visible');
+        }
+        updatePlayerNameDisplay();
+      }
+
+      function savePlayerName() {
+        const name = playerNameInput.value.trim();
+        if (!name) {
+          playerNameInput.focus();
+          return;
+        }
+        playerName = name;
+        localStorage.setItem(PLAYER_NAME_KEY, playerName);
+        loadPlayerProfile();
+        updatePlayerNameDisplay();
+        refreshCurrencyUI();
+        showStartScreen();
       }
       const finalScoreEl = document.getElementById('finalScore');
       const startBtn = document.getElementById('startBtn');
@@ -212,8 +1016,11 @@
         ];
         direction = { x: 1, y: 0 };
         nextDirection = { x: 1, y: 0 };
-        score = 0;
-        diamanty = 0;
+        if (!isOwner()) {
+          score = 0;
+        } else {
+          applyOwnerInputs();
+        }
         hueCounter = 0;
         spawnKostky();
         lastKostkaSpawn = 0;
@@ -255,6 +1062,34 @@
         ctx.fillRect(px, py, size, size);
       }
 
+      function getNameLines(name, maxWidth) {
+        if (ctx.measureText(name).width <= maxWidth) return [name];
+        const mid = Math.ceil(name.length / 2);
+        const spaceIdx = name.lastIndexOf(' ', mid);
+        if (spaceIdx > 0) {
+          const line1 = name.slice(0, spaceIdx);
+          const line2 = name.slice(spaceIdx + 1);
+          if (line2) return [line1, line2];
+        }
+        return [name.slice(0, mid), name.slice(mid)];
+      }
+
+      function drawPlayerNameAboveHead(head) {
+        if (!playerName) return;
+        const cx = head.x * CELL + CELL / 2;
+        const maxWidth = CELL * 5;
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.fillStyle = '#00ff88';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const lines = getNameLines(playerName, maxWidth);
+        let y = head.y * CELL - 2;
+        for (let i = lines.length - 1; i >= 0; i--) {
+          ctx.fillText(lines[i], cx, y);
+          y -= 11;
+        }
+      }
+
       function draw() {
         ctx.fillStyle = '#12121a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -268,10 +1103,23 @@
 
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
-          const r = Math.round(0 + t * 180);
-          const g = Math.round(217 + t * 38);
-          const b = Math.round(255 - t * 167);
-          drawRect(seg.x, seg.y, `rgb(${r},${g},${b})`, 1);
+          if (isOwner() || equippedSkin === 'gold') {
+            const r = Math.round(255 - t * 55);
+            const g = Math.round(215 - t * 75);
+            const b = Math.round(30 + t * 20);
+            drawRect(seg.x, seg.y, `rgb(${r}, ${g}, ${b})`, 1);
+          } else if (equippedSkin === 'red') {
+            const r = Math.round(255 - t * 60);
+            drawRect(seg.x, seg.y, `rgb(${r}, 68, 68)`, 1);
+          } else if (equippedSkin === 'white') {
+            const v = Math.round(255 - t * 60);
+            drawRect(seg.x, seg.y, `rgb(${v}, ${v}, ${v})`, 1);
+          } else {
+            const r = Math.round(0 + t * 180);
+            const g = Math.round(217 + t * 38);
+            const b = Math.round(255 - t * 167);
+            drawRect(seg.x, seg.y, `rgb(${r},${g},${b})`, 1);
+          }
         });
 
         const head = snake[0];
@@ -279,6 +1127,8 @@
         ctx.beginPath();
         ctx.arc(head.x * CELL + CELL / 2, head.y * CELL + CELL / 2, 4, 0, Math.PI * 2);
         ctx.fill();
+
+        drawPlayerNameAboveHead(head);
       }
 
       function move() {
@@ -313,16 +1163,150 @@
       }
 
       const finalDiamantyEl = document.getElementById('finalDiamanty');
+      const finalGemsEl = document.getElementById('finalGems');
 
       function gameOver() {
         running = false;
+        paused = false;
+        pauseOverlay.classList.remove('visible');
+        showShopMain();
+        shopOverlay.classList.remove('visible');
         finalScoreEl.textContent = score;
         finalDiamantyEl.textContent = diamanty;
+        finalGemsEl.textContent = gems;
         gameOverOverlay.classList.add('visible');
       }
 
+      function pauseGame() {
+        if (!running || paused) return;
+        paused = true;
+        pauseOverlay.classList.add('visible');
+      }
+
+      function resumeGame() {
+        paused = false;
+        pauseOverlay.classList.remove('visible');
+        showShopMain();
+        shopOverlay.classList.remove('visible');
+      }
+
+      function quitToMenu() {
+        running = false;
+        paused = false;
+        pauseOverlay.classList.remove('visible');
+        showShopMain();
+        shopOverlay.classList.remove('visible');
+        showStartScreen();
+      }
+
+      function buySkinAndOpenWardrobe(skinId) {
+        if (wardrobe.includes(skinId)) {
+          openWardrobe();
+          return;
+        }
+        const cost = SKIN_PRICES[skinId];
+        if (diamanty < cost) {
+          showShopMessage(`Potřebuješ ${cost} diamantů (máš ${diamanty})`);
+          return;
+        }
+        diamanty = diamanty - cost;
+        wardrobe.push(skinId);
+        refreshCurrencyUI();
+        showShopMessage(`−${cost} diamantů, zbývá ${diamanty}`);
+        openWardrobe();
+      }
+
+      function showShopMain() {
+        shopView = 'main';
+        shopMainView.classList.remove('hidden');
+        shopDiamondView.classList.add('hidden');
+        shopWardrobeView.classList.add('hidden');
+      }
+
+      function getSkinPreviewHtml(skinId) {
+        if (skinId === 'red') {
+          return '<div class="shop-skin-preview"><span></span><span></span><span></span><span></span></div>';
+        }
+        if (skinId === 'white') {
+          return '<div class="shop-skin-preview white-skin"><span></span><span></span><span></span><span></span></div>';
+        }
+        if (skinId === 'gold') {
+          return '<div class="shop-skin-preview gold-skin"><span></span><span></span><span></span><span></span></div>';
+        }
+        return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
+      }
+
+      function renderWardrobeSkins() {
+        ensureOwnerGoldSkin();
+        wardrobeSkinsList.innerHTML = '';
+        if (wardrobe.length === 0) {
+          wardrobeSkinsList.innerHTML = '<p class="wardrobe-empty">Zatím nemáš žádné skiny ve šatně</p>';
+          return;
+        }
+        wardrobe.forEach(skinId => {
+          const item = document.createElement('div');
+          item.className = 'wardrobe-item';
+          item.innerHTML = `
+            ${getSkinPreviewHtml(skinId)}
+            <div class="wardrobe-actions">
+              <button class="btn" data-action="equip" data-skin="${skinId}">Vzít</button>
+              <button class="btn" data-action="unequip">Odložit</button>
+            </div>
+          `;
+          wardrobeSkinsList.appendChild(item);
+        });
+      }
+
+      function equipSkinFromWardrobe(skinId) {
+        equippedSkin = skinId;
+        saveProgress();
+        if (running) draw();
+      }
+
+      function unequipSkin() {
+        equippedSkin = 'default';
+        saveProgress();
+        if (running) draw();
+      }
+
+      function openWardrobe() {
+        shopView = 'wardrobe';
+        shopMainView.classList.add('hidden');
+        shopDiamondView.classList.add('hidden');
+        shopWardrobeView.classList.remove('hidden');
+        renderWardrobeSkins();
+      }
+
+      function openDiamondShop() {
+        shopView = 'diamond';
+        shopMainView.classList.add('hidden');
+        shopDiamondView.classList.remove('hidden');
+        shopWardrobeView.classList.add('hidden');
+      }
+
+      function openShop() {
+        pauseOverlay.classList.remove('visible');
+        showShopMain();
+        updateShopCurrencyDisplay();
+        shopOverlay.classList.add('visible');
+      }
+
+      function closeShop() {
+        showShopMain();
+        shopOverlay.classList.remove('visible');
+        pauseOverlay.classList.add('visible');
+      }
+
+      function shopBack() {
+        if (shopView === 'diamond' || shopView === 'wardrobe') {
+          showShopMain();
+        } else {
+          closeShop();
+        }
+      }
+
       function loop(now) {
-        if (!running) return requestAnimationFrame(loop);
+        if (!running || paused) return requestAnimationFrame(loop);
         if (now - lastKostkaSpawn >= KOSTKA_SPAWN_MS) {
           lastKostkaSpawn = now;
           spawnOneKostka();
@@ -336,8 +1320,13 @@
       }
 
       function start() {
+        if (!playerName) return;
         startOverlay.classList.remove('visible');
         gameOverOverlay.classList.remove('visible');
+        pauseOverlay.classList.remove('visible');
+        showShopMain();
+        shopOverlay.classList.remove('visible');
+        paused = false;
         initGame();
         running = true;
         const now = performance.now();
@@ -348,12 +1337,35 @@
 
       document.addEventListener('keydown', (e) => {
         if (!running) {
-          if (e.code === 'Space') {
+          if (nameOverlay.classList.contains('visible')) {
+            if (e.code === 'Enter') {
+              e.preventDefault();
+              savePlayerName();
+            }
+            return;
+          }
+          if (e.code === 'Space' && playerName) {
             e.preventDefault();
             start();
           }
           return;
         }
+        if (e.code === 'Escape') {
+          e.preventDefault();
+          if (shopOverlay.classList.contains('visible')) {
+            if (shopView === 'diamond' || shopView === 'wardrobe') {
+              showShopMain();
+            } else {
+              closeShop();
+            }
+          } else if (paused) {
+            resumeGame();
+          } else {
+            pauseGame();
+          }
+          return;
+        }
+        if (paused) return;
         e.preventDefault();
         if (e.code === 'ArrowUp' || e.code === 'KeyW') {
           if (direction.y !== 1) nextDirection = { x: 0, y: -1 };
@@ -367,11 +1379,39 @@
       });
 
       startBtn.addEventListener('click', () => {
-        if (!running) start();
+        if (!running && playerName) start();
       });
       restartBtn.addEventListener('click', start);
+      quitBtn.addEventListener('click', quitToMenu);
+      shopBtn.addEventListener('click', openShop);
+      shopBackBtn.addEventListener('click', shopBack);
+      shopDiamondBtn.addEventListener('click', openDiamondShop);
+      shopSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('red'));
+      shopWhiteSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('white'));
+      shopWardrobeBtn.addEventListener('click', openWardrobe);
+      wardrobeSkinsList.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        if (btn.dataset.action === 'equip') {
+          equipSkinFromWardrobe(btn.dataset.skin);
+        } else if (btn.dataset.action === 'unequip') {
+          unequipSkin();
+        }
+      });
+      nameBtn.addEventListener('click', savePlayerName);
+      playerNameInput.addEventListener('keydown', (e) => {
+        if (e.code === 'Enter') savePlayerName();
+      });
 
+      ownerScoreInput.addEventListener('input', applyOwnerInputs);
+      ownerDiamantyInput.addEventListener('input', applyOwnerInputs);
+      ownerGemsInput.addEventListener('input', applyOwnerInputs);
+
+      loadPlayerProfile();
       initGame();
+      showStartScreen();
+      updateOwnerPanel();
+      updateScoreDisplay();
       draw();
       requestAnimationFrame(loop);
     })();
