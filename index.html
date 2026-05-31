@@ -201,6 +201,129 @@
       border-color: #00d9ff;
     }
 
+    .owner-chat-box {
+      width: min(420px, 92%);
+      max-height: 70%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: rgba(10, 10, 18, 0.98);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 10px;
+      box-shadow: 0 0 24px rgba(255, 215, 0, 0.15);
+    }
+
+    .owner-chat-box h2 {
+      margin: 0;
+      font-size: 1rem;
+      color: #ffd700;
+    }
+
+    #ownerChatLog {
+      flex: 1;
+      min-height: 120px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 0.75rem;
+      background: #12121a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: #e8e8e8;
+    }
+
+    .owner-chat-line {
+      margin-bottom: 0.45rem;
+    }
+
+    .owner-chat-line.system {
+      color: #00d9ff;
+    }
+
+    .owner-chat-line.owner {
+      color: #ffd700;
+    }
+
+    .owner-chat-input {
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      background: #12121a;
+      color: #e8e8e8;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .owner-chat-input:focus {
+      outline: none;
+      border-color: #ffd700;
+    }
+
+    .owner-kick-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .owner-kick-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    .owner-chat-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    #banOverlay {
+      z-index: 24;
+    }
+
+    #ownerChatOverlay {
+      z-index: 25;
+    }
+
+    .owner-panel .owner-chat-btn {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.6rem;
+      background: linear-gradient(135deg, #ffd700, #b8860b);
+      color: #1a1200;
+    }
+
+    #banOverlay h2 {
+      color: #ff6b6b;
+    }
+
+    #banOverlay p {
+      color: #e8e8e8;
+      text-align: center;
+      max-width: 360px;
+    }
+
+    #banReason {
+      color: #ff6b6b;
+      font-weight: 700;
+    }
+
+    #banDuration {
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    #banTimeLeft {
+      color: #00d9ff;
+      font-weight: 700;
+    }
+
     .name-input {
       font-family: inherit;
       font-size: 0.9rem;
@@ -311,6 +434,13 @@
     .shop-sidebar .shop-stat-gems {
       background: rgba(186, 85, 255, 0.12);
       border-color: #ba55ff;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .shop-sidebar .shop-stat-gems:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(186, 85, 255, 0.4);
     }
 
     .shop-sidebar .shop-stat-label {
@@ -427,6 +557,35 @@
       color: #00ff88;
     }
 
+    .shop-gems-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 16px 24px;
+      min-width: 140px;
+      background: rgba(186, 85, 255, 0.12);
+      border: 2px solid #ba55ff;
+      border-radius: 8px;
+      box-shadow: 0 0 16px rgba(186, 85, 255, 0.2);
+    }
+
+    #shopOverlay .shop-gems-box .offer-main {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ba55ff;
+      text-align: center;
+      margin: 0;
+    }
+
+    #shopOverlay .shop-gems-box .offer-price {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #00ff88;
+      margin: 0;
+    }
+
     .shop-skin-box {
       display: flex;
       flex-direction: column;
@@ -447,6 +606,10 @@
 
     .shop-skin-box.shop-skin-white:hover {
       box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+    }
+
+    .shop-skin-box.shop-skin-blue:hover {
+      box-shadow: 0 0 12px rgba(0, 153, 255, 0.35);
     }
 
     .shop-skin-preview {
@@ -493,6 +656,15 @@
     .shop-skin-preview.white-skin span:first-child {
       background: #ffffff;
       box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+    }
+
+    .shop-skin-preview.blue-skin span {
+      background: #3399ff;
+    }
+
+    .shop-skin-preview.blue-skin span:first-child {
+      background: #66b3ff;
+      box-shadow: 0 0 4px rgba(0, 153, 255, 0.6);
     }
 
     .shop-skin-preview.gold-skin span {
@@ -546,10 +718,61 @@
       flex: 1;
       min-height: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       padding: 1rem;
       overflow: auto;
+      gap: 0.75rem;
+    }
+
+    .wardrobe-showcase {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
+      padding: 0.5rem;
+    }
+
+    .wardrobe-showcase-item {
+      padding: 8px 10px;
+      background: rgba(10, 10, 18, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      animation: wardrobeSkinPulse 6s ease-in-out infinite;
+    }
+
+    .wardrobe-showcase-item:nth-child(1) { animation-delay: 0s; }
+    .wardrobe-showcase-item:nth-child(2) { animation-delay: 1.2s; }
+    .wardrobe-showcase-item:nth-child(3) { animation-delay: 2.4s; }
+    .wardrobe-showcase-item:nth-child(4) { animation-delay: 3.6s; }
+
+    @keyframes wardrobeSkinPulse {
+      0%, 16%, 100% {
+        opacity: 0.45;
+        transform: scale(0.92);
+        box-shadow: none;
+      }
+      8% {
+        opacity: 1;
+        transform: scale(1.08);
+        box-shadow: 0 0 14px rgba(0, 255, 136, 0.35);
+      }
+    }
+
+    .wardrobe-showcase .shop-skin-preview span {
+      animation: wardrobeSlither 0.55s ease-in-out infinite alternate;
+    }
+
+    .wardrobe-showcase .shop-skin-preview span:nth-child(1) { animation-delay: 0s; }
+    .wardrobe-showcase .shop-skin-preview span:nth-child(2) { animation-delay: 0.08s; }
+    .wardrobe-showcase .shop-skin-preview span:nth-child(3) { animation-delay: 0.16s; }
+    .wardrobe-showcase .shop-skin-preview span:nth-child(4) { animation-delay: 0.24s; }
+
+    @keyframes wardrobeSlither {
+      from { transform: translateY(0); }
+      to { transform: translateY(-3px); }
     }
 
     .shop-message {
@@ -597,6 +820,11 @@
       border-radius: 8px;
     }
 
+    .wardrobe-item-equipped {
+      border-color: #00ff88;
+      box-shadow: 0 0 12px rgba(0, 255, 136, 0.25);
+    }
+
     .wardrobe-actions {
       display: flex;
       gap: 0.5rem;
@@ -641,6 +869,223 @@
     #shopBtn:hover {
       box-shadow: 0 0 24px rgba(255, 215, 0, 0.55);
     }
+
+    #modeSelectOverlay {
+      z-index: 30;
+    }
+
+    #multiOverlay {
+      z-index: 29;
+    }
+
+    .mode-select-layout {
+      display: flex;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10%;
+    }
+
+    .mode-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 2rem 2.5rem;
+      background: rgba(18, 18, 26, 0.95);
+      border: 2px solid rgba(0, 217, 255, 0.25);
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      color: #e8e8e8;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+
+    .mode-card:hover {
+      border-color: #00d9ff;
+      box-shadow: 0 0 28px rgba(0, 217, 255, 0.25);
+      transform: translateY(-4px);
+    }
+
+    .mode-card:focus-visible {
+      outline: 2px solid #00ff88;
+      outline-offset: 4px;
+    }
+
+    .mode-icons {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0.75rem;
+      min-height: 64px;
+    }
+
+    .computer-icon {
+      width: 52px;
+      height: 38px;
+      background: linear-gradient(180deg, #2d3a4a 0%, #1a2230 100%);
+      border: 2px solid #00d9ff;
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      box-shadow: inset 0 0 12px rgba(0, 217, 255, 0.15);
+    }
+
+    .computer-icon::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      background: rgba(0, 217, 255, 0.12);
+      border-radius: 2px;
+    }
+
+    .computer-icon::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 4px;
+      background: #555;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .computer-icon.small {
+      width: 44px;
+      height: 32px;
+      opacity: 0.85;
+    }
+
+    .mode-title {
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      color: #00ff88;
+      letter-spacing: 0.02em;
+      max-width: 180px;
+      line-height: 1.35;
+    }
+
+    #multiOverlay p {
+      color: #aaa;
+      margin-bottom: 1rem;
+      text-align: center;
+      max-width: 320px;
+    }
+
+    .multi-lobby-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.25rem;
+      max-width: 360px;
+    }
+
+    .multi-lobby-box h2 {
+      color: #00ff88;
+      margin: 0;
+    }
+
+    #multiStatus {
+      color: #00d9ff;
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    .multi-player-list {
+      list-style: none;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0.75rem;
+      margin: 0;
+      background: #12121a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .multi-player-list li {
+      padding: 0.4rem 0.5rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .multi-player-list li:last-child {
+      border-bottom: none;
+    }
+
+    .multi-player-list li.self {
+      color: #00ff88;
+      font-weight: 700;
+    }
+
+    .multi-player-list li.empty {
+      color: #666;
+      font-style: italic;
+    }
+
+    .multi-lobby-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #multiGameOverOverlay h2 {
+      color: #ff6b6b;
+    }
+
+    #multiShareUrl {
+      font-size: 0.8rem;
+      color: #ffd700;
+      word-break: break-all;
+      text-align: center;
+      margin: 0;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 215, 0, 0.08);
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: 6px;
+      width: 100%;
+    }
+
+    .mode-select-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #modeSelectGreeting {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #00d9ff;
+    }
+
+    #modeSelectGreeting span {
+      color: #00ff88;
+      font-weight: 700;
+    }
+
+    .btn-small {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+    }
+
+    .start-name-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -650,15 +1095,60 @@
   <div class="game-wrapper">
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
-      <div id="nameOverlay" class="overlay visible">
-        <h2>Zadej jméno</h2>
+      <div id="modeSelectOverlay" class="overlay visible">
+        <div class="mode-select-wrap">
+          <p id="modeSelectGreeting">Hráč: <span>—</span></p>
+          <button type="button" class="btn btn-small" id="changeNameModeBtn">Změnit jméno</button>
+          <div class="mode-select-layout">
+          <button type="button" class="mode-card" id="singlePlayerBtn">
+            <div class="mode-icons">
+              <div class="computer-icon" aria-hidden="true"></div>
+            </div>
+            <span class="mode-title">Hra pro jednoho hráče</span>
+          </button>
+          <button type="button" class="mode-card" id="multiPlayerBtn">
+            <div class="mode-icons">
+              <div class="computer-icon small" aria-hidden="true"></div>
+              <div class="computer-icon" aria-hidden="true"></div>
+            </div>
+            <span class="mode-title">Hra pro více hráčů</span>
+          </button>
+          </div>
+        </div>
+      </div>
+      <div id="multiOverlay" class="overlay">
+        <div class="multi-lobby-box">
+          <h2>Server – více hráčů</h2>
+          <p id="multiStatus">Připojování…</p>
+          <p id="multiShareUrl" class="multi-help" hidden></p>
+          <ul id="multiPlayerList" class="multi-player-list">
+            <li class="empty">Načítám hráče…</li>
+          </ul>
+          <p class="multi-help">1) Spusť v terminálu: <strong>npm start</strong><br>2) Otevři hru přes <strong>http://localhost:3000</strong><br>3) Kamarád zadá stejnou adresu na svém počítači<br>4) Každý má jiné jméno → <strong>Začít hru</strong></p>
+          <div class="multi-lobby-actions">
+            <button class="btn" id="multiStartBtn">Začít hru</button>
+            <button class="btn" id="multiReconnectBtn">Připojit znovu</button>
+            <button class="btn" id="multiBackBtn">Zpět na výběr</button>
+          </div>
+        </div>
+      </div>
+      <div id="multiGameOverOverlay" class="overlay">
+        <h2>Konec kola</h2>
+        <p id="multiGameOverText">—</p>
+        <button class="btn" id="multiLobbyBtn">Zpět do lobby</button>
+      </div>
+      <div id="nameOverlay" class="overlay">
+        <h2 id="nameOverlayTitle">Zadej jméno</h2>
         <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Tvé jméno" autocomplete="off">
         <button class="btn" id="nameBtn">Pokračovat</button>
       </div>
       <div id="startOverlay" class="overlay">
         <h2 id="startGreeting">Připraven?</h2>
         <p>Stiskni mezerník nebo klikni na tlačítko</p>
-        <button class="btn" id="startBtn">Začít hru</button>
+        <div class="start-name-row">
+          <button class="btn" id="startBtn">Začít hru</button>
+          <button class="btn btn-small" id="changeNameStartBtn">Změnit jméno</button>
+        </div>
       </div>
       <div id="gameOverOverlay" class="overlay">
         <h2>Konec hry</h2>
@@ -672,6 +1162,36 @@
         <div class="menu-btns">
           <button class="btn" id="quitBtn">Ukončit hru</button>
           <button class="btn" id="shopBtn">Obchod</button>
+        </div>
+      </div>
+      <div id="banOverlay" class="overlay">
+        <h2>Vyhozen ze hry</h2>
+        <p id="banDuration">Vyhozen na — minut</p>
+        <p id="banReason">Důvod: —</p>
+        <p id="banTimeLeft">Zbývá: —</p>
+      </div>
+      <div id="ownerChatOverlay" class="overlay">
+        <div class="owner-chat-box">
+          <h2>Vyhodit hráče</h2>
+          <form id="ownerKickForm" class="owner-kick-form">
+            <label class="owner-kick-label">
+              <span>Jméno hráče</span>
+              <input type="text" id="kickTargetInput" class="owner-chat-input" maxlength="40" placeholder="např. matus" autocomplete="off" required>
+            </label>
+            <label class="owner-kick-label">
+              <span>Minuty</span>
+              <input type="number" id="kickMinutesInput" class="owner-chat-input" min="1" max="9999" value="5" required>
+            </label>
+            <label class="owner-kick-label">
+              <span>Důvod</span>
+              <input type="text" id="kickReasonInput" class="owner-chat-input" maxlength="200" placeholder="proč ho vyhazuješ" autocomplete="off" required>
+            </label>
+          </form>
+          <div id="ownerChatLog"></div>
+          <div class="owner-chat-actions">
+            <button type="button" class="btn" id="ownerChatSendBtn">Vyhodit hráče</button>
+            <button type="button" class="btn" id="ownerChatCloseBtn">Zavřít</button>
+          </div>
         </div>
       </div>
       <div id="shopOverlay" class="overlay">
@@ -695,7 +1215,7 @@
               <div class="shop-stat shop-stat-diamond" id="shopDiamondBtn">
                 <div class="shop-stat-label">Diamanty</div>
               </div>
-              <div class="shop-stat shop-stat-gems">
+              <div class="shop-stat shop-stat-gems" id="shopGemsBtn">
                 <div class="shop-stat-label">Gems</div>
               </div>
             </div>
@@ -713,6 +1233,12 @@
                   </div>
                   <div class="shop-skin-label">10 <span class="diamanty-word">diamanty</span></div>
                 </div>
+                <div class="shop-skin-box shop-skin-blue" id="shopBlueSkinBtn">
+                  <div class="shop-skin-preview blue-skin">
+                    <span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="shop-skin-label">10 <span class="diamanty-word">diamanty</span></div>
+                </div>
               </div>
             </div>
             <div class="shop-wardrobe-box" id="shopWardrobeBtn">Šatna</div>
@@ -720,6 +1246,7 @@
         </div>
         <div id="shopWardrobeView" class="shop-view hidden">
           <div class="wardrobe-content">
+            <div id="wardrobeShowcase" class="wardrobe-showcase"></div>
             <div id="wardrobeSkinsList" class="wardrobe-skins"></div>
           </div>
         </div>
@@ -728,6 +1255,14 @@
             <div class="shop-diamond-box">
               <p class="offer-main">5 diamanty</p>
               <p class="offer-price">55 czk</p>
+            </div>
+          </div>
+        </div>
+        <div id="shopGemsView" class="shop-view hidden">
+          <div class="shop-diamond-offer">
+            <div class="shop-gems-box">
+              <p class="offer-main">5 gems</p>
+              <p class="offer-price">350 czk</p>
             </div>
           </div>
         </div>
@@ -746,6 +1281,7 @@
       <label>Skóre: <input type="number" id="ownerScore" min="0" value="0"></label>
       <label>Diamanty: <input type="number" id="ownerDiamanty" min="0" value="0"></label>
       <label>Gems: <input type="number" id="ownerGems" min="0" value="0"></label>
+      <button type="button" class="btn owner-chat-btn" id="ownerChatBtn">Chat (Enter)</button>
     </div>
   </div>
 
@@ -773,19 +1309,56 @@
       const MAX_KOSTKY = 23;
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
+      const BANS_KEY = 'snake-bans';
       const DIAMANTY_KEY = 'snake-diamanty';
       const GEMS_KEY = 'snake-gems';
       const WARDROBE_KEY = 'snake-wardrobe';
       const EQUIPPED_SKIN_KEY = 'snake-equipped-skin';
-      const SKIN_PRICES = { red: 50, white: 10 };
+      const SKIN_PRICES = { red: 50, white: 10, blue: 10 };
+      const SCORE_PER_DIAMANT = 5;
+      const DIAMANTS_PER_GEM = 100;
 
       let playerName = localStorage.getItem(PLAYER_NAME_KEY) || '';
+      let gameMode = null;
+      let multiWs = null;
+      let multiPlayerId = null;
+      let multiInGame = false;
+      let multiServerState = { kostky: [], players: [] };
+      let multiLobbyPlayers = [];
+      let multiShareUrl = '';
+      const MULTI_COLORS = [
+        { r: 0, g: 217, b: 255 },
+        { r: 255, g: 107, b: 107 },
+        { r: 0, g: 255, b: 136 },
+        { r: 255, g: 215, b: 0 },
+        { r: 180, g: 100, b: 255 },
+        { r: 255, g: 140, b: 50 },
+        { r: 100, g: 200, b: 255 },
+        { r: 255, g: 100, b: 180 },
+      ];
       let equippedSkin = 'default';
       let wardrobe = [];
       let diamanty = 0;
       let gems = 0;
 
       const nameOverlay = document.getElementById('nameOverlay');
+      const modeSelectOverlay = document.getElementById('modeSelectOverlay');
+      const modeSelectGreeting = document.getElementById('modeSelectGreeting').querySelector('span');
+      const changeNameModeBtn = document.getElementById('changeNameModeBtn');
+      const changeNameStartBtn = document.getElementById('changeNameStartBtn');
+      const nameOverlayTitle = document.getElementById('nameOverlayTitle');
+      const multiOverlay = document.getElementById('multiOverlay');
+      const singlePlayerBtn = document.getElementById('singlePlayerBtn');
+      const multiPlayerBtn = document.getElementById('multiPlayerBtn');
+      const multiBackBtn = document.getElementById('multiBackBtn');
+      const multiStartBtn = document.getElementById('multiStartBtn');
+      const multiReconnectBtn = document.getElementById('multiReconnectBtn');
+      const multiStatusEl = document.getElementById('multiStatus');
+      const multiShareUrlEl = document.getElementById('multiShareUrl');
+      const multiPlayerList = document.getElementById('multiPlayerList');
+      const multiGameOverOverlay = document.getElementById('multiGameOverOverlay');
+      const multiGameOverText = document.getElementById('multiGameOverText');
+      const multiLobbyBtn = document.getElementById('multiLobbyBtn');
       const playerNameInput = document.getElementById('playerNameInput');
       const nameBtn = document.getElementById('nameBtn');
       const startGreeting = document.getElementById('startGreeting');
@@ -801,14 +1374,19 @@
       const shopGemsTopEl = document.getElementById('shopGemsTop');
       const shopMainView = document.getElementById('shopMainView');
       const shopDiamondView = document.getElementById('shopDiamondView');
+      const shopGemsView = document.getElementById('shopGemsView');
       const shopWardrobeView = document.getElementById('shopWardrobeView');
       const shopWardrobeBtn = document.getElementById('shopWardrobeBtn');
       const wardrobeSkinsList = document.getElementById('wardrobeSkinsList');
+      const wardrobeShowcase = document.getElementById('wardrobeShowcase');
+      const ALL_SHOP_SKINS = ['default', 'red', 'white', 'blue'];
       const shopMessage = document.getElementById('shopMessage');
       let shopMessageTimer = null;
       const shopDiamondBtn = document.getElementById('shopDiamondBtn');
+      const shopGemsBtn = document.getElementById('shopGemsBtn');
       const shopSkinBtn = document.getElementById('shopSkinBtn');
       const shopWhiteSkinBtn = document.getElementById('shopWhiteSkinBtn');
+      const shopBlueSkinBtn = document.getElementById('shopBlueSkinBtn');
       let shopView = 'main';
       const scoreEl = document.getElementById('score');
       const diamantyEl = document.getElementById('diamanty');
@@ -817,6 +1395,27 @@
       const ownerScoreInput = document.getElementById('ownerScore');
       const ownerDiamantyInput = document.getElementById('ownerDiamanty');
       const ownerGemsInput = document.getElementById('ownerGems');
+      const ownerChatBtn = document.getElementById('ownerChatBtn');
+      const ownerChatOverlay = document.getElementById('ownerChatOverlay');
+      const ownerChatLog = document.getElementById('ownerChatLog');
+      const ownerKickForm = document.getElementById('ownerKickForm');
+      const kickTargetInput = document.getElementById('kickTargetInput');
+      const kickMinutesInput = document.getElementById('kickMinutesInput');
+      const kickReasonInput = document.getElementById('kickReasonInput');
+      const ownerChatSendBtn = document.getElementById('ownerChatSendBtn');
+      const ownerChatCloseBtn = document.getElementById('ownerChatCloseBtn');
+      const banOverlay = document.getElementById('banOverlay');
+      const banDurationEl = document.getElementById('banDuration');
+      const banReasonEl = document.getElementById('banReason');
+      const banTimeLeftEl = document.getElementById('banTimeLeft');
+      let banTimer = null;
+      let banPollTimer = null;
+      let bansChannel = null;
+      try {
+        bansChannel = new BroadcastChannel('snake-game-bans');
+      } catch {
+        bansChannel = null;
+      }
 
       function getProfileId(name) {
         return (name || '').trim().toLowerCase();
@@ -886,14 +1485,210 @@
 
       function ensureOwnerGoldSkin() {
         if (!isOwner()) return;
-        if (!wardrobe.includes('gold')) {
+        const hadGold = wardrobe.includes('gold');
+        if (!hadGold) {
           wardrobe.push('gold');
+          if (equippedSkin === 'default') {
+            equippedSkin = 'gold';
+          }
           saveProgress();
         }
       }
 
       function isOwner() {
         return playerName.toLowerCase().includes('owner');
+      }
+
+      function readBans() {
+        try {
+          return JSON.parse(localStorage.getItem(BANS_KEY) || '{}');
+        } catch {
+          return {};
+        }
+      }
+
+      function writeBans(bans) {
+        localStorage.setItem(BANS_KEY, JSON.stringify(bans));
+        window.dispatchEvent(new Event('snake-bans-updated'));
+        if (bansChannel) {
+          bansChannel.postMessage({ type: 'bans-updated', bans });
+        }
+      }
+
+      function syncBansFromRemote(bans) {
+        if (!bans || typeof bans !== 'object') return;
+        localStorage.setItem(BANS_KEY, JSON.stringify(bans));
+        checkCurrentPlayerBan();
+      }
+
+      function removeBan(profileId) {
+        const bans = readBans();
+        delete bans[profileId];
+        writeBans(bans);
+      }
+
+      function getActiveBan(name) {
+        const id = getProfileId(name);
+        if (!id) return null;
+        const ban = readBans()[id];
+        if (!ban) return null;
+        if (Date.now() >= ban.until) {
+          removeBan(id);
+          return null;
+        }
+        return ban;
+      }
+
+      function isPlayerBanned(name) {
+        return getActiveBan(name) !== null;
+      }
+
+      function formatBanMinutes(n) {
+        if (n === 1) return '1 minutu';
+        if (n >= 2 && n <= 4) return `${n} minuty`;
+        return `${n} minut`;
+      }
+
+      function formatBanTimeLeft(ms) {
+        const totalSec = Math.max(0, Math.ceil(ms / 1000));
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        if (min > 0) return `${min} min ${sec} s`;
+        return `${sec} s`;
+      }
+
+      function updateBanTimeLeft() {
+        const ban = getActiveBan(playerName);
+        if (!ban) {
+          banOverlay.classList.remove('visible');
+          if (banTimer) {
+            clearInterval(banTimer);
+            banTimer = null;
+          }
+          if (gameMode === 'multi') showMultiLobby();
+          else if (gameMode === 'single') showStartScreen();
+          else showModeSelect();
+          return;
+        }
+        banDurationEl.textContent = `Vyhozen na ${formatBanMinutes(ban.minutes)}`;
+        banTimeLeftEl.textContent = `Zbývá: ${formatBanTimeLeft(ban.until - Date.now())}`;
+      }
+
+      function stopGameForBan() {
+        running = false;
+        paused = false;
+        pauseOverlay.classList.remove('visible');
+        shopOverlay.classList.remove('visible');
+        ownerChatOverlay.classList.remove('visible');
+        modeSelectOverlay.classList.remove('visible');
+        multiOverlay.classList.remove('visible');
+        multiGameOverOverlay.classList.remove('visible');
+        startOverlay.classList.remove('visible');
+        gameOverOverlay.classList.remove('visible');
+        nameOverlay.classList.remove('visible');
+      }
+
+      function showBanOverlay() {
+        const ban = getActiveBan(playerName);
+        if (!ban) return;
+        stopGameForBan();
+        banDurationEl.textContent = `Vyhozen na ${formatBanMinutes(ban.minutes)}`;
+        banReasonEl.textContent = `Zpráva od ownera: ${ban.reason}`;
+        updateBanTimeLeft();
+        banOverlay.classList.add('visible');
+        if (!banTimer) {
+          banTimer = setInterval(updateBanTimeLeft, 1000);
+        }
+        draw();
+      }
+
+      function checkCurrentPlayerBan() {
+        if (!playerName) return;
+        if (isPlayerBanned(playerName)) {
+          if (running) stopGameForBan();
+          showBanOverlay();
+        }
+      }
+
+      function startBanPolling() {
+        if (banPollTimer) return;
+        banPollTimer = setInterval(checkCurrentPlayerBan, 200);
+      }
+
+      function applyKick(targetName, minutes, reason) {
+        const id = getProfileId(targetName);
+        if (!id) return false;
+        const cleanReason = reason.trim();
+        if (!cleanReason) {
+          appendOwnerChatLog('Musíš napsat důvod kicku.', true);
+          return false;
+        }
+        const bans = readBans();
+        bans[id] = {
+          until: Date.now() + minutes * 60 * 1000,
+          reason: cleanReason,
+          minutes,
+        };
+        writeBans(bans);
+        checkCurrentPlayerBan();
+        return true;
+      }
+
+      function appendOwnerChatLog(text, isSystem) {
+        const line = document.createElement('div');
+        line.className = 'owner-chat-line' + (isSystem ? ' system' : ' owner');
+        line.textContent = text;
+        ownerChatLog.appendChild(line);
+        ownerChatLog.scrollTop = ownerChatLog.scrollHeight;
+      }
+
+      function openOwnerChat() {
+        if (!isOwner()) return;
+        if (running && !paused) pauseGame();
+        ownerChatLog.innerHTML = '';
+        appendOwnerChatLog('Vyplň jméno, minuty a důvod, pak klikni Vyhodit hráče.', true);
+        kickTargetInput.value = '';
+        kickMinutesInput.value = '5';
+        kickReasonInput.value = '';
+        ownerChatOverlay.classList.add('visible');
+        kickTargetInput.focus();
+      }
+
+      function closeOwnerChat() {
+        ownerChatOverlay.classList.remove('visible');
+      }
+
+      function submitOwnerKick() {
+        const target = kickTargetInput.value.trim();
+        const minutes = Math.max(1, parseInt(kickMinutesInput.value, 10) || 1);
+        const reason = kickReasonInput.value.trim();
+        if (!target) {
+          appendOwnerChatLog('Napiš jméno hráče.', true);
+          kickTargetInput.focus();
+          return;
+        }
+        if (!reason) {
+          appendOwnerChatLog('Napiš důvod kicku.', true);
+          kickReasonInput.focus();
+          return;
+        }
+        const ok = applyKick(target, minutes, reason);
+        if (ok) {
+          appendOwnerChatLog(
+            `Hráč ${target} vyhozen na ${minutes} min. Důvod: ${reason}`,
+            true
+          );
+          kickReasonInput.value = '';
+        }
+      }
+
+      function shouldIgnoreOwnerEnter(target) {
+        if (nameOverlay.classList.contains('visible')) return true;
+        if (!target) return false;
+        if (ownerChatOverlay.classList.contains('visible')) return true;
+        const tag = target.tagName;
+        if (tag === 'TEXTAREA' || tag === 'INPUT') return true;
+        return false;
       }
 
       function syncOwnerInputs() {
@@ -969,17 +1764,366 @@
 
       function updatePlayerNameDisplay() {
         playerNameDisplay.textContent = playerName || '—';
+        modeSelectGreeting.textContent = playerName || '—';
         updateOwnerPanel();
       }
 
+      function openChangeName() {
+        const changing = Boolean(playerName);
+        nameOverlayTitle.textContent = changing ? 'Změnit jméno' : 'Zadej jméno';
+        nameBtn.textContent = changing ? 'Uložit' : 'Pokračovat';
+        playerNameInput.value = playerName || '';
+        hideAllMenuOverlays();
+        multiGameOverOverlay.classList.remove('visible');
+        nameOverlay.classList.add('visible');
+        playerNameInput.focus();
+        if (changing) playerNameInput.select();
+      }
+
+      function afterNameSaved() {
+        nameOverlay.classList.remove('visible');
+        if (gameMode === 'single') showStartScreen();
+        else if (gameMode === 'multi') showMultiLobby();
+        else showModeSelect();
+      }
+
+      function hideAllMenuOverlays() {
+        modeSelectOverlay.classList.remove('visible');
+        nameOverlay.classList.remove('visible');
+        startOverlay.classList.remove('visible');
+        multiOverlay.classList.remove('visible');
+        multiGameOverOverlay.classList.remove('visible');
+      }
+
+      function showModeSelect() {
+        if (playerName && isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
+        disconnectMultiplayer();
+        running = false;
+        paused = false;
+        multiInGame = false;
+        gameMode = null;
+        hideAllMenuOverlays();
+        banOverlay.classList.remove('visible');
+        modeSelectOverlay.classList.add('visible');
+        updatePlayerNameDisplay();
+        draw();
+      }
+
+      function enterSelectedMode() {
+        if (gameMode === 'single') {
+          showStartScreen();
+        } else if (gameMode === 'multi') {
+          showMultiLobby();
+        }
+      }
+
+      function selectGameMode(mode) {
+        gameMode = mode;
+        modeSelectOverlay.classList.remove('visible');
+        if (isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
+        if (!playerName) {
+          nameOverlay.classList.add('visible');
+          playerNameInput.value = '';
+          playerNameInput.focus();
+          return;
+        }
+        enterSelectedMode();
+      }
+
+      function getMultiWsUrl() {
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${protocol}//${location.host}`;
+      }
+
+      function setMultiStatus(text) {
+        multiStatusEl.textContent = text;
+      }
+
+      function renderMultiPlayerList(players) {
+        multiLobbyPlayers = players || [];
+        multiPlayerList.innerHTML = '';
+        if (!multiLobbyPlayers.length) {
+          const li = document.createElement('li');
+          li.className = 'empty';
+          li.textContent = 'Zatím nikdo jiný – pošli kamarádovi adresu serveru.';
+          multiPlayerList.appendChild(li);
+          return;
+        }
+        multiLobbyPlayers.forEach((p) => {
+          const li = document.createElement('li');
+          if (p.id === multiPlayerId) li.classList.add('self');
+          li.textContent = p.id === multiPlayerId ? `${p.name} (ty)` : p.name;
+          multiPlayerList.appendChild(li);
+        });
+      }
+
+      function updateMultiShareUrl(url) {
+        multiShareUrl = url || '';
+        if (multiShareUrl) {
+          multiShareUrlEl.hidden = false;
+          multiShareUrlEl.textContent = `Adresa pro kamarády: ${multiShareUrl}`;
+        } else {
+          multiShareUrlEl.hidden = true;
+          multiShareUrlEl.textContent = '';
+        }
+      }
+
+      function updateMultiLobbyUi() {
+        const count = multiLobbyPlayers.length;
+        if (multiInGame) return;
+        if (count >= 2) {
+          setMultiStatus(`Připojeno – ${count} hráči online. Kdokoli může spustit hru.`);
+          multiStartBtn.disabled = false;
+        } else if (count === 1) {
+          setMultiStatus('Připojeno – čekáme na dalšího hráče (nebo začni sám).');
+          multiStartBtn.disabled = false;
+        } else {
+          setMultiStatus('Připojování…');
+          multiStartBtn.disabled = true;
+        }
+        renderMultiPlayerList(multiLobbyPlayers);
+      }
+
+      function disconnectMultiplayer() {
+        if (multiWs) {
+          try {
+            if (multiWs.readyState === WebSocket.OPEN) {
+              multiWs.send(JSON.stringify({ type: 'leaveLobby' }));
+            }
+            multiWs.close();
+          } catch {
+            /* ignore */
+          }
+          multiWs = null;
+        }
+        multiPlayerId = null;
+        multiInGame = false;
+        multiServerState = { kostky: [], players: [] };
+        multiLobbyPlayers = [];
+      }
+
+      function connectMultiplayer() {
+        if (location.protocol === 'file:') {
+          setMultiStatus('Neotevírej soubor přímo! V terminálu napiš: npm start');
+          updateMultiShareUrl('');
+          multiStartBtn.disabled = true;
+          renderMultiPlayerList([]);
+          return;
+        }
+        disconnectMultiplayer();
+        setMultiStatus('Připojování na server…');
+        multiStartBtn.disabled = true;
+        multiWs = new WebSocket(getMultiWsUrl());
+        let opened = false;
+
+        multiWs.onopen = () => {
+          opened = true;
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
+        };
+
+        multiWs.onmessage = (event) => {
+          let msg;
+          try {
+            msg = JSON.parse(event.data);
+          } catch {
+            return;
+          }
+          handleMultiMessage(msg);
+        };
+
+        multiWs.onclose = () => {
+          if (!opened) {
+            setMultiStatus('Server neběží. V terminálu ve složce hry spusť: npm start');
+            multiStartBtn.disabled = true;
+          } else if (gameMode === 'multi' && multiOverlay.classList.contains('visible')) {
+            setMultiStatus('Odpojeno od serveru. Klikni Připojit znovu.');
+            multiStartBtn.disabled = true;
+          }
+          if (multiInGame) {
+            multiInGame = false;
+            running = false;
+            multiGameOverText.textContent = 'Spojení se serverem se přerušilo.';
+            multiGameOverOverlay.classList.add('visible');
+          }
+        };
+
+        multiWs.onerror = () => {
+          setMultiStatus('Server neběží. V terminálu spusť: npm start');
+          multiStartBtn.disabled = true;
+        };
+      }
+
+      function handleMultiMessage(msg) {
+        if (msg.type === 'error') {
+          setMultiStatus(msg.message || 'Chyba serveru.');
+          return;
+        }
+        if (msg.type === 'welcome') {
+          multiPlayerId = msg.id;
+          multiLobbyPlayers = msg.players || [];
+          updateMultiShareUrl(msg.shareUrl);
+          updateMultiLobbyUi();
+          return;
+        }
+        if (msg.type === 'lobby') {
+          multiLobbyPlayers = msg.players || [];
+          if (msg.shareUrl) updateMultiShareUrl(msg.shareUrl);
+          updateMultiLobbyUi();
+          return;
+        }
+        if (msg.type === 'gameStart') {
+          multiInGame = true;
+          running = true;
+          paused = false;
+          multiOverlay.classList.remove('visible');
+          multiGameOverOverlay.classList.remove('visible');
+          drawMultiplayer();
+          return;
+        }
+        if (msg.type === 'state') {
+          multiServerState = {
+            kostky: msg.kostky || [],
+            players: msg.players || [],
+          };
+          const me = multiServerState.players.find((p) => p.id === multiPlayerId);
+          if (me && !me.alive && multiInGame) {
+            multiInGame = false;
+            running = false;
+            multiGameOverText.textContent = `Prohrál jsi. Skóre: ${me.score}. Ostatní ještě hrají – nebo počkej na konec kola.`;
+            multiGameOverOverlay.classList.add('visible');
+          }
+          if (multiInGame) drawMultiplayer();
+          return;
+        }
+        if (msg.type === 'gameOver') {
+          multiInGame = false;
+          running = false;
+          const me = (msg.players || []).find((p) => p.id === multiPlayerId);
+          const winner = (msg.players || []).find((p) => p.id === msg.winnerId);
+          if (winner && winner.id === multiPlayerId) {
+            multiGameOverText.textContent = `Vyhrál jsi! Skóre: ${me ? me.score : 0}`;
+          } else if (me && !me.alive) {
+            multiGameOverText.textContent = `Prohrál jsi. Skóre: ${me.score}`;
+          } else if (winner) {
+            multiGameOverText.textContent = `Vyhrál ${winner.name}. Tvoje skóre: ${me ? me.score : 0}`;
+          } else {
+            multiGameOverText.textContent = 'Kolo skončilo.';
+          }
+          multiGameOverOverlay.classList.add('visible');
+          return;
+        }
+      }
+
+      function sendMultiInput(direction) {
+        if (!multiWs || multiWs.readyState !== WebSocket.OPEN || !multiInGame) return;
+        multiWs.send(JSON.stringify({ type: 'input', direction }));
+      }
+
+      function requestMultiStart() {
+        if (!multiWs || multiWs.readyState !== WebSocket.OPEN) {
+          setMultiStatus('Nejsi připojený k serveru.');
+          return;
+        }
+        multiWs.send(JSON.stringify({ type: 'start' }));
+      }
+
+      function drawMultiplayerName(head, name, color) {
+        if (!name || !head) return;
+        const cx = head.x * CELL + CELL / 2;
+        const maxWidth = CELL * 5;
+        ctx.font = 'bold 10px JetBrains Mono, monospace';
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const lines = getNameLines(name, maxWidth);
+        let y = head.y * CELL - 2;
+        for (let i = lines.length - 1; i >= 0; i--) {
+          ctx.fillText(lines[i], cx, y);
+          y -= 11;
+        }
+      }
+
+      function drawMultiplayer() {
+        ctx.fillStyle = '#12121a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const border = 2;
+        ctx.strokeStyle = '#2a2a3a';
+        ctx.lineWidth = border;
+        ctx.strokeRect(border / 2, border / 2, canvas.width - border, canvas.height - border);
+
+        (multiServerState.kostky || []).forEach((k) => {
+          drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1);
+        });
+
+        (multiServerState.players || []).forEach((p) => {
+          if (!p.alive || !p.snake || !p.snake.length) return;
+          const base = MULTI_COLORS[p.colorIndex % MULTI_COLORS.length];
+          p.snake.forEach((seg, i) => {
+            const t = i / Math.max(p.snake.length - 1, 1);
+            const r = Math.round(base.r - t * 60);
+            const g = Math.round(base.g - t * 40);
+            const b = Math.round(base.b - t * 30);
+            drawRect(seg.x, seg.y, `rgb(${r}, ${g}, ${b})`, 1);
+          });
+          const head = p.snake[0];
+          ctx.fillStyle = '#0a0a12';
+          ctx.beginPath();
+          ctx.arc(head.x * CELL + CELL / 2, head.y * CELL + CELL / 2, 4, 0, Math.PI * 2);
+          ctx.fill();
+          const nameColor = p.id === multiPlayerId ? '#00ff88' : '#e8e8e8';
+          drawMultiplayerName(head, p.name, nameColor);
+        });
+      }
+
+      function returnToMultiLobby() {
+        multiInGame = false;
+        running = false;
+        multiGameOverOverlay.classList.remove('visible');
+        multiOverlay.classList.add('visible');
+        if (multiWs && multiWs.readyState === WebSocket.OPEN) {
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
+        } else {
+          connectMultiplayer();
+        }
+        draw();
+      }
+
+      function showMultiLobby() {
+        if (playerName && isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
+        gameMode = 'multi';
+        multiInGame = false;
+        running = false;
+        hideAllMenuOverlays();
+        banOverlay.classList.remove('visible');
+        multiOverlay.classList.add('visible');
+        updatePlayerNameDisplay();
+        connectMultiplayer();
+        draw();
+      }
+
       function showStartScreen() {
+        if (gameMode !== 'single') return;
+        if (playerName && isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
+        banOverlay.classList.remove('visible');
+        hideAllMenuOverlays();
         if (playerName) {
-          nameOverlay.classList.remove('visible');
           startGreeting.textContent = `Ahoj, ${playerName}!`;
           startOverlay.classList.add('visible');
         } else {
           nameOverlay.classList.add('visible');
-          startOverlay.classList.remove('visible');
         }
         updatePlayerNameDisplay();
       }
@@ -995,7 +2139,11 @@
         loadPlayerProfile();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
-        showStartScreen();
+        if (isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
+        afterNameSaved();
       }
       const finalScoreEl = document.getElementById('finalScore');
       const startBtn = document.getElementById('startBtn');
@@ -1005,10 +2153,17 @@
         return min + Math.floor(Math.random() * (max - min));
       }
 
+      function bankScoreToDiamanty() {
+        if (isOwner()) return;
+        if (score >= 5) {
+          diamanty += Math.floor(score / 5);
+          score = score % 5;
+        }
+      }
+
       function initGame() {
         const startX = Math.floor(COLS / 2);
         const startY = Math.floor(ROWS / 2);
-        // snake[0] = hlava (směr doprava), zbytek = tělo za ní
         snake = [
           { x: startX, y: startY },
           { x: startX - 1, y: startY },
@@ -1016,15 +2171,12 @@
         ];
         direction = { x: 1, y: 0 };
         nextDirection = { x: 1, y: 0 };
-        if (!isOwner()) {
-          score = 0;
-        } else {
-          applyOwnerInputs();
-        }
+        bankScoreToDiamanty();
+        score = 0;
         hueCounter = 0;
         spawnKostky();
         lastKostkaSpawn = 0;
-        updateScoreDisplay();
+        refreshCurrencyUI();
       }
 
       function getFreeCells(excludeKostky = true) {
@@ -1091,6 +2243,10 @@
       }
 
       function draw() {
+        if (multiInGame) {
+          drawMultiplayer();
+          return;
+        }
         ctx.fillStyle = '#12121a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1103,7 +2259,7 @@
 
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
-          if (isOwner() || equippedSkin === 'gold') {
+          if (equippedSkin === 'gold') {
             const r = Math.round(255 - t * 55);
             const g = Math.round(215 - t * 75);
             const b = Math.round(30 + t * 20);
@@ -1114,6 +2270,11 @@
           } else if (equippedSkin === 'white') {
             const v = Math.round(255 - t * 60);
             drawRect(seg.x, seg.y, `rgb(${v}, ${v}, ${v})`, 1);
+          } else if (equippedSkin === 'blue') {
+            const b = Math.round(255 - t * 60);
+            const g = Math.round(120 - t * 40);
+            const r = Math.round(30 - t * 20);
+            drawRect(seg.x, seg.y, `rgb(${r}, ${g}, ${b})`, 1);
           } else {
             const r = Math.round(0 + t * 180);
             const g = Math.round(217 + t * 38);
@@ -1132,6 +2293,10 @@
       }
 
       function move() {
+        if (isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
         direction = { ...nextDirection };
         const head = snake[0];
         const newHead = {
@@ -1171,9 +2336,12 @@
         pauseOverlay.classList.remove('visible');
         showShopMain();
         shopOverlay.classList.remove('visible');
+        bankScoreToDiamanty();
+        saveProgress();
         finalScoreEl.textContent = score;
         finalDiamantyEl.textContent = diamanty;
         finalGemsEl.textContent = gems;
+        refreshCurrencyUI();
         gameOverOverlay.classList.add('visible');
       }
 
@@ -1184,6 +2352,10 @@
       }
 
       function resumeGame() {
+        if (isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
         paused = false;
         pauseOverlay.classList.remove('visible');
         showShopMain();
@@ -1193,10 +2365,47 @@
       function quitToMenu() {
         running = false;
         paused = false;
+        bankScoreToDiamanty();
+        saveProgress();
         pauseOverlay.classList.remove('visible');
         showShopMain();
         shopOverlay.classList.remove('visible');
-        showStartScreen();
+        refreshCurrencyUI();
+        if (gameMode === 'multi') {
+          showMultiLobby();
+        } else if (gameMode === 'single') {
+          showStartScreen();
+        } else {
+          showModeSelect();
+        }
+      }
+
+      function getAffordableDiamantValue() {
+        return diamanty + Math.floor(score / SCORE_PER_DIAMANT) + gems * DIAMANTS_PER_GEM;
+      }
+
+      function payDiamantCost(cost) {
+        if (getAffordableDiamantValue() < cost) return false;
+
+        let remaining = cost;
+
+        const fromDiamanty = Math.min(diamanty, remaining);
+        diamanty -= fromDiamanty;
+        remaining -= fromDiamanty;
+
+        while (remaining > 0 && score >= SCORE_PER_DIAMANT) {
+          score -= SCORE_PER_DIAMANT;
+          remaining -= 1;
+        }
+
+        while (remaining > 0 && gems > 0) {
+          gems -= 1;
+          const usedFromGem = Math.min(DIAMANTS_PER_GEM, remaining);
+          remaining -= usedFromGem;
+          diamanty += DIAMANTS_PER_GEM - usedFromGem;
+        }
+
+        return remaining === 0;
       }
 
       function buySkinAndOpenWardrobe(skinId) {
@@ -1205,14 +2414,13 @@
           return;
         }
         const cost = SKIN_PRICES[skinId];
-        if (diamanty < cost) {
-          showShopMessage(`Potřebuješ ${cost} diamantů (máš ${diamanty})`);
+        if (!payDiamantCost(cost)) {
+          showShopMessage(`Potřebuješ ${cost} diamantů (máš ${getAffordableDiamantValue()} celkem)`);
           return;
         }
-        diamanty = diamanty - cost;
         wardrobe.push(skinId);
         refreshCurrencyUI();
-        showShopMessage(`−${cost} diamantů, zbývá ${diamanty}`);
+        showShopMessage(`Skin koupen za ${cost} diamantů`);
         openWardrobe();
       }
 
@@ -1220,6 +2428,7 @@
         shopView = 'main';
         shopMainView.classList.remove('hidden');
         shopDiamondView.classList.add('hidden');
+        shopGemsView.classList.add('hidden');
         shopWardrobeView.classList.add('hidden');
       }
 
@@ -1230,14 +2439,26 @@
         if (skinId === 'white') {
           return '<div class="shop-skin-preview white-skin"><span></span><span></span><span></span><span></span></div>';
         }
+        if (skinId === 'blue') {
+          return '<div class="shop-skin-preview blue-skin"><span></span><span></span><span></span><span></span></div>';
+        }
         if (skinId === 'gold') {
           return '<div class="shop-skin-preview gold-skin"><span></span><span></span><span></span><span></span></div>';
         }
         return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
       }
 
+      function renderWardrobeShowcase() {
+        wardrobeShowcase.innerHTML = ALL_SHOP_SKINS.map(skinId => `
+          <div class="wardrobe-showcase-item">
+            ${getSkinPreviewHtml(skinId)}
+          </div>
+        `).join('');
+      }
+
       function renderWardrobeSkins() {
         ensureOwnerGoldSkin();
+        renderWardrobeShowcase();
         wardrobeSkinsList.innerHTML = '';
         if (wardrobe.length === 0) {
           wardrobeSkinsList.innerHTML = '<p class="wardrobe-empty">Zatím nemáš žádné skiny ve šatně</p>';
@@ -1245,7 +2466,7 @@
         }
         wardrobe.forEach(skinId => {
           const item = document.createElement('div');
-          item.className = 'wardrobe-item';
+          item.className = 'wardrobe-item' + (equippedSkin === skinId ? ' wardrobe-item-equipped' : '');
           item.innerHTML = `
             ${getSkinPreviewHtml(skinId)}
             <div class="wardrobe-actions">
@@ -1258,21 +2479,25 @@
       }
 
       function equipSkinFromWardrobe(skinId) {
+        if (!wardrobe.includes(skinId)) return;
         equippedSkin = skinId;
         saveProgress();
-        if (running) draw();
+        renderWardrobeSkins();
+        draw();
       }
 
       function unequipSkin() {
         equippedSkin = 'default';
         saveProgress();
-        if (running) draw();
+        renderWardrobeSkins();
+        draw();
       }
 
       function openWardrobe() {
         shopView = 'wardrobe';
         shopMainView.classList.add('hidden');
         shopDiamondView.classList.add('hidden');
+        shopGemsView.classList.add('hidden');
         shopWardrobeView.classList.remove('hidden');
         renderWardrobeSkins();
       }
@@ -1281,6 +2506,15 @@
         shopView = 'diamond';
         shopMainView.classList.add('hidden');
         shopDiamondView.classList.remove('hidden');
+        shopGemsView.classList.add('hidden');
+        shopWardrobeView.classList.add('hidden');
+      }
+
+      function openGemsShop() {
+        shopView = 'gems';
+        shopMainView.classList.add('hidden');
+        shopDiamondView.classList.add('hidden');
+        shopGemsView.classList.remove('hidden');
         shopWardrobeView.classList.add('hidden');
       }
 
@@ -1298,7 +2532,7 @@
       }
 
       function shopBack() {
-        if (shopView === 'diamond' || shopView === 'wardrobe') {
+        if (shopView === 'diamond' || shopView === 'gems' || shopView === 'wardrobe') {
           showShopMain();
         } else {
           closeShop();
@@ -1306,6 +2540,10 @@
       }
 
       function loop(now) {
+        if (multiInGame) {
+          drawMultiplayer();
+          return requestAnimationFrame(loop);
+        }
         if (!running || paused) return requestAnimationFrame(loop);
         if (now - lastKostkaSpawn >= KOSTKA_SPAWN_MS) {
           lastKostkaSpawn = now;
@@ -1320,7 +2558,11 @@
       }
 
       function start() {
-        if (!playerName) return;
+        if (!playerName || gameMode !== 'single') return;
+        if (isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
         startOverlay.classList.remove('visible');
         gameOverOverlay.classList.remove('visible');
         pauseOverlay.classList.remove('visible');
@@ -1336,6 +2578,29 @@
       }
 
       document.addEventListener('keydown', (e) => {
+        if (e.code === 'Enter' && isOwner() && !shouldIgnoreOwnerEnter(e.target)) {
+          e.preventDefault();
+          openOwnerChat();
+          return;
+        }
+        if (ownerChatOverlay.classList.contains('visible') && e.code === 'Escape') {
+          e.preventDefault();
+          closeOwnerChat();
+          return;
+        }
+        if (multiInGame) {
+          e.preventDefault();
+          if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+            sendMultiInput({ x: 0, y: -1 });
+          } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+            sendMultiInput({ x: 0, y: 1 });
+          } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            sendMultiInput({ x: -1, y: 0 });
+          } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+            sendMultiInput({ x: 1, y: 0 });
+          }
+          return;
+        }
         if (!running) {
           if (nameOverlay.classList.contains('visible')) {
             if (e.code === 'Enter') {
@@ -1344,7 +2609,7 @@
             }
             return;
           }
-          if (e.code === 'Space' && playerName) {
+          if (e.code === 'Space' && playerName && startOverlay.classList.contains('visible') && gameMode === 'single') {
             e.preventDefault();
             start();
           }
@@ -1353,7 +2618,7 @@
         if (e.code === 'Escape') {
           e.preventDefault();
           if (shopOverlay.classList.contains('visible')) {
-            if (shopView === 'diamond' || shopView === 'wardrobe') {
+            if (shopView === 'diamond' || shopView === 'gems' || shopView === 'wardrobe') {
               showShopMain();
             } else {
               closeShop();
@@ -1386,8 +2651,10 @@
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
       shopDiamondBtn.addEventListener('click', openDiamondShop);
+      shopGemsBtn.addEventListener('click', openGemsShop);
       shopSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('red'));
       shopWhiteSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('white'));
+      shopBlueSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('blue'));
       shopWardrobeBtn.addEventListener('click', openWardrobe);
       wardrobeSkinsList.addEventListener('click', (e) => {
         const btn = e.target.closest('button');
@@ -1399,6 +2666,14 @@
         }
       });
       nameBtn.addEventListener('click', savePlayerName);
+      changeNameModeBtn.addEventListener('click', openChangeName);
+      changeNameStartBtn.addEventListener('click', openChangeName);
+      singlePlayerBtn.addEventListener('click', () => selectGameMode('single'));
+      multiPlayerBtn.addEventListener('click', () => selectGameMode('multi'));
+      multiBackBtn.addEventListener('click', showModeSelect);
+      multiStartBtn.addEventListener('click', requestMultiStart);
+      multiReconnectBtn.addEventListener('click', connectMultiplayer);
+      multiLobbyBtn.addEventListener('click', returnToMultiLobby);
       playerNameInput.addEventListener('keydown', (e) => {
         if (e.code === 'Enter') savePlayerName();
       });
@@ -1406,12 +2681,42 @@
       ownerScoreInput.addEventListener('input', applyOwnerInputs);
       ownerDiamantyInput.addEventListener('input', applyOwnerInputs);
       ownerGemsInput.addEventListener('input', applyOwnerInputs);
+      ownerChatBtn.addEventListener('click', openOwnerChat);
+      ownerChatCloseBtn.addEventListener('click', closeOwnerChat);
+      ownerChatSendBtn.addEventListener('click', submitOwnerKick);
+      ownerKickForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitOwnerKick();
+      });
+
+      window.addEventListener('storage', (e) => {
+        if (e.key === BANS_KEY) {
+          checkCurrentPlayerBan();
+        }
+      });
+      window.addEventListener('snake-bans-updated', checkCurrentPlayerBan);
+      window.addEventListener('focus', checkCurrentPlayerBan);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) checkCurrentPlayerBan();
+      });
+      if (bansChannel) {
+        bansChannel.onmessage = (e) => {
+          if (e.data?.type === 'bans-updated') {
+            syncBansFromRemote(e.data.bans);
+          }
+        };
+      }
+      startBanPolling();
 
       loadPlayerProfile();
-      initGame();
-      showStartScreen();
       updateOwnerPanel();
-      updateScoreDisplay();
+      initGame();
+      if (playerName && isPlayerBanned(playerName)) {
+        showBanOverlay();
+      } else {
+        showModeSelect();
+      }
+      refreshCurrencyUI();
       draw();
       requestAnimationFrame(loop);
     })();
