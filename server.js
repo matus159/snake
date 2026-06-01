@@ -32,7 +32,11 @@ const SPAWN_SLOTS = [
   { x: COLS - 13, y: 12, dir: { x: -1, y: 0 } },
 ];
 
+const GIFT_QUEUE_FILE = path.join(__dirname, 'gift-queue.json');
+
 const players = new Map();
+const giftListeners = new Map();
+let giftQueue = new Map();
 let gameStatus = 'lobby';
 let kostky = [];
 let hueCounter = 0;
@@ -48,6 +52,93 @@ function send(ws, msg) {
     ws.send(JSON.stringify(msg));
   }
 }
+
+function loadGiftQueue() {
+  try {
+    const data = JSON.parse(fs.readFileSync(GIFT_QUEUE_FILE, 'utf8'));
+    giftQueue = new Map(
+      Object.entries(data).map(([key, gifts]) => [key, Array.isArray(gifts) ? gifts : []])
+    );
+  } catch {
+    giftQueue = new Map();
+  }
+}
+
+function saveGiftQueue() {
+  try {
+    fs.writeFileSync(GIFT_QUEUE_FILE, JSON.stringify(Object.fromEntries(giftQueue), null, 2));
+  } catch (err) {
+    console.error('Nepodařilo se uložit frontu dárků:', err.message);
+  }
+}
+
+function queueGift(toKey, gift) {
+  if (!giftQueue.has(toKey)) giftQueue.set(toKey, []);
+  giftQueue.get(toKey).push(gift);
+  saveGiftQueue();
+}
+
+function takeGifts(toKey) {
+  const gifts = giftQueue.get(toKey) || [];
+  if (gifts.length) {
+    giftQueue.delete(toKey);
+    saveGiftQueue();
+  }
+  return gifts;
+}
+
+function findOnlinePlayerByName(nameLower) {
+  return [...players.values()].find((p) => p.name.toLowerCase() === nameLower);
+}
+
+function deliverPendingGiftsToWs(ws, nameLower) {
+  const gifts = takeGifts(nameLower);
+  if (gifts.length) {
+    send(ws, { type: 'pendingGifts', gifts });
+  }
+}
+
+function unwatchGifts(ws) {
+  const key = ws.giftWatchName;
+  if (!key) return;
+  const set = giftListeners.get(key);
+  if (set) {
+    set.delete(ws);
+    if (!set.size) giftListeners.delete(key);
+  }
+  ws.giftWatchName = null;
+}
+
+function watchGifts(ws, nameLower) {
+  unwatchGifts(ws);
+  if (!nameLower) return;
+  if (!giftListeners.has(nameLower)) giftListeners.set(nameLower, new Set());
+  giftListeners.get(nameLower).add(ws);
+  ws.giftWatchName = nameLower;
+  deliverPendingGiftsToWs(ws, nameLower);
+}
+
+function deliverGiftLive(toKey, gift) {
+  const sent = new Set();
+  let delivered = false;
+  const online = findOnlinePlayerByName(toKey);
+  if (online && online.ws.readyState === online.ws.OPEN) {
+    send(online.ws, { type: 'pendingGifts', gifts: [gift] });
+    sent.add(online.ws);
+    delivered = true;
+  }
+  const listeners = giftListeners.get(toKey);
+  if (listeners) {
+    for (const lws of listeners) {
+      if (sent.has(lws) || lws.readyState !== lws.OPEN) continue;
+      send(lws, { type: 'pendingGifts', gifts: [gift] });
+      delivered = true;
+    }
+  }
+  return delivered;
+}
+
+loadGiftQueue();
 
 function broadcast(msg) {
   const data = JSON.stringify(msg);
@@ -95,6 +186,10 @@ function sendWelcome(ws, id) {
     shareUrl: snap.shareUrl,
     players: snap.players,
   });
+  const player = players.get(id);
+  if (player) {
+    deliverPendingGiftsToWs(ws, player.name.toLowerCase());
+  }
 }
 
 function broadcastLobby() {
@@ -345,6 +440,36 @@ function handleMessage(ws, raw) {
     return;
   }
 
+  if (msg.type === 'sendGift') {
+    const fromName = (msg.fromName || '').trim().slice(0, 20);
+    const toKey = (msg.toName || '').trim().toLowerCase();
+    const giftType = msg.giftType;
+    const value = msg.value;
+    if (!fromName || !toKey || !giftType) {
+      send(ws, { type: 'error', message: 'Neplatný dárek.' });
+      return;
+    }
+    const gift = { from: fromName, type: giftType, value, at: Date.now() };
+    const live = deliverGiftLive(toKey, gift);
+    if (!live) queueGift(toKey, gift);
+    send(ws, { type: 'giftSent', toName: msg.toName });
+    return;
+  }
+
+  if (msg.type === 'watchGifts') {
+    const nameLower = (msg.name || '').trim().toLowerCase();
+    if (!nameLower) return;
+    watchGifts(ws, nameLower);
+    return;
+  }
+
+  if (msg.type === 'fetchGifts') {
+    const nameLower = (msg.name || '').trim().toLowerCase();
+    if (!nameLower) return;
+    deliverPendingGiftsToWs(ws, nameLower);
+    return;
+  }
+
   if (msg.type === 'join') {
     const name = (msg.name || '').trim().slice(0, 20);
     if (!name) {
@@ -453,7 +578,10 @@ const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws) => {
   ws.on('message', (data) => handleMessage(ws, data.toString()));
-  ws.on('close', () => removePlayer(ws.playerId));
+  ws.on('close', () => {
+    unwatchGifts(ws);
+    removePlayer(ws.playerId);
+  });
 });
 
 server.listen(PORT, '0.0.0.0', () => {

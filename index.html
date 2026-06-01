@@ -750,6 +750,26 @@
       }
     }
 
+    .shop-skin-preview.rainbow-skin span:nth-child(1) {
+      background: #ff5555;
+      box-shadow: 0 0 6px rgba(255, 80, 80, 0.7);
+    }
+
+    .shop-skin-preview.rainbow-skin span:nth-child(2) {
+      background: #ffcc33;
+      box-shadow: 0 0 6px rgba(255, 200, 50, 0.7);
+    }
+
+    .shop-skin-preview.rainbow-skin span:nth-child(3) {
+      background: #55ee88;
+      box-shadow: 0 0 6px rgba(80, 255, 140, 0.7);
+    }
+
+    .shop-skin-preview.rainbow-skin span:nth-child(4) {
+      background: #5599ff;
+      box-shadow: 0 0 6px rgba(80, 150, 255, 0.7);
+    }
+
     .shop-skin-label {
       font-size: 0.65rem;
       font-weight: 700;
@@ -1470,6 +1490,36 @@
       text-shadow: 0 0 12px rgba(255, 220, 80, 0.35);
     }
 
+    .black-snake-celebration.rainbow-skin-mode {
+      background: radial-gradient(circle at center, #2a1838 0%, #120818 45%, #050508 100%);
+      animation: rainbowCelebrationBg 4s linear infinite;
+    }
+
+    .black-snake-celebration.rainbow-skin-mode h2 {
+      animation: rainbowTitleGlow 2s ease-in-out infinite;
+    }
+
+    .black-snake-celebration.rainbow-skin-mode p {
+      color: #c9b0ff;
+      text-shadow: 0 0 12px rgba(180, 120, 255, 0.35);
+    }
+
+    @keyframes rainbowCelebrationBg {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    @keyframes rainbowTitleGlow {
+      0%, 100% {
+        color: #ff88cc;
+        text-shadow: 0 0 30px rgba(255, 100, 200, 0.8), 0 0 60px rgba(100, 200, 255, 0.4);
+      }
+      50% {
+        color: #88ffcc;
+        text-shadow: 0 0 40px rgba(100, 255, 200, 0.9), 0 0 70px rgba(200, 100, 255, 0.5);
+      }
+    }
+
     @keyframes goldCelebrationBg {
       from {
         background: radial-gradient(circle at center, #4a4018 0%, #1a1408 45%, #050403 100%);
@@ -1989,6 +2039,7 @@
                     <span class="egg-price-box" id="eggPriceBox">2000 gems</span>
                   </button>
                   <p class="wheel-result" id="eggResult"></p>
+                  <p class="gift-hint egg-prize-hint">Občas padne vzácný duhový had (~10 % šance).</p>
                 </div>
               </div>
             </div>
@@ -2059,6 +2110,7 @@
       const SPEED_MS = 120;
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
+      const RAINBOW_GROWTH_PER_KOSTKA = 10;
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
       const BANS_KEY = 'snake-bans';
@@ -2072,8 +2124,9 @@
       const DIAMANTS_PER_GEM = 100;
       const WHEEL_SPIN_COST = 1200;
       const EGG_CRACK_COST = 2000;
+      const ALL_SKINS_GIFT_FLAG = 'snake-all-skins-gift-v1';
       const WHEEL_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'black'];
-      const EGG_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'black', 'gold'];
+      const EGG_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'black', 'gold', 'rainbow'];
       const SKIN_NAMES = {
         default: 'Výchozí',
         red: 'Červený',
@@ -2082,11 +2135,13 @@
         pink: 'Růžový',
         black: 'Černý',
         gold: 'Zářící',
+        rainbow: 'Duhový',
       };
-      const EGG_PRIZES = [
-        { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' },
-        { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' },
-        { id: 'allSkins', label: 'Všechny hady', short: 'Vše', type: 'allSkins' },
+      const EGG_PRIZE_POOL = [
+        { weight: 34, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
+        { weight: 34, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
+        { weight: 10, prize: { id: 'rainbow', label: 'Duhový had', short: 'Duhový', type: 'skin', skinId: 'rainbow' } },
+        { weight: 8, prize: { id: 'allSkins', label: 'Všechny hady', short: 'Vše', type: 'allSkins' } },
       ];
       const WHEEL_PRIZES = [
         { id: 'd50', label: '50 diamantů', short: '50', type: 'diamonds', amount: 50, color: '#0088aa' },
@@ -2109,6 +2164,7 @@
       let playerName = localStorage.getItem(PLAYER_NAME_KEY) || '';
       let gameMode = null;
       let multiWs = null;
+      let giftSyncWs = null;
       let multiPlayerId = null;
       let multiInGame = false;
       let multiServerState = { kostky: [], players: [] };
@@ -2239,6 +2295,29 @@
         bansChannel = null;
       }
 
+      let giftsChannel = null;
+      try {
+        giftsChannel = new BroadcastChannel('snake-gifts');
+        giftsChannel.onmessage = (e) => {
+          if (e.data?.type !== 'gift-delivered') return;
+          if (e.data.recipientId !== getProfileId(playerName)) return;
+          const r = e.data.recipient;
+          if (!r) return;
+          diamanty = parseInt(r.diamanty, 10) || 0;
+          gems = parseInt(r.gems, 10) || 0;
+          if (Array.isArray(r.wardrobe)) wardrobe = [...r.wardrobe];
+          if (Array.isArray(r.giftLog)) giftLog = [...r.giftLog];
+          saveProgress();
+          refreshCurrencyUI();
+          if (shopView === 'gift') renderGiftInbox();
+          if (giftLog[0]) {
+            showShopMessage(`Dostal jsi dárek od ${giftLog[0].from}!`);
+          }
+        };
+      } catch {
+        giftsChannel = null;
+      }
+
       function getProfileId(name) {
         return (name || '').trim().toLowerCase();
       }
@@ -2305,6 +2384,34 @@
         equippedSkin = profile.equippedSkin || 'default';
         giftLog = Array.isArray(profile.giftLog) ? [...profile.giftLog] : [];
         ensureOwnerGoldSkin();
+        grantAllSkinsOnce();
+      }
+
+      function grantAllSkinsOnce() {
+        const id = getProfileId(playerName);
+        if (!id) return;
+        const flagKey = `${ALL_SKINS_GIFT_FLAG}-${id}`;
+        if (localStorage.getItem(flagKey) === '1') return;
+
+        let added = 0;
+        EGG_ALL_SKINS.forEach((skinId) => {
+          if (!wardrobe.includes(skinId)) {
+            wardrobe.push(skinId);
+            added += 1;
+          }
+        });
+        if (wardrobe.includes('rainbow')) {
+          equippedSkin = 'rainbow';
+        } else if (wardrobe.includes('gold')) {
+          equippedSkin = 'gold';
+        } else if (wardrobe.includes('black')) {
+          equippedSkin = 'black';
+        }
+        localStorage.setItem(flagKey, '1');
+        saveProgress();
+        if (added > 0) {
+          showShopMessage('Dostal jsi všechny hady do šatny (jednorázově).');
+        }
       }
 
       function ensureOwnerGoldSkin() {
@@ -2811,11 +2918,18 @@
           setMultiStatus(msg.message || 'Chyba serveru.');
           return;
         }
+        if (msg.type === 'pendingGifts') {
+          (msg.gifts || []).forEach(applyRemoteGift);
+          return;
+        }
         if (msg.type === 'welcome') {
           multiPlayerId = msg.id;
           multiLobbyPlayers = msg.players || [];
           updateMultiShareUrl(msg.shareUrl);
           updateMultiLobbyUi();
+          if (multiWs && playerName) {
+            multiWs.send(JSON.stringify({ type: 'watchGifts', name: playerName }));
+          }
           return;
         }
         if (msg.type === 'lobby') {
@@ -2986,6 +3100,7 @@
         loadPlayerProfile();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
+        fetchPendingGiftsFromServer();
         if (isPlayerBanned(playerName)) {
           showBanOverlay();
           return;
@@ -3202,6 +3317,9 @@
           const t = i / Math.max(snake.length - 1, 1);
           if (equippedSkin === 'gold') {
             drawGlowRect(seg.x, seg.y, t);
+          } else if (equippedSkin === 'rainbow') {
+            const hue = ((performance.now() / 18 + i * 16) % 360 + 360) % 360;
+            drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
           } else if (equippedSkin === 'red') {
             const r = Math.round(255 - t * 60);
             drawRect(seg.x, seg.y, `rgb(${r}, 68, 68)`, 1);
@@ -3265,7 +3383,12 @@
         const eatenIndex = kostky.findIndex(k => k.x === newHead.x && k.y === newHead.y);
         if (eatenIndex !== -1) {
           kostky.splice(eatenIndex, 1);
-          score += 1;
+          const growth = equippedSkin === 'rainbow' ? RAINBOW_GROWTH_PER_KOSTKA : 1;
+          score += growth;
+          const tail = snake[snake.length - 1];
+          for (let i = 1; i < growth; i++) {
+            snake.push({ x: tail.x, y: tail.y });
+          }
           updateScoreDisplay();
           spawnOneKostka();
         } else {
@@ -3437,13 +3560,138 @@
         }
       }
 
+      function serverGiftsAvailable() {
+        return location.protocol !== 'file:';
+      }
+
+      function giftAlreadyReceived(gift) {
+        return giftLog.some((g) =>
+          g.from === gift.from &&
+          g.type === gift.type &&
+          g.value === gift.value &&
+          Math.abs((g.at || 0) - (gift.at || 0)) < 5000
+        );
+      }
+
+      function applyRemoteGift(gift) {
+        if (!gift || !gift.type || giftAlreadyReceived(gift)) return;
+        if (gift.type === 'diamanty') {
+          diamanty += parseInt(gift.value, 10) || 0;
+        } else if (gift.type === 'gems') {
+          gems = getGemsBalance() + (parseInt(gift.value, 10) || 0);
+        } else if (gift.type === 'skin') {
+          const skinId = gift.value;
+          if (GIFTABLE_SKINS.includes(skinId) && !wardrobe.includes(skinId)) {
+            wardrobe.push(skinId);
+          }
+        }
+        giftLog.unshift({
+          from: gift.from || '?',
+          type: gift.type,
+          value: gift.value,
+          at: gift.at || Date.now(),
+        });
+        giftLog = giftLog.slice(0, 8);
+        saveProgress();
+        refreshCurrencyUI();
+        if (shopView === 'gift') renderGiftInbox();
+        showShopMessage(`Dostal jsi dárek od ${gift.from}!`);
+      }
+
+      function handleGiftSyncMessage(event) {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'pendingGifts') {
+            (msg.gifts || []).forEach(applyRemoteGift);
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
+      function connectGiftSync() {
+        if (!serverGiftsAvailable() || !playerName) return;
+        if (multiWs && multiWs.readyState === WebSocket.OPEN) {
+          multiWs.send(JSON.stringify({ type: 'watchGifts', name: playerName }));
+          return;
+        }
+        if (giftSyncWs && (giftSyncWs.readyState === WebSocket.OPEN || giftSyncWs.readyState === WebSocket.CONNECTING)) {
+          return;
+        }
+        giftSyncWs = new WebSocket(getMultiWsUrl());
+        giftSyncWs.onopen = () => {
+          giftSyncWs.send(JSON.stringify({ type: 'watchGifts', name: playerName }));
+        };
+        giftSyncWs.onmessage = handleGiftSyncMessage;
+        giftSyncWs.onclose = () => {
+          giftSyncWs = null;
+          setTimeout(connectGiftSync, 3000);
+        };
+        giftSyncWs.onerror = () => {
+          giftSyncWs?.close();
+        };
+      }
+
+      function fetchPendingGiftsFromServer() {
+        connectGiftSync();
+      }
+
+      function relayGiftToServer(recipientName, giftType, giftValue) {
+        return new Promise((resolve) => {
+          if (!serverGiftsAvailable()) {
+            resolve(false);
+            return;
+          }
+          const ws = multiWs && multiWs.readyState === WebSocket.OPEN ? multiWs : new WebSocket(getMultiWsUrl());
+          const isTemp = ws !== multiWs;
+          let done = false;
+          const finish = (ok) => {
+            if (done) return;
+            done = true;
+            if (isTemp && ws.readyState === WebSocket.OPEN) ws.close();
+            resolve(ok);
+          };
+          const onMessage = (event) => {
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg.type === 'giftSent') {
+                ws.removeEventListener('message', onMessage);
+                finish(true);
+              }
+            } catch {
+              /* ignore */
+            }
+          };
+          const sendGiftMsg = () => {
+            ws.addEventListener('message', onMessage);
+            ws.send(JSON.stringify({
+              type: 'sendGift',
+              fromName: playerName,
+              toName: recipientName,
+              giftType,
+              value: giftValue,
+            }));
+          };
+          if (ws.readyState === WebSocket.OPEN) {
+            sendGiftMsg();
+          } else {
+            ws.addEventListener('open', sendGiftMsg);
+            ws.addEventListener('error', () => finish(false));
+          }
+          setTimeout(() => {
+            ws.removeEventListener('message', onMessage);
+            finish(false);
+          }, 5000);
+        });
+      }
+
       function pushGiftLog(profile, fromName, type, value) {
         if (!profile.giftLog) profile.giftLog = [];
         profile.giftLog.unshift({ from: fromName, type, value, at: Date.now() });
         profile.giftLog = profile.giftLog.slice(0, 8);
       }
 
-      function sendGiftToPlayer(recipientName, giftType, giftValue) {
+      async function sendGiftToPlayer(recipientName, giftType, giftValue) {
         const recipientId = getProfileId(recipientName);
         const senderId = getProfileId(playerName);
         const isSelf = recipientId === senderId;
@@ -3529,19 +3777,36 @@
             equippedSkin,
             giftLog,
           };
-        } else {
-          profiles[recipientId] = recipient;
-          profiles[senderId] = {
-            diamanty,
-            gems,
-            wardrobe: [...wardrobe],
-            equippedSkin,
-            giftLog: [...giftLog],
-          };
+          writeProfiles(profiles);
+          refreshCurrencyUI();
+          return { ok: true, delivery: 'self' };
         }
+
+        profiles[senderId] = {
+          diamanty,
+          gems,
+          wardrobe: [...wardrobe],
+          equippedSkin,
+          giftLog: [...giftLog],
+        };
+        profiles[recipientId] = recipient;
         writeProfiles(profiles);
+        if (giftsChannel) {
+          giftsChannel.postMessage({
+            type: 'gift-delivered',
+            recipientId,
+            recipient: { ...recipient },
+          });
+        }
+
+        let delivery = 'local';
+        if (serverGiftsAvailable()) {
+          const delivered = await relayGiftToServer(recipientName, giftType, giftValue);
+          delivery = delivered ? 'server' : 'local';
+        }
+
         refreshCurrencyUI();
-        return true;
+        return { ok: true, delivery };
       }
 
       function openGiftShop() {
@@ -3558,9 +3823,10 @@
         refreshCurrencyUI();
         updateGiftFormVisibility();
         renderGiftInbox();
+        fetchPendingGiftsFromServer();
       }
 
-      function handleGiftSubmit(e) {
+      async function handleGiftSubmit(e) {
         e.preventDefault();
         const recipientName = giftRecipientInput?.value.trim() || '';
         const giftType = giftTypeSelect?.value || 'diamanty';
@@ -3573,10 +3839,10 @@
           return;
         }
 
-        const sent = sendGiftToPlayer(recipientName, giftType, giftValue);
-        if (!sent) return;
+        const result = await sendGiftToPlayer(recipientName, giftType, giftValue);
+        if (!result?.ok) return;
 
-        const isSelf = getProfileId(recipientName) === getProfileId(playerName);
+        const isSelf = result.delivery === 'self';
         if (isSelf) {
           if (giftType === 'diamanty') {
             showGiftMessage(`Poslal jsi si ${giftValue} diamantů – dárek je v přijatých dárcích`);
@@ -3585,12 +3851,14 @@
           } else {
             showGiftMessage(`Poslal jsi si skin ${SKIN_NAMES[giftValue]} – dárek je v přijatých dárcích`);
           }
+        } else if (result.delivery === 'server') {
+          showGiftMessage(`Dárek odeslán hráči ${recipientName} přes server`);
         } else if (giftType === 'diamanty') {
-          showGiftMessage(`Posláno ${giftValue} diamantů hráči ${recipientName}`);
+          showGiftMessage(`Posláno ${giftValue} diamantů hráči ${recipientName} (stejný prohlížeč)`);
         } else if (giftType === 'gems') {
-          showGiftMessage(`Posláno ${giftValue} gems hráči ${recipientName}`);
+          showGiftMessage(`Posláno ${giftValue} gems hráči ${recipientName} (stejný prohlížeč)`);
         } else {
-          showGiftMessage(`Skin ${SKIN_NAMES[giftValue]} poslán hráči ${recipientName}`);
+          showGiftMessage(`Skin ${SKIN_NAMES[giftValue]} poslán hráči ${recipientName} (stejný prohlížeč)`);
         }
 
         if (giftRecipientInput) giftRecipientInput.value = '';
@@ -3615,6 +3883,9 @@
         }
         if (skinId === 'gold') {
           return '<div class="shop-skin-preview gold-skin"><span></span><span></span><span></span><span></span></div>';
+        }
+        if (skinId === 'rainbow') {
+          return '<div class="shop-skin-preview rainbow-skin"><span></span><span></span><span></span><span></span></div>';
         }
         return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
       }
@@ -3686,8 +3957,40 @@
         }
         blackSnakeAnim = null;
         if (blackSnakeCelebration) {
-          blackSnakeCelebration.classList.remove('visible', 'all-skins-mode', 'gold-skin-mode');
+          blackSnakeCelebration.classList.remove('visible', 'all-skins-mode', 'gold-skin-mode', 'rainbow-skin-mode');
         }
+      }
+
+      function pickEggPrize() {
+        const total = EGG_PRIZE_POOL.reduce((sum, entry) => sum + entry.weight, 0);
+        let roll = Math.random() * total;
+        for (const entry of EGG_PRIZE_POOL) {
+          roll -= entry.weight;
+          if (roll <= 0) return entry.prize;
+        }
+        return EGG_PRIZE_POOL[0].prize;
+      }
+
+      function drawRainbowCelebrationSnake(ctx, snake, segSize, time) {
+        snake.forEach((seg, i) => {
+          const hue = ((time * 4 + i * 14) % 360 + 360) % 360;
+          ctx.save();
+          ctx.shadowColor = `hsla(${hue}, 100%, 65%, 0.85)`;
+          ctx.shadowBlur = 14;
+          ctx.fillStyle = `hsl(${hue}, 95%, 58%)`;
+          ctx.fillRect(seg.x - segSize / 2, seg.y - segSize / 2, segSize, segSize);
+          if (i < 2) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            const inset = segSize * 0.2;
+            ctx.fillRect(seg.x - segSize / 2 + inset, seg.y - segSize / 2 + inset, segSize - inset * 2, segSize - inset * 2);
+          }
+          ctx.restore();
+        });
+        const head = snake[0];
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, segSize * 0.22, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       function resizeBlackSnakeCanvas() {
@@ -3773,7 +4076,23 @@
         ctx.fillStyle = 'rgba(5, 5, 12, 0.22)';
         ctx.fillRect(0, 0, w, h);
 
-        if (anim.mode === 'gold') {
+        if (anim.mode === 'rainbow') {
+          anim.time = (anim.time || 0) + 1;
+          anim.headX += anim.speed;
+          anim.phase += 0.09;
+          const baseY = h * (0.36 + 0.22 * Math.sin(anim.pass * 0.8 + anim.phase * 0.2));
+          const snake = [];
+          for (let i = 0; i < anim.segments; i++) {
+            const x = anim.headX - i * spacing;
+            const wave = Math.sin(x * 0.012 + anim.phase) * (h * 0.1);
+            snake.push({ x, y: baseY + wave });
+          }
+          drawRainbowCelebrationSnake(ctx, snake, segSize, anim.time);
+          if (anim.headX > w + anim.segments * spacing) {
+            anim.headX = -anim.segments * spacing;
+            anim.pass += 1;
+          }
+        } else if (anim.mode === 'gold') {
           anim.time = (anim.time || 0) + 1;
           const pulse = 0.72 + 0.28 * Math.sin(anim.time * 0.06);
 
@@ -3922,6 +4241,28 @@
         blackSnakeCelebrationTimer = setTimeout(stopBlackSnakeCelebration, 10000);
       }
 
+      function showRainbowSnakeCelebration(alreadyHad) {
+        if (!blackSnakeCelebration || !blackSnakeCelebrationCanvas) return;
+        stopBlackSnakeCelebration();
+        resizeBlackSnakeCanvas();
+        wheelCelebrationTitle.textContent = 'Duhový had!';
+        blackSnakeCelebrationSub.textContent = alreadyHad
+          ? 'Znovu jsi vyhrál duhového hada!'
+          : 'Vzácná výhra z vajíčka!';
+        blackSnakeAnim = {
+          mode: 'rainbow',
+          headX: -200,
+          segments: Math.floor(window.innerWidth / 18) + 20,
+          speed: Math.max(5.5, window.innerWidth * 0.0065),
+          phase: 0,
+          pass: 0,
+          time: 0,
+        };
+        blackSnakeCelebration.classList.add('visible', 'rainbow-skin-mode');
+        tickWheelCelebration();
+        blackSnakeCelebrationTimer = setTimeout(stopBlackSnakeCelebration, 10000);
+      }
+
       function resetEggVisual() {
         if (!eggBody) return;
         eggBody.classList.remove('cracking', 'cracked', 'revealed');
@@ -4049,8 +4390,8 @@
             }
           });
           if (added > 0) {
-            equippedSkin = wardrobe.includes('gold') ? 'gold' : wardrobe.includes('black') ? 'black' : wardrobe[wardrobe.length - 1];
-            eggResultEl.textContent = `Vyhráváš všechny hady včetně zářícího! (+${added} skinů)`;
+            equippedSkin = wardrobe.includes('rainbow') ? 'rainbow' : wardrobe.includes('gold') ? 'gold' : wardrobe.includes('black') ? 'black' : wardrobe[wardrobe.length - 1];
+            eggResultEl.textContent = `Vyhráváš všechny hady včetně duhového! (+${added} skinů)`;
             showShopMessage('Všechny hady jsou ve šatně!');
           } else {
             diamanty += 150;
@@ -4063,9 +4404,10 @@
             wardrobe.push(prize.skinId);
           }
           equippedSkin = prize.skinId;
+          const dupGems = prize.skinId === 'gold' ? 100 : prize.skinId === 'rainbow' ? 75 : 50;
           if (alreadyHad) {
-            diamanty += prize.skinId === 'gold' ? 100 : 50;
-            eggResultEl.textContent = `${prize.label} už máš – nasazen znovu + ${prize.skinId === 'gold' ? 100 : 50} diamantů.`;
+            diamanty += dupGems;
+            eggResultEl.textContent = `${prize.label} už máš – nasazen znovu + ${dupGems} diamantů.`;
           } else {
             eggResultEl.textContent = `Vyhráváš ${prize.label}! Had je nasazený.`;
             showShopMessage(`${prize.label} je ve šatně a nasazený!`);
@@ -4074,6 +4416,8 @@
             showBlackSnakeCelebration(alreadyHad);
           } else if (prize.skinId === 'gold') {
             showGoldSnakeCelebration(alreadyHad);
+          } else if (prize.skinId === 'rainbow') {
+            showRainbowSnakeCelebration(alreadyHad);
           }
         }
         saveProgress();
@@ -4100,8 +4444,7 @@
         refreshCurrencyUI();
         saveProgress();
 
-        const winIndex = Math.floor(Math.random() * EGG_PRIZES.length);
-        const chosenPrize = EGG_PRIZES[winIndex];
+        const chosenPrize = pickEggPrize();
 
         if (eggBody) {
           eggBody.classList.add('cracking');
@@ -4417,9 +4760,15 @@
         }
       });
       window.addEventListener('snake-bans-updated', checkCurrentPlayerBan);
-      window.addEventListener('focus', checkCurrentPlayerBan);
+      window.addEventListener('focus', () => {
+        checkCurrentPlayerBan();
+        connectGiftSync();
+      });
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) checkCurrentPlayerBan();
+        if (!document.hidden) {
+          checkCurrentPlayerBan();
+          connectGiftSync();
+        }
       });
       if (bansChannel) {
         bansChannel.onmessage = (e) => {
@@ -4439,6 +4788,7 @@
       loadPlayerProfile();
       updateOwnerPanel();
       initGame();
+      fetchPendingGiftsFromServer();
       if (playerName && isPlayerBanned(playerName)) {
         showBanOverlay();
       } else {
