@@ -1,0 +1,11 @@
+name = "snake-game-server"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[[durable_objects.bindings]]
+name = "GAME_SERVER"
+class_name = "GameServer"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["GameServer"]

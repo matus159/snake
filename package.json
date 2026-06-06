@@ -2,9 +2,17 @@
   "name": "snake",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "sync": "cp index.html public/index.html",
+    "dev:worker": "wrangler dev --config game-server/wrangler.toml",
+    "dev:pages": "npm run sync && wrangler pages dev public --do GAME_SERVER=GameServer@snake-game-server",
+    "dev": "npm run sync && wrangler pages dev public --do GAME_SERVER=GameServer@snake-game-server",
+    "deploy:worker": "wrangler deploy --config game-server/wrangler.toml",
+    "deploy:pages": "npm run sync && wrangler pages deploy",
+    "deploy": "npm run deploy:worker && npm run deploy:pages"
   },
-  "dependencies": {
-    "ws": "^8.18.0"
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250320.0",
+    "typescript": "^5.8.2",
+    "wrangler": "^4.0.0"
   }
 }
