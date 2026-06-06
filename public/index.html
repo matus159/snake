@@ -2970,6 +2970,8 @@
           multiInGame = true;
           running = true;
           paused = false;
+          score = 0;
+          scoreEl.textContent = '0';
           multiOverlay.classList.remove('visible');
           multiGameOverOverlay.classList.remove('visible');
           drawMultiplayer();
@@ -2981,6 +2983,10 @@
             players: msg.players || [],
           };
           const me = multiServerState.players.find((p) => p.id === multiPlayerId);
+          if (me) {
+            score = me.score;
+            scoreEl.textContent = String(score);
+          }
           if (me && !me.alive && multiInGame) {
             multiInGame = false;
             running = false;
@@ -2995,6 +3001,13 @@
           running = false;
           const me = (msg.players || []).find((p) => p.id === multiPlayerId);
           const winner = (msg.players || []).find((p) => p.id === msg.winnerId);
+          if (me) {
+            score = me.score;
+            scoreEl.textContent = String(score);
+            bankScoreToDiamanty();
+            saveProgress();
+            refreshCurrencyUI();
+          }
           if (winner && winner.id === multiPlayerId) {
             multiGameOverText.textContent = `Vyhrál jsi! Skóre: ${me ? me.score : 0}`;
           } else if (me && !me.alive) {
