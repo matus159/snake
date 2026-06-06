@@ -11,6 +11,8 @@ npm install
 npm run dev
 ```
 
+Otevři **http://localhost:8788**. Multiplayer jde **i sám** – v lobby klikni **Začít hru**. Druhého hráče otestuješ druhou záložkou se stejnou adresou a jiným jménem.
+
 ## Deploy
 
 Podrobný návod: **[DEPLOY.md](./DEPLOY.md)**

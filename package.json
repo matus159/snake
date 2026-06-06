@@ -3,15 +3,16 @@
   "private": true,
   "scripts": {
     "sync": "cp index.html public/index.html",
-    "dev:worker": "wrangler dev --config game-server/wrangler.toml",
-    "dev:pages": "npm run sync && wrangler pages dev public --do GAME_SERVER=GameServer@snake-game-server",
-    "dev": "npm run sync && wrangler pages dev public --do GAME_SERVER=GameServer@snake-game-server",
+    "dev:worker": "wrangler dev --config game-server/wrangler.toml --port 8787",
+    "dev:pages": "wrangler pages dev public --port 8788 --do GAME_SERVER=GameServer@snake-game-server",
+    "dev": "npm run sync && concurrently -k -n worker,pages -c blue,green \"npm run dev:worker\" \"npm run dev:pages\"",
     "deploy:worker": "wrangler deploy --config game-server/wrangler.toml",
     "deploy:pages": "npm run sync && wrangler pages deploy",
     "deploy": "npm run deploy:worker && npm run deploy:pages"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250320.0",
+    "concurrently": "^9.2.1",
     "typescript": "^5.8.2",
     "wrangler": "^4.0.0"
   }

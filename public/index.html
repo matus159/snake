@@ -1864,7 +1864,7 @@
           <ul id="multiPlayerList" class="multi-player-list">
             <li class="empty">Načítám hráče…</li>
           </ul>
-          <p class="multi-help">1) Hra běží na <strong>Cloudflare</strong> (nebo lokálně: <strong>npm run dev</strong>)<br>2) Kamarád otevře <strong>stejnou adresu</strong> v prohlížeči<br>3) Každý zadá jiné jméno → <strong>Začít hru</strong></p>
+          <p id="multiHelpText" class="multi-help">1) Hra běží na <strong>Cloudflare</strong> (nebo lokálně: <strong>npm run dev</strong>)<br>2) Kamarád otevře <strong>stejnou adresu</strong> v prohlížeči<br>3) Každý zadá jiné jméno → <strong>Začít hru</strong></p>
           <div class="multi-lobby-actions">
             <button class="btn" id="multiStartBtn">Začít hru</button>
             <button class="btn" id="multiReconnectBtn">Připojit znovu</button>
@@ -2190,6 +2190,7 @@
       let giftSyncWs = null;
       let multiPlayerId = null;
       let multiInGame = false;
+      let lastMultiServerScore = 0;
       let multiServerState = { kostky: [], players: [] };
       let multiLobbyPlayers = [];
       let multiShareUrl = '';
@@ -2818,6 +2819,21 @@
         enterSelectedMode();
       }
 
+      function isLocalDev() {
+        const host = location.hostname;
+        return host === 'localhost' || host === '127.0.0.1';
+      }
+
+      function updateMultiHelpText() {
+        const el = document.getElementById('multiHelpText');
+        if (!el) return;
+        if (isLocalDev()) {
+          el.innerHTML = `Lokální ladění: běží <strong>${location.origin}</strong><br>Pro test stačíš ty sám – klikni <strong>Začít hru</strong>.<br>Druhého hráče otestuješ druhou záložkou se stejnou adresou a jiným jménem.`;
+        } else {
+          el.innerHTML = '1) Hra běží na <strong>Cloudflare</strong><br>2) Kamarád otevře <strong>stejnou adresu</strong> v prohlížeči<br>3) Každý zadá jiné jméno → <strong>Začít hru</strong> (jde i sám pro test)';
+        }
+      }
+
       function getMultiWsUrl() {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         return `${protocol}//${location.host}`;
@@ -2863,7 +2879,9 @@
           setMultiStatus(`Připojeno – ${count} hráči online. Kdokoli může spustit hru.`);
           multiStartBtn.disabled = false;
         } else if (count === 1) {
-          setMultiStatus('Připojeno – čekáme na dalšího hráče (nebo začni sám).');
+          setMultiStatus(isLocalDev()
+            ? 'Lokální server – jsi sám, klidně klikni Začít hru.'
+            : 'Připojeno – můžeš začít sám, nebo počkat na dalšího hráče.');
           multiStartBtn.disabled = false;
         } else {
           setMultiStatus('Připojování…');
@@ -2886,6 +2904,7 @@
         }
         multiPlayerId = null;
         multiInGame = false;
+        lastMultiServerScore = 0;
         multiServerState = { kostky: [], players: [] };
         multiLobbyPlayers = [];
       }
@@ -2941,6 +2960,15 @@
         };
       }
 
+      function applyMultiScoreFromServer(serverScore) {
+        const gained = Math.max(0, serverScore - lastMultiServerScore);
+        lastMultiServerScore = serverScore;
+        if (gained > 0) {
+          score += gained;
+          updateScoreDisplay();
+        }
+      }
+
       function handleMultiMessage(msg) {
         if (msg.type === 'error') {
           setMultiStatus(msg.message || 'Chyba serveru.');
@@ -2970,6 +2998,7 @@
           multiInGame = true;
           running = true;
           paused = false;
+          lastMultiServerScore = 0;
           score = 0;
           scoreEl.textContent = '0';
           multiOverlay.classList.remove('visible');
@@ -2984,8 +3013,7 @@
           };
           const me = multiServerState.players.find((p) => p.id === multiPlayerId);
           if (me) {
-            score = me.score;
-            scoreEl.textContent = String(score);
+            applyMultiScoreFromServer(me.score);
           }
           if (me && !me.alive && multiInGame) {
             multiInGame = false;
@@ -3002,11 +3030,7 @@
           const me = (msg.players || []).find((p) => p.id === multiPlayerId);
           const winner = (msg.players || []).find((p) => p.id === msg.winnerId);
           if (me) {
-            score = me.score;
-            scoreEl.textContent = String(score);
-            bankScoreToDiamanty();
-            saveProgress();
-            refreshCurrencyUI();
+            applyMultiScoreFromServer(me.score);
           }
           if (winner && winner.id === multiPlayerId) {
             multiGameOverText.textContent = `Vyhrál jsi! Skóre: ${me ? me.score : 0}`;
@@ -3109,6 +3133,7 @@
         banOverlay.classList.remove('visible');
         multiOverlay.classList.add('visible');
         updatePlayerNameDisplay();
+        updateMultiHelpText();
         connectMultiplayer();
         draw();
       }
