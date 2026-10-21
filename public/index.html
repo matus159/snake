@@ -411,66 +411,6 @@
       justify-content: center;
     }
 
-    .shop-sidebar {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .shop-sidebar .shop-stat {
-      width: 64px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-      border: 2px solid;
-      box-sizing: border-box;
-    }
-
-    .shop-sidebar .shop-stat-diamond {
-      background: rgba(0, 217, 255, 0.12);
-      border-color: #00d9ff;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-
-    .shop-sidebar .shop-stat-diamond:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 12px rgba(0, 217, 255, 0.4);
-    }
-
-    .shop-sidebar .shop-stat-gems {
-      background: rgba(186, 85, 255, 0.12);
-      border-color: #ba55ff;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-
-    .shop-sidebar .shop-stat-gems:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 12px rgba(186, 85, 255, 0.4);
-    }
-
-    .shop-sidebar .shop-stat-label {
-      font-size: 0.6rem;
-      font-weight: 700;
-      text-align: center;
-      line-height: 1.2;
-    }
-
-    .shop-sidebar .shop-stat-diamond .shop-stat-label {
-      color: #00d9ff;
-    }
-
-    .shop-sidebar .shop-stat-gems .shop-stat-label {
-      color: #ba55ff;
-    }
-
     .shop-stat {
       display: flex;
       flex-direction: column;
@@ -560,71 +500,6 @@
 
     .hidden {
       display: none !important;
-    }
-
-    .shop-diamond-offer {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .shop-diamond-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 16px 24px;
-      min-width: 140px;
-      background: rgba(0, 217, 255, 0.12);
-      border: 2px solid #00d9ff;
-      border-radius: 8px;
-      box-shadow: 0 0 16px rgba(0, 217, 255, 0.2);
-    }
-
-    #shopOverlay .shop-diamond-box .offer-main {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #00d9ff;
-      text-align: center;
-      margin-top: -6px;
-      margin-left: -8px;
-    }
-
-    #shopOverlay .shop-diamond-box .offer-price {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #00ff88;
-    }
-
-    .shop-gems-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 16px 24px;
-      min-width: 140px;
-      background: rgba(186, 85, 255, 0.12);
-      border: 2px solid #ba55ff;
-      border-radius: 8px;
-      box-shadow: 0 0 16px rgba(186, 85, 255, 0.2);
-    }
-
-    #shopOverlay .shop-gems-box .offer-main {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #ba55ff;
-      text-align: center;
-      margin: 0;
-    }
-
-    #shopOverlay .shop-gems-box .offer-price {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #00ff88;
-      margin: 0;
     }
 
     .shop-skin-box {
@@ -1951,14 +1826,6 @@
         <div id="shopMessage" class="shop-message"></div>
         <div id="shopMainView" class="shop-view">
           <div class="shop-body">
-            <div class="shop-sidebar">
-              <div class="shop-stat shop-stat-diamond" id="shopDiamondBtn">
-                <div class="shop-stat-label">Diamanty</div>
-              </div>
-              <div class="shop-stat shop-stat-gems" id="shopGemsBtn">
-                <div class="shop-stat-label">Gems</div>
-              </div>
-            </div>
             <div class="shop-content">
               <div class="shop-skins-row">
                 <div class="shop-skin-box" id="shopSkinBtn">
@@ -2065,22 +1932,6 @@
                   <p class="gift-hint egg-prize-hint">Občas padne vzácný duhový had (~10 % šance).</p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        <div id="shopDiamondView" class="shop-view hidden">
-          <div class="shop-diamond-offer">
-            <div class="shop-diamond-box">
-              <p class="offer-main">5 diamanty</p>
-              <p class="offer-price">55 czk</p>
-            </div>
-          </div>
-        </div>
-        <div id="shopGemsView" class="shop-view hidden">
-          <div class="shop-diamond-offer">
-            <div class="shop-gems-box">
-              <p class="offer-main">5 gems</p>
-              <p class="offer-price">350 czk</p>
             </div>
           </div>
         </div>
@@ -2244,8 +2095,6 @@
       const shopDiamantyTopEl = document.getElementById('shopDiamantyTop');
       const shopGemsTopEl = document.getElementById('shopGemsTop');
       const shopMainView = document.getElementById('shopMainView');
-      const shopDiamondView = document.getElementById('shopDiamondView');
-      const shopGemsView = document.getElementById('shopGemsView');
       const shopWardrobeView = document.getElementById('shopWardrobeView');
       const shopGiftView = document.getElementById('shopGiftView');
       const shopWardrobeBtn = document.getElementById('shopWardrobeBtn');
@@ -2285,8 +2134,6 @@
       const ALL_SHOP_SKINS = ['default', 'red', 'white', 'blue', 'pink'];
       const shopMessage = document.getElementById('shopMessage');
       let shopMessageTimer = null;
-      const shopDiamondBtn = document.getElementById('shopDiamondBtn');
-      const shopGemsBtn = document.getElementById('shopGemsBtn');
       const shopSkinBtn = document.getElementById('shopSkinBtn');
       const shopWhiteSkinBtn = document.getElementById('shopWhiteSkinBtn');
       const shopBlueSkinBtn = document.getElementById('shopBlueSkinBtn');
@@ -3562,8 +3409,6 @@
       function showShopMain() {
         shopView = 'main';
         shopMainView.classList.remove('hidden');
-        shopDiamondView.classList.add('hidden');
-        shopGemsView.classList.add('hidden');
         shopWardrobeView.classList.add('hidden');
         shopGiftView.classList.add('hidden');
       }
@@ -3880,8 +3725,6 @@
       function openGiftShop() {
         shopView = 'gift';
         shopMainView.classList.add('hidden');
-        shopDiamondView.classList.add('hidden');
-        shopGemsView.classList.add('hidden');
         shopWardrobeView.classList.add('hidden');
         shopGiftView.classList.remove('hidden');
         if (giftResultEl) {
@@ -4652,30 +4495,10 @@
         }
         resetEggVisual();
         shopMainView.classList.add('hidden');
-        shopDiamondView.classList.add('hidden');
-        shopGemsView.classList.add('hidden');
         shopWardrobeView.classList.remove('hidden');
         shopGiftView.classList.add('hidden');
         refreshCurrencyUI();
         renderWardrobeSkins();
-      }
-
-      function openDiamondShop() {
-        shopView = 'diamond';
-        shopMainView.classList.add('hidden');
-        shopDiamondView.classList.remove('hidden');
-        shopGemsView.classList.add('hidden');
-        shopWardrobeView.classList.add('hidden');
-        shopGiftView.classList.add('hidden');
-      }
-
-      function openGemsShop() {
-        shopView = 'gems';
-        shopMainView.classList.add('hidden');
-        shopDiamondView.classList.add('hidden');
-        shopGemsView.classList.remove('hidden');
-        shopWardrobeView.classList.add('hidden');
-        shopGiftView.classList.add('hidden');
       }
 
       function openShop() {
@@ -4692,7 +4515,7 @@
       }
 
       function shopBack() {
-        if (shopView === 'diamond' || shopView === 'gems' || shopView === 'wardrobe' || shopView === 'gift') {
+        if (shopView === 'wardrobe' || shopView === 'gift') {
           showShopMain();
         } else {
           closeShop();
@@ -4778,7 +4601,7 @@
         if (e.code === 'Escape') {
           e.preventDefault();
           if (shopOverlay.classList.contains('visible')) {
-            if (shopView === 'diamond' || shopView === 'gems' || shopView === 'wardrobe' || shopView === 'gift') {
+            if (shopView === 'wardrobe' || shopView === 'gift') {
               showShopMain();
             } else {
               closeShop();
@@ -4810,8 +4633,6 @@
       quitBtn.addEventListener('click', quitToMenu);
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
-      shopDiamondBtn.addEventListener('click', openDiamondShop);
-      shopGemsBtn.addEventListener('click', openGemsShop);
       shopSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('red'));
       shopWhiteSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('white'));
       shopBlueSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('blue'));
