@@ -1804,6 +1804,7 @@
         <h2>Pauza</h2>
         <div class="menu-btns">
           <button class="btn" id="quitBtn">Ukončit hru</button>
+          <button class="btn" id="mainMenuBtn">Vrátit do hlavní nabídky</button>
           <button class="btn" id="shopBtn">Obchod</button>
         </div>
       </div>
@@ -2117,6 +2118,7 @@
       const pauseOverlay = document.getElementById('pauseOverlay');
       const shopOverlay = document.getElementById('shopOverlay');
       const quitBtn = document.getElementById('quitBtn');
+      const mainMenuBtn = document.getElementById('mainMenuBtn');
       const shopBtn = document.getElementById('shopBtn');
       const shopBackBtn = document.getElementById('shopBackBtn');
       const shopDiamantyTopEl = document.getElementById('shopDiamantyTop');
@@ -3351,6 +3353,7 @@
       function pauseGame() {
         if (!running || paused) return;
         paused = true;
+        mainMenuBtn.classList.toggle('hidden', gameMode !== 'single');
         pauseOverlay.classList.add('visible');
       }
 
@@ -3381,6 +3384,11 @@
         } else {
           showModeSelect();
         }
+      }
+
+      function quitToMainMenu() {
+        gameMode = null;
+        quitToMenu();
       }
 
       function getAffordableDiamantValue() {
@@ -4652,6 +4660,7 @@
       });
       restartBtn.addEventListener('click', start);
       quitBtn.addEventListener('click', quitToMenu);
+      mainMenuBtn.addEventListener('click', quitToMainMenu);
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
       shopSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('red'));
