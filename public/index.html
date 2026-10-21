@@ -66,12 +66,12 @@
       justify-content: center;
     }
 
-    .score-row, .diamond-row {
+    .diamond-row {
       font-size: 0.9rem;
       color: #00d9ff;
     }
 
-    .score-row span, .diamond-row span {
+    .diamond-row span {
       font-weight: 700;
       color: #00ff88;
     }
@@ -1767,7 +1767,6 @@
       </div>
       <div id="gameOverOverlay" class="overlay">
         <h2>Konec hry</h2>
-        <p>Skóre: <span id="finalScore">0</span></p>
         <p>Diamanty: <span id="finalDiamanty">0</span></p>
         <p>Gems: <span id="finalGems">0</span></p>
         <button class="btn" id="restartBtn">Hrát znovu</button>
@@ -1941,7 +1940,6 @@
       </div>
     </div>
     <div class="controls">
-      <p class="score-row">Skóre: <span id="score">0</span></p>
       <p class="diamond-row">Diamanty: <span id="diamanty">0</span></p>
     </div>
     <div class="gems-menu">Gems: <span id="gems">0</span></div>
@@ -2139,7 +2137,6 @@
       const shopBlueSkinBtn = document.getElementById('shopBlueSkinBtn');
       const shopPinkSkinBtn = document.getElementById('shopPinkSkinBtn');
       let shopView = 'main';
-      const scoreEl = document.getElementById('score');
       const diamantyEl = document.getElementById('diamanty');
       const gemsEl = document.getElementById('gems');
       const ownerPanel = document.getElementById('ownerPanel');
@@ -2566,7 +2563,6 @@
 
       function refreshCurrencyUI() {
         bankDiamantyToGems();
-        scoreEl.textContent = score;
         diamantyEl.textContent = diamanty;
         gemsEl.textContent = getGemsBalance();
         saveProgress();
@@ -2584,7 +2580,6 @@
           gems += Math.floor(diamanty / 100);
           diamanty = diamanty % 100;
         }
-        scoreEl.textContent = score;
         diamantyEl.textContent = diamanty;
         gemsEl.textContent = gems;
         saveProgress();
@@ -2847,7 +2842,6 @@
           paused = false;
           lastMultiServerScore = 0;
           score = 0;
-          scoreEl.textContent = '0';
           multiOverlay.classList.remove('visible');
           multiGameOverOverlay.classList.remove('visible');
           drawMultiplayer();
@@ -2865,7 +2859,7 @@
           if (me && !me.alive && multiInGame) {
             multiInGame = false;
             running = false;
-            multiGameOverText.textContent = `Prohrál jsi. Skóre: ${me.score}. Ostatní ještě hrají – nebo počkej na konec kola.`;
+            multiGameOverText.textContent = 'Prohrál jsi. Ostatní ještě hrají – nebo počkej na konec kola.';
             multiGameOverOverlay.classList.add('visible');
           }
           if (multiInGame) drawMultiplayer();
@@ -2880,11 +2874,11 @@
             applyMultiScoreFromServer(me.score);
           }
           if (winner && winner.id === multiPlayerId) {
-            multiGameOverText.textContent = `Vyhrál jsi! Skóre: ${me ? me.score : 0}`;
+            multiGameOverText.textContent = 'Vyhrál jsi!';
           } else if (me && !me.alive) {
-            multiGameOverText.textContent = `Prohrál jsi. Skóre: ${me.score}`;
+            multiGameOverText.textContent = 'Prohrál jsi.';
           } else if (winner) {
-            multiGameOverText.textContent = `Vyhrál ${winner.name}. Tvoje skóre: ${me ? me.score : 0}`;
+            multiGameOverText.textContent = `Vyhrál ${winner.name}.`;
           } else {
             multiGameOverText.textContent = 'Kolo skončilo.';
           }
@@ -3020,7 +3014,6 @@
         }
         afterNameSaved();
       }
-      const finalScoreEl = document.getElementById('finalScore');
       const startBtn = document.getElementById('startBtn');
       const restartBtn = document.getElementById('restartBtn');
 
@@ -3320,7 +3313,6 @@
         shopOverlay.classList.remove('visible');
         bankScoreToDiamanty();
         saveProgress();
-        finalScoreEl.textContent = score;
         finalDiamantyEl.textContent = diamanty;
         finalGemsEl.textContent = gems;
         refreshCurrencyUI();
