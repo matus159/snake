@@ -66,6 +66,13 @@
       justify-content: center;
     }
 
+    .currency-icon {
+      width: 1.1em;
+      height: 1.1em;
+      vertical-align: -0.2em;
+      margin-right: 0.2em;
+    }
+
     .diamond-row {
       font-size: 0.9rem;
       color: #00d9ff;
@@ -1704,6 +1711,31 @@
   </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gradDiamond" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b8f6ff"/>
+      <stop offset="1" stop-color="#0098c7"/>
+    </linearGradient>
+    <linearGradient id="gradGem" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0c8ff"/>
+      <stop offset="1" stop-color="#7a1fc9"/>
+    </linearGradient>
+  </defs>
+  <symbol id="iconDiamond" viewBox="0 0 24 24">
+    <path d="M6 3h12l4 6-10 12L2 9z" fill="url(#gradDiamond)"/>
+    <path d="M2 9h20L12 21z" fill="#00b4e6" opacity="0.55"/>
+    <path d="M6 3l3 6h6l3-6z" fill="#e6fcff" opacity="0.7"/>
+    <path d="M6 3h12l4 6-10 12L2 9zM2 9h20M9 9l3 12 3-12M6 3l3 6 3-6 3 6 3-6" fill="none" stroke="#00d9ff" stroke-width="1" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="iconGem" viewBox="0 0 24 24">
+    <path d="M7 2h10l5 5v4l-10 11L2 11V7z" fill="url(#gradGem)"/>
+    <path d="M2 11h20L12 22z" fill="#9b30ff" opacity="0.5"/>
+    <path d="M7 2l2 5h6l2-5z" fill="#fbeaff" opacity="0.75"/>
+    <path d="M7 2h10l5 5v4l-10 11L2 11V7zM2 7h20M2 11h20M9 7v4l3 11 3-11V7M7 2l2 5M17 2l-2 5" fill="none" stroke="#ba55ff" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M20 1.5l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5z" fill="#fff"/>
+  </symbol>
+</svg>
   <h1>Had – sbírej kostky</h1>
   <p class="info">Šipky nebo WASD · sbírej kostky, narůstáš · neudeř se do sebe ani do okraje</p>
 
@@ -1767,8 +1799,8 @@
       </div>
       <div id="gameOverOverlay" class="overlay">
         <h2>Konec hry</h2>
-        <p>Diamanty: <span id="finalDiamanty">0</span></p>
-        <p>Gems: <span id="finalGems">0</span></p>
+        <p>Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="finalDiamanty">0</span></p>
+        <p>Gems: <svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg><span id="finalGems">0</span></p>
         <button class="btn" id="restartBtn">Hrát znovu</button>
       </div>
       <div id="pauseOverlay" class="overlay">
@@ -1813,11 +1845,11 @@
           <h2>Obchod</h2>
           <div class="shop-currencies">
             <div class="shop-stat shop-stat-diamond">
-              <div class="shop-stat-label">Diamanty</div>
+              <div class="shop-stat-label"><svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>Diamanty</div>
               <div class="shop-stat-value" id="shopDiamantyTop">0</div>
             </div>
             <div class="shop-stat shop-stat-gems">
-              <div class="shop-stat-label">Gems</div>
+              <div class="shop-stat-label"><svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg>Gems</div>
               <div class="shop-stat-value" id="shopGemsTop">0</div>
             </div>
           </div>
@@ -1831,25 +1863,25 @@
                   <div class="shop-skin-preview">
                     <span></span><span></span><span></span><span></span>
                   </div>
-                  <div class="shop-skin-label">50 <span class="diamanty-word">diamanty</span></div>
+                  <div class="shop-skin-label">50 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamanty</span></div>
                 </div>
                 <div class="shop-skin-box shop-skin-white" id="shopWhiteSkinBtn">
                   <div class="shop-skin-preview white-skin">
                     <span></span><span></span><span></span><span></span>
                   </div>
-                  <div class="shop-skin-label">10 <span class="diamanty-word">diamanty</span></div>
+                  <div class="shop-skin-label">10 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamanty</span></div>
                 </div>
                 <div class="shop-skin-box shop-skin-blue" id="shopBlueSkinBtn">
                   <div class="shop-skin-preview blue-skin">
                     <span></span><span></span><span></span><span></span>
                   </div>
-                  <div class="shop-skin-label">10 <span class="diamanty-word">diamanty</span></div>
+                  <div class="shop-skin-label">10 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamanty</span></div>
                 </div>
                 <div class="shop-skin-box shop-skin-pink" id="shopPinkSkinBtn">
                   <div class="shop-skin-preview pink-skin">
                     <span></span><span></span><span></span><span></span>
                   </div>
-                  <div class="shop-skin-label">10 <span class="diamanty-word">diamanty</span></div>
+                  <div class="shop-skin-label">10 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamanty</span></div>
                 </div>
               </div>
             </div>
@@ -1910,7 +1942,7 @@
                       <canvas id="wheelCanvas" width="180" height="180"></canvas>
                     </div>
                   </div>
-                  <button type="button" class="wheel-gems-cost" id="wheelSpinBtn">1200 gems</button>
+                  <button type="button" class="wheel-gems-cost" id="wheelSpinBtn"><svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg>1200 gems</button>
                   <p class="wheel-result" id="wheelResult"></p>
                   <p class="wheel-weekend-hint" id="wheelWeekendHint"></p>
                 </div>
@@ -1940,9 +1972,9 @@
       </div>
     </div>
     <div class="controls">
-      <p class="diamond-row">Diamanty: <span id="diamanty">0</span></p>
+      <p class="diamond-row">Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="diamanty">0</span></p>
     </div>
-    <div class="gems-menu">Gems: <span id="gems">0</span></div>
+    <div class="gems-menu">Gems: <svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg><span id="gems">0</span></div>
     <div class="player-name"><span id="playerNameDisplay">—</span></div>
     <div id="ownerPanel" class="owner-panel">
       <label>Skóre: <input type="number" id="ownerScore" min="0" value="0"></label>
