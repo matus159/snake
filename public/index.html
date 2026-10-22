@@ -196,7 +196,7 @@
     .touch-esc {
       position: fixed;
       top: 12px;
-      right: 12px;
+      left: 12px;
       z-index: 50;
       width: 48px;
       height: 32px;
@@ -225,11 +225,11 @@
     }
 
     @media (pointer: coarse) {
-      .touch-controls {
+      body.steering .touch-controls {
         display: grid;
       }
 
-      .touch-esc {
+      body.in-game:not(.shop-open) .touch-esc {
         display: block;
       }
 
@@ -1835,6 +1835,75 @@
       flex-wrap: wrap;
       justify-content: center;
       margin-top: 0.5rem;
+    }
+
+    /* Obchod na mobilu: nižší lišta, posuvný obsah, cena vlevo od hada.
+       Je na konci, aby přebil základní styly obchodu. */
+    @media (pointer: coarse) and (orientation: landscape) {
+      .shop-top-bar {
+        padding: 6px 12px;
+      }
+
+      .shop-top-bar h2 {
+        font-size: 1.1rem;
+      }
+
+      .shop-currencies {
+        gap: 1rem;
+      }
+
+      .shop-top-bar .shop-stat {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .shop-stat-label {
+        font-size: 0.75rem;
+      }
+
+      .shop-stat-value {
+        font-size: 0.95rem;
+      }
+
+      .shop-footer {
+        padding: 6px 12px;
+      }
+
+      .shop-content {
+        padding-right: 100px;
+      }
+
+      .shop-skins-row {
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        transform: none;
+        gap: 0.5rem;
+      }
+
+      .shop-skin-box {
+        flex-direction: row;
+        margin-top: 0;
+        padding: 6px 10px;
+      }
+
+      .shop-skin-label {
+        order: -1;
+        text-align: left;
+      }
+
+      #shopWardrobeView {
+        overflow-y: auto;
+      }
+
+      #shopWardrobeView .wardrobe-layout {
+        flex: none;
+      }
+
+      #shopWardrobeView .wardrobe-scroll {
+        flex: none;
+        overflow: visible;
+      }
     }
   </style>
 </head>
@@ -4666,6 +4735,10 @@
       }
 
       function loop(now) {
+        // Dotykové ovládání: Esc během hry mimo obchod, šipky jen když had jede.
+        document.body.classList.toggle('in-game', running || multiInGame);
+        document.body.classList.toggle('shop-open', shopOverlay.classList.contains('visible'));
+        document.body.classList.toggle('steering', (running && !paused) || multiInGame);
         if (multiInGame) {
           drawMultiplayer();
           return requestAnimationFrame(loop);
