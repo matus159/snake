@@ -10,6 +10,8 @@ import {
 } from './game-logic';
 import type { Env, Gift, GiftQueueData, Kostka, Player, WsAttachment } from './types';
 
+const PROGRESS_RESET_ID = '2026-10-22';
+
 function send(ws: WebSocket, msg: unknown) {
   try {
     ws.send(JSON.stringify(msg));
@@ -40,6 +42,11 @@ export class GameServer implements DurableObject {
   constructor(state: DurableObjectState, _env: Env) {
     this.state = state;
     this.state.blockConcurrencyWhile(async () => {
+      // Jednorázově zahodí dárky čekající ve frontě (plošné vymazání postupu).
+      if ((await this.state.storage.get<string>('progressResetId')) !== PROGRESS_RESET_ID) {
+        await this.state.storage.delete('giftQueue');
+        await this.state.storage.put('progressResetId', PROGRESS_RESET_ID);
+      }
       const stored = await this.state.storage.get<GiftQueueData>('giftQueue');
       if (stored) this.giftQueue = stored;
     });
