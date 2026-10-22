@@ -2026,7 +2026,6 @@
       const DIAMANTS_PER_GEM = 100;
       const WHEEL_SPIN_COST = 1200;
       const EGG_CRACK_COST = 2000;
-      const ALL_SKINS_GIFT_FLAG = 'snake-all-skins-gift-v1';
       const WHEEL_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'black'];
       const EGG_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'black', 'gold', 'rainbow'];
       const SKIN_NAMES = {
@@ -2286,47 +2285,6 @@
         equippedSkin = profile.equippedSkin || 'default';
         giftLog = Array.isArray(profile.giftLog) ? [...profile.giftLog] : [];
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
-        ensureOwnerGoldSkin();
-        grantAllSkinsOnce();
-      }
-
-      function grantAllSkinsOnce() {
-        const id = getProfileId(playerName);
-        if (!id) return;
-        const flagKey = `${ALL_SKINS_GIFT_FLAG}-${id}`;
-        if (localStorage.getItem(flagKey) === '1') return;
-
-        let added = 0;
-        EGG_ALL_SKINS.forEach((skinId) => {
-          if (!wardrobe.includes(skinId)) {
-            wardrobe.push(skinId);
-            added += 1;
-          }
-        });
-        if (wardrobe.includes('rainbow')) {
-          equippedSkin = 'rainbow';
-        } else if (wardrobe.includes('gold')) {
-          equippedSkin = 'gold';
-        } else if (wardrobe.includes('black')) {
-          equippedSkin = 'black';
-        }
-        localStorage.setItem(flagKey, '1');
-        saveProgress();
-        if (added > 0) {
-          showShopMessage('Dostal jsi všechny hady do šatny (jednorázově).');
-        }
-      }
-
-      function ensureOwnerGoldSkin() {
-        if (!isOwner()) return;
-        const hadGold = wardrobe.includes('gold');
-        if (!hadGold) {
-          wardrobe.push('gold');
-          if (equippedSkin === 'default') {
-            equippedSkin = 'gold';
-          }
-          saveProgress();
-        }
       }
 
       function isOwner() {
@@ -4475,7 +4433,6 @@
       }
 
       function renderWardrobeSkins() {
-        ensureOwnerGoldSkin();
         renderWardrobeShowcase();
         drawWheelCanvas();
         updateWheelUi();
