@@ -229,7 +229,7 @@
         display: grid;
       }
 
-      body.in-game .touch-esc {
+      body.in-game:not(.shop-open) .touch-esc {
         display: block;
       }
 
@@ -4735,8 +4735,9 @@
       }
 
       function loop(now) {
-        // Dotykové ovládání: Esc během hry, šipky jen když had jede.
+        // Dotykové ovládání: Esc během hry mimo obchod, šipky jen když had jede.
         document.body.classList.toggle('in-game', running || multiInGame);
+        document.body.classList.toggle('shop-open', shopOverlay.classList.contains('visible'));
         document.body.classList.toggle('steering', (running && !paused) || multiInGame);
         if (multiInGame) {
           drawMultiplayer();
