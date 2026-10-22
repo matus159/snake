@@ -2020,6 +2020,21 @@
       const GEMS_KEY = 'snake-gems';
       const WARDROBE_KEY = 'snake-wardrobe';
       const EQUIPPED_SKIN_KEY = 'snake-equipped-skin';
+      const PROGRESS_RESET_KEY = 'snake-progress-reset';
+      const PROGRESS_RESET_ID = '2026-10-22';
+
+      // Jednorázově smaže všem hráčům diamanty, gemy, hady a dárky.
+      // Pro další plošné vymazání stačí změnit PROGRESS_RESET_ID.
+      function resetAllProgressOnce() {
+        try {
+          if (localStorage.getItem(PROGRESS_RESET_KEY) === PROGRESS_RESET_ID) return;
+          [PROFILES_KEY, DIAMANTY_KEY, GEMS_KEY, WARDROBE_KEY, EQUIPPED_SKIN_KEY].forEach((key) => {
+            localStorage.removeItem(key);
+          });
+          localStorage.setItem(PROGRESS_RESET_KEY, PROGRESS_RESET_ID);
+        } catch {}
+      }
+      resetAllProgressOnce();
       const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10 };
       const GIFTABLE_SKINS = ['red', 'white', 'blue', 'pink'];
       const SCORE_PER_DIAMANT = 5;
