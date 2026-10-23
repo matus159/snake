@@ -22,3 +22,7 @@ npm run deploy
 ```
 
 Nebo push na `main` → GitHub Actions deployne automaticky (potřebuje Cloudflare secrets).
+
+## Autoři obrázků
+
+Obrázek taca (Tacos event) je z [Twemoji](https://github.com/jdecked/twemoji) © Twitter, Inc. a další přispěvatelé, licence [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
