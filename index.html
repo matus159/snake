@@ -127,6 +127,15 @@
       }
     }
 
+    /* Úvodní animace tacos eventu běží přímo na hrací ploše – okna nad plochou se schovají. */
+    body.tacos-intro-on .canvas-container .overlay {
+      visibility: hidden;
+    }
+
+    body.tacos-intro-on .canvas-container {
+      cursor: pointer;
+    }
+
     .six-seven {
       position: fixed;
       left: 50%;
@@ -2324,6 +2333,10 @@
         const [from, to] = weekend ? TACOS_WEEKEND_WINDOW : TACOS_WEEKDAY_WINDOW;
         return minutes >= from && minutes < to;
       }
+      // Den eventu podle českého času – úvodní animace se ukáže jednou za event.
+      function tacosEventKey(now = new Date()) {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: TACOS_TIME_ZONE }).format(now);
+      }
       const TACO_SCORE = 2;
       const TACO_DIAMANTY = 1;
       // Hudba tacos eventu: oficiální přehrávač YouTube, hraje jen když had jede.
@@ -2460,8 +2473,113 @@
         if (now - tacosCheckedAt < 1000) return;
         tacosCheckedAt = now;
         tacosActive = isTacosEventActive();
-        document.body.classList.toggle('tacos-disco', tacosActive);
+        if (tacosActive) maybePlayTacosIntro();
+        document.body.classList.toggle('tacos-disco', tacosActive && !tacosIntroPlaying);
       }
+
+      const TACOS_INTRO_KEY = 'snake-tacos-intro';
+      const TACOS_INTRO_MS = 7000;
+      let tacosIntroPlaying = false;
+      let tacosIntroStart = 0;
+
+      function maybePlayTacosIntro() {
+        // V multiplayeru se hra zastavit nedá, animace počká na konec kola.
+        if (tacosIntroPlaying || multiInGame) return;
+        const key = tacosEventKey();
+        let seen = null;
+        try { seen = localStorage.getItem(TACOS_INTRO_KEY); } catch {}
+        if (seen === key) return;
+        try { localStorage.setItem(TACOS_INTRO_KEY, key); } catch {}
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        tacosIntroPlaying = true;
+        tacosIntroStart = performance.now();
+        document.body.classList.add('tacos-intro-on');
+      }
+
+      function finishTacosIntro() {
+        if (!tacosIntroPlaying) return;
+        tacosIntroPlaying = false;
+        document.body.classList.remove('tacos-intro-on');
+        document.body.classList.toggle('tacos-disco', tacosActive);
+        // Po animaci je hra pozastavená, hráč ji pustí sám (Esc / Pokračovat).
+        lastTick = performance.now();
+        if (gameMode === 'single' && running && !paused) pauseGame();
+        draw();
+      }
+
+      document.querySelector('.canvas-container').addEventListener('click', () => {
+        if (tacosIntroPlaying) finishTacosIntro();
+      });
+
+      // Animace na hrací ploše (ms): černý had s disko náhrdelníkem leze k pravému okraji,
+      // okraj se otevře, had projde ven a okraj se zavře. Disko začne až potom.
+      function drawTacosIntroBoard(t) {
+        const w = canvas.width;
+        const h = canvas.height;
+        const row = Math.floor(ROWS / 2);
+        const SEGMENTS = 8;
+
+        ctx.fillStyle = '#12121a';
+        ctx.fillRect(0, 0, w, h);
+
+        // černý had po políčkách, stejné barvy jako černý had ve hře
+        const stopCol = COLS - 1;
+        const endCol = COLS + SEGMENTS;
+        let head;
+        // had začíná uprostřed plochy
+        const startCol = Math.floor(COLS / 2);
+        if (t <= 2600) head = Math.floor(startCol + (stopCol - startCol) * (t / 2600));
+        else if (t <= 3300) head = stopCol;
+        else if (t <= 5300) head = Math.floor(stopCol + (endCol - stopCol) * ((t - 3300) / 2000));
+        else head = endCol;
+        for (let i = SEGMENTS - 1; i >= 0; i--) {
+          const x = head - i;
+          if (x < 0 || x >= COLS) continue;
+          const v = Math.round(120 - (i / Math.max(SEGMENTS - 1, 1)) * 70);
+          drawRect(x, row, `rgb(${v}, ${v}, ${v})`, 1);
+          if (i === 0) {
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x * CELL + CELL / 2, row * CELL + CELL / 2, CELL / 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (i === 1) {
+            // zlatý náhrdelník s disko koulí
+            const cx = x * CELL + CELL / 2;
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, row * CELL + CELL / 2, CELL / 2, Math.PI * 0.15, Math.PI * 0.85);
+            ctx.stroke();
+            const by = row * CELL + CELL + 5;
+            const ball = ctx.createRadialGradient(cx - 2, by - 2, 1, cx, by, 6);
+            ball.addColorStop(0, '#fff');
+            ball.addColorStop(0.5, '#ffd700');
+            ball.addColorStop(1, '#b8860b');
+            ctx.fillStyle = ball;
+            ctx.beginPath();
+            ctx.arc(cx, by, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // okraj plochy; vpravo se uprostřed otevře mezera na 3 políčka
+        let open = 0;
+        if (t > 2600 && t <= 3300) open = (t - 2600) / 700;
+        else if (t > 3300 && t <= 5400) open = 1;
+        else if (t > 5400 && t <= 6100) open = 1 - (t - 5400) / 700;
+        open = open * open * (3 - 2 * open);
+        const border = 2;
+        ctx.strokeStyle = '#2a2a3a';
+        ctx.lineWidth = border;
+        ctx.strokeRect(border / 2, border / 2, w - border, h - border);
+        if (open > 0.01) {
+          const gap = 3 * CELL * open;
+          ctx.fillStyle = '#12121a';
+          ctx.fillRect(w - border - 1, (row + 0.5) * CELL - gap / 2, border + 1, gap);
+        }
+      }
+
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       const pauseOverlay = document.getElementById('pauseOverlay');
       const shopOverlay = document.getElementById('shopOverlay');
@@ -4542,6 +4660,12 @@
           drawMultiplayer();
           return requestAnimationFrame(loop);
         }
+        if (tacosIntroPlaying) {
+          const t = now - tacosIntroStart;
+          if (t >= TACOS_INTRO_MS) finishTacosIntro();
+          else drawTacosIntroBoard(t);
+          return requestAnimationFrame(loop);
+        }
         if (!running || paused) return requestAnimationFrame(loop);
         if (now - lastKostkaSpawn >= KOSTKA_SPAWN_MS) {
           lastKostkaSpawn = now;
@@ -4569,7 +4693,10 @@
             events: {
               onReady: () => {
                 tacosPlayerReady = true;
-                if (tacosMusicOn) playTacosMusic();
+                if (tacosMusicOn) {
+                  tacosMusicEl.classList.remove('tacos-music-off');
+                  playTacosMusic();
+                }
               },
             },
           });
@@ -4597,11 +4724,11 @@
       }
 
       function syncTacosMusic() {
-        const on = tacosActive && ((gameMode === 'single' && running && !paused) || multiInGame);
+        const on = tacosActive && !tacosIntroPlaying && ((gameMode === 'single' && running && !paused) || multiInGame);
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
-        tacosMusicEl.classList.toggle('tacos-music-off', !on);
         if (!tacosPlayerReady) return;
+        tacosMusicEl.classList.toggle('tacos-music-off', !on);
         if (on) playTacosMusic();
         else tacosPlayer.pauseVideo();
       }
