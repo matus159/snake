@@ -2328,7 +2328,18 @@
       const TACO_DIAMANTY = 1;
       // Hudba tacos eventu: oficiální přehrávač YouTube, hraje jen když had jede.
       const TACOS_MUSIC_VIDEO_ID = 'W-3DWBv0CvU';
-      const RAINBOW_SCORE_PER_KOSTKA = 10;
+      // Kolik skóre dá jedna kostka podle nasazeného hada (jen hra pro jednoho hráče).
+      const SKIN_SCORE_PER_KOSTKA = {
+        default: 1,
+        white: 2,
+        blue: 2,
+        pink: 2,
+        yellow: 2,
+        red: 3,
+        black: 4,
+        gold: 5,
+        rainbow: 10,
+      };
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
       const BANS_KEY = 'snake-bans';
@@ -3650,13 +3661,13 @@
 
         const eatenIndex = kostky.findIndex(k => k.x === newHead.x && k.y === newHead.y);
         if (eatenIndex !== -1) {
-          // Had vždy naroste jen o 1, bonus z taca a duhového hada jde jen do skóre a diamantů.
+          // Had vždy naroste jen o 1, bonus z taca a hada jde jen do skóre a diamantů.
           const [eaten] = kostky.splice(eatenIndex, 1);
           if (eaten.taco) {
             score += TACO_SCORE;
             diamanty += TACO_DIAMANTY;
           } else {
-            score += equippedSkin === 'rainbow' ? RAINBOW_SCORE_PER_KOSTKA : 1;
+            score += SKIN_SCORE_PER_KOSTKA[equippedSkin] || 1;
           }
           updateScoreDisplay();
           spawnOneKostka();
