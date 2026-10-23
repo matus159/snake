@@ -2370,7 +2370,7 @@
       }
       const TACO_SCORE = 2;
       const TACO_DIAMANTY = 1;
-      // Hudba tacos eventu: oficiální přehrávač YouTube, hraje jen když had jede.
+      // Hudba tacos eventu: oficiální přehrávač YouTube, hraje po celý event.
       const TACOS_MUSIC_VIDEO_ID = 'W-3DWBv0CvU';
       // Kolik skóre dá jedna kostka podle nasazeného hada (jen hra pro jednoho hráče).
       const SKIN_SCORE_PER_KOSTKA = {
@@ -4778,7 +4778,8 @@
       }
 
       function syncTacosMusic() {
-        const on = tacosActive && !tacosIntroPlaying && ((gameMode === 'single' && running && !paused) || multiInGame);
+        // Hudba hraje celý event – ve hře i v menu (výběr hry, lobby, pauza), jen ne během animace.
+        const on = tacosActive && !tacosIntroPlaying;
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;
