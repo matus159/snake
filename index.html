@@ -2531,7 +2531,7 @@
       function finishTacosIntro() {
         if (!tacosIntroPlaying) return;
         tacosIntroPlaying = false;
-        document.body.classList.remove('tacos-intro-on');
+        // Okna nad plochou (i menu) zůstanou schovaná ještě během odpočtu.
         document.body.classList.toggle('tacos-disco', tacosActive);
         draw();
         startTacosCountdown();
@@ -2556,6 +2556,7 @@
         setTimeout(() => {
           tacosCountdownActive = false;
           tacosCountdownEl.classList.remove('visible');
+          document.body.classList.remove('tacos-intro-on');
           lastTick = performance.now();
         }, TACOS_COUNTDOWN.length * TACOS_COUNTDOWN_STEP_MS);
       }
