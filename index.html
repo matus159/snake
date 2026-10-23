@@ -4778,8 +4778,9 @@
       }
 
       function syncTacosMusic() {
-        // Hudba hraje celý event – ve hře i v menu (výběr hry, lobby, pauza), jen ne během animace.
-        const on = tacosActive && !tacosIntroPlaying;
+        // Hudba hraje celý event – ve hře i v menu (výběr hry, lobby, pauza);
+        // začne až po animaci a odpočtu, když zmizí „Teď!“.
+        const on = tacosActive && !tacosIntroPlaying && !tacosCountdownActive;
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;
