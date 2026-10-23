@@ -201,7 +201,7 @@
     /* Joystick jako v Brawl Stars: táhni kolečkem a had jede tím směrem. */
     .joystick {
       position: fixed;
-      left: 20px;
+      right: 20px;
       bottom: 20px;
       z-index: 50;
       width: 110px;
@@ -1890,12 +1890,6 @@
     /* Obchod na mobilu: nižší lišta, posuvný obsah, cena vlevo od hada.
        Je na konci, aby přebil základní styly obchodu. */
     @media (pointer: coarse) and (orientation: landscape) {
-      /* Vlevo dole je joystick, jméno hráče proto vpravo. */
-      .player-name {
-        left: auto;
-        right: 8px;
-      }
-
       .shop-top-bar {
         padding: 6px 12px;
       }
