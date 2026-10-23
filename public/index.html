@@ -2309,7 +2309,7 @@
       resetAllProgressOnce();
       const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10 };
       const SCORE_PER_DIAMANT = 5;
-      const DIAMANTS_PER_GEM = 100;
+      const DIAMANTS_PER_GEM = 10;
       const WHEEL_SPIN_COST = 1200;
       const EGG_CRACK_COST = 2000;
       const WHEEL_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'black'];
@@ -2835,9 +2835,9 @@
           diamanty += Math.floor(score / 5);
           score = score % 5;
         }
-        if (diamanty >= 100) {
-          gems += Math.floor(diamanty / 100);
-          diamanty = diamanty % 100;
+        if (diamanty >= DIAMANTS_PER_GEM) {
+          gems += Math.floor(diamanty / DIAMANTS_PER_GEM);
+          diamanty = diamanty % DIAMANTS_PER_GEM;
         }
         diamantyEl.textContent = diamanty;
         gemsEl.textContent = gems;
