@@ -191,24 +191,40 @@
       touch-action: none;
     }
 
-    .touch-controls,
+    .joystick,
     .touch-esc,
     .info-touch,
     .rotate-overlay {
       display: none;
     }
 
-    .touch-controls {
+    /* Joystick jako v Brawl Stars: táhni kolečkem a had jede tím směrem. */
+    .joystick {
       position: fixed;
-      right: 12px;
-      bottom: 12px;
+      left: 20px;
+      bottom: 20px;
       z-index: 50;
-      grid-template-columns: repeat(3, 40px);
-      grid-template-rows: repeat(2, 40px);
-      gap: 4px;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 217, 255, 0.5);
+      background: rgba(0, 217, 255, 0.08);
+      touch-action: none;
       user-select: none;
       -webkit-user-select: none;
-      touch-action: none;
+    }
+
+    .joystick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 48px;
+      height: 48px;
+      margin: -24px 0 0 -24px;
+      border-radius: 50%;
+      background: rgba(0, 217, 255, 0.55);
+      box-shadow: 0 0 12px rgba(0, 217, 255, 0.5);
+      pointer-events: none;
     }
 
     .touch-btn {
@@ -226,11 +242,6 @@
     .touch-btn:active {
       background: rgba(0, 217, 255, 0.3);
     }
-
-    .touch-up { grid-column: 2; grid-row: 1; }
-    .touch-left { grid-column: 1; grid-row: 2; }
-    .touch-down { grid-column: 2; grid-row: 2; }
-    .touch-right { grid-column: 3; grid-row: 2; }
 
     .touch-esc {
       position: fixed;
@@ -264,8 +275,8 @@
     }
 
     @media (pointer: coarse) {
-      body.steering .touch-controls {
-        display: grid;
+      body.steering .joystick {
+        display: block;
       }
 
       body.in-game:not(.shop-open) .touch-esc {
@@ -1879,6 +1890,12 @@
     /* Obchod na mobilu: nižší lišta, posuvný obsah, cena vlevo od hada.
        Je na konci, aby přebil základní styly obchodu. */
     @media (pointer: coarse) and (orientation: landscape) {
+      /* Vlevo dole je joystick, jméno hráče proto vpravo. */
+      .player-name {
+        left: auto;
+        right: 8px;
+      }
+
       .shop-top-bar {
         padding: 6px 12px;
       }
@@ -1973,7 +1990,7 @@
   </symbol>
 </svg>
   <h1>Had – sbírej kostky</h1>
-  <p class="info"><span class="info-keys">Šipky nebo WASD</span><span class="info-touch">Přejeď prstem nebo použij šipky</span> · sbírej kostky, narůstáš · neudeř se do sebe ani do okraje</p>
+  <p class="info"><span class="info-keys">Šipky nebo WASD</span><span class="info-touch">Hýbej joystickem nebo přejeď prstem</span> · sbírej kostky, narůstáš · neudeř se do sebe ani do okraje</p>
 
   <div class="game-wrapper">
     <div class="canvas-container">
@@ -2221,11 +2238,8 @@
     <div class="tacos-music hidden" id="tacosMusic">
       <div id="tacosMusicPlayer"></div>
     </div>
-    <div class="touch-controls" id="touchControls">
-      <button type="button" class="touch-btn touch-up" data-dir="up" aria-label="Nahoru">▲</button>
-      <button type="button" class="touch-btn touch-left" data-dir="left" aria-label="Doleva">◀</button>
-      <button type="button" class="touch-btn touch-right" data-dir="right" aria-label="Doprava">▶</button>
-      <button type="button" class="touch-btn touch-down" data-dir="down" aria-label="Dolů">▼</button>
+    <div class="joystick" id="joystick" aria-label="Ovládání">
+      <div class="joystick-knob" id="joystickKnob"></div>
     </div>
     <div class="player-name"><span id="playerNameDisplay">—</span></div>
     <div id="ownerPanel" class="owner-panel">
@@ -4987,12 +5001,49 @@
         }
       }
 
-      document.querySelectorAll('.touch-btn[data-dir]').forEach((btn) => {
-        btn.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          steer(btn.dataset.dir);
-        });
+      const joystick = document.getElementById('joystick');
+      const joystickKnob = document.getElementById('joystickKnob');
+      const JOYSTICK_RADIUS = 40;
+      const JOYSTICK_DEAD_ZONE = 12;
+      let joystickPointer = null;
+      let joystickDir = null;
+
+      function moveJoystick(e) {
+        const rect = joystick.getBoundingClientRect();
+        let dx = e.clientX - (rect.left + rect.width / 2);
+        let dy = e.clientY - (rect.top + rect.height / 2);
+        const dist = Math.hypot(dx, dy);
+        if (dist > JOYSTICK_RADIUS) {
+          dx = (dx / dist) * JOYSTICK_RADIUS;
+          dy = (dy / dist) * JOYSTICK_RADIUS;
+        }
+        joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+        if (dist < JOYSTICK_DEAD_ZONE) return;
+        const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+        // Směr se pošle jen když se změní, ne při každém pohybu prstu.
+        if (dir !== joystickDir) {
+          joystickDir = dir;
+          steer(dir);
+        }
+      }
+
+      function releaseJoystick() {
+        joystickPointer = null;
+        joystickDir = null;
+        joystickKnob.style.transform = '';
+      }
+
+      joystick.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        joystickPointer = e.pointerId;
+        joystick.setPointerCapture(e.pointerId);
+        moveJoystick(e);
       });
+      joystick.addEventListener('pointermove', (e) => {
+        if (e.pointerId === joystickPointer) moveJoystick(e);
+      });
+      joystick.addEventListener('pointerup', releaseJoystick);
+      joystick.addEventListener('pointercancel', releaseJoystick);
       document.getElementById('touchEscBtn').addEventListener('click', pressEscape);
 
       let swipeStart = null;
