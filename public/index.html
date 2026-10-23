@@ -2275,9 +2275,30 @@
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
       // Tacos event: část kostek je zlatá s tacos, dávají diamant navíc.
-      // Event se vypne nastavením TACOS_EVENT na false.
+      // Event se úplně vypne nastavením TACOS_EVENT na false.
       const TACOS_EVENT = true;
       const TACO_CHANCE = 0.25;
+      // Tacos event běží jen v určitý čas (český čas, Europe/Prague):
+      // po–pá 16:00–16:15, so–ne 15:00–15:45. Musí sedět s game-server/src/game-logic.ts.
+      const TACOS_TIME_ZONE = 'Europe/Prague';
+      const TACOS_WEEKDAY_WINDOW = [16 * 60, 16 * 60 + 15];
+      const TACOS_WEEKEND_WINDOW = [15 * 60, 15 * 60 + 45];
+
+      function isTacosEventActive(now = new Date()) {
+        if (!TACOS_EVENT) return false;
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: TACOS_TIME_ZONE,
+          weekday: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23',
+        }).formatToParts(now);
+        const get = (type) => parts.find((p) => p.type === type)?.value;
+        const minutes = Number(get('hour')) * 60 + Number(get('minute'));
+        const weekend = get('weekday') === 'Sat' || get('weekday') === 'Sun';
+        const [from, to] = weekend ? TACOS_WEEKEND_WINDOW : TACOS_WEEKDAY_WINDOW;
+        return minutes >= from && minutes < to;
+      }
       const TACO_SCORE = 2;
       const TACO_DIAMANTY = 1;
       // Hudba tacos eventu: oficiální přehrávač YouTube, hraje jen když had jede.
@@ -2399,7 +2420,19 @@
       const startGreeting = document.getElementById('startGreeting');
       const playerNameDisplay = document.getElementById('playerNameDisplay');
       const startOverlay = document.getElementById('startOverlay');
-      document.getElementById('tacosEventBanner').classList.toggle('hidden', !TACOS_EVENT);
+      const tacosEventBanner = document.getElementById('tacosEventBanner');
+      tacosEventBanner.classList.toggle('hidden', !TACOS_EVENT);
+      let tacosActive = isTacosEventActive();
+      let tacosCheckedAt = -Infinity;
+
+      function updateTacosEvent(now) {
+        if (now - tacosCheckedAt < 1000) return;
+        tacosCheckedAt = now;
+        tacosActive = isTacosEventActive();
+        tacosEventBanner.textContent = tacosActive
+          ? '🌮 Tacos event právě běží! Zlaté kostky s tacos = +1 diamant'
+          : '🌮 Tacos event: po–pá 16:00–16:15, so–ne 15:00–15:45';
+      }
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       const pauseOverlay = document.getElementById('pauseOverlay');
       const shopOverlay = document.getElementById('shopOverlay');
@@ -3356,7 +3389,7 @@
         if (free.length === 0) return;
         const cell = free[randInt(0, free.length)];
         const hue = (hueCounter++ * 360 / 24) % 360;
-        const taco = TACOS_EVENT && Math.random() < TACO_CHANCE;
+        const taco = tacosActive && Math.random() < TACO_CHANCE;
         kostky.push({ x: cell.x, y: cell.y, hue, taco });
       }
 
@@ -4838,6 +4871,7 @@
         // Dotykové ovládání: Esc během hry mimo obchod, šipky jen když had jede.
         document.body.classList.toggle('in-game', running || multiInGame);
         document.body.classList.toggle('shop-open', shopOverlay.classList.contains('visible'));
+        updateTacosEvent(now);
         syncTacosMusic();
         document.body.classList.toggle('steering', (running && !paused) || multiInGame);
         if (multiInGame) {
@@ -4885,7 +4919,7 @@
       }
 
       function syncTacosMusic() {
-        const on = TACOS_EVENT && ((gameMode === 'single' && running && !paused) || multiInGame);
+        const on = tacosActive && ((gameMode === 'single' && running && !paused) || multiInGame);
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;
