@@ -9,6 +9,27 @@ export const KOSTKA_SPAWN_MS = 2000;
 export const TACOS_EVENT = true;
 export const TACO_CHANCE = 0.25;
 export const TACO_SCORE = 2;
+// Tacos event běží jen v určitý čas (český čas, Europe/Prague):
+// po–pá 16:00–16:15, so–ne 15:00–15:45. Musí sedět s index.html.
+export const TACOS_TIME_ZONE = 'Europe/Prague';
+const TACOS_WEEKDAY_WINDOW = [16 * 60, 16 * 60 + 15];
+const TACOS_WEEKEND_WINDOW = [15 * 60, 15 * 60 + 45];
+
+export function isTacosEventActive(now: Date = new Date()): boolean {
+  if (!TACOS_EVENT) return false;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: TACOS_TIME_ZONE,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+  const minutes = Number(get('hour')) * 60 + Number(get('minute'));
+  const weekend = get('weekday') === 'Sat' || get('weekday') === 'Sun';
+  const [from, to] = weekend ? TACOS_WEEKEND_WINDOW : TACOS_WEEKDAY_WINDOW;
+  return minutes >= from && minutes < to;
+}
 
 export const SPAWN_SLOTS = [
   { x: 8, y: Math.floor(ROWS / 2), dir: { x: 1, y: 0 } },
@@ -65,7 +86,7 @@ export function spawnOneKostka(
   if (free.length === 0) return hueCounter;
   const cell = free[randInt(0, free.length)];
   const hue = (hueCounter * 360) / 24 % 360;
-  const taco = TACOS_EVENT && Math.random() < TACO_CHANCE;
+  const taco = isTacosEventActive() && Math.random() < TACO_CHANCE;
   kostky.push({ x: cell.x, y: cell.y, hue, taco });
   return hueCounter + 1;
 }
