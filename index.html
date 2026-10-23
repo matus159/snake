@@ -73,6 +73,15 @@
       margin-right: 0.2em;
     }
 
+    .tacos-event-banner {
+      padding: 0.4rem 0.9rem;
+      border: 1px solid #ffd700;
+      border-radius: 8px;
+      background: rgba(255, 215, 0, 0.12);
+      color: #ffd700;
+      font-weight: 700;
+    }
+
     .diamond-row {
       font-size: 0.9rem;
       color: #00d9ff;
@@ -1988,6 +1997,7 @@
       </div>
       <div id="startOverlay" class="overlay">
         <h2 id="startGreeting">Připraven?</h2>
+        <p class="tacos-event-banner" id="tacosEventBanner">🌮 Tacos event! Zlaté kostky s tacos = +1 diamant</p>
         <p><span class="info-keys">Stiskni mezerník nebo klikni na tlačítko</span><span class="info-touch">Klepni na tlačítko</span></p>
         <div class="start-name-row">
           <button class="btn" id="startBtn">Začít hru</button>
@@ -2223,6 +2233,12 @@
       const SPEED_MS = 120;
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
+      // Tacos event: část kostek je zlatá s tacos, dávají diamant navíc.
+      // Event se vypne nastavením TACOS_EVENT na false.
+      const TACOS_EVENT = true;
+      const TACO_CHANCE = 0.25;
+      const TACO_SCORE = 2;
+      const TACO_DIAMANTY = 1;
       const RAINBOW_GROWTH_PER_KOSTKA = 10;
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
@@ -2339,6 +2355,7 @@
       const startGreeting = document.getElementById('startGreeting');
       const playerNameDisplay = document.getElementById('playerNameDisplay');
       const startOverlay = document.getElementById('startOverlay');
+      document.getElementById('tacosEventBanner').classList.toggle('hidden', !TACOS_EVENT);
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       const pauseOverlay = document.getElementById('pauseOverlay');
       const shopOverlay = document.getElementById('shopOverlay');
@@ -3280,7 +3297,8 @@
         if (free.length === 0) return;
         const cell = free[randInt(0, free.length)];
         const hue = (hueCounter++ * 360 / 24) % 360;
-        kostky.push({ x: cell.x, y: cell.y, hue });
+        const taco = TACOS_EVENT && Math.random() < TACO_CHANCE;
+        kostky.push({ x: cell.x, y: cell.y, hue, taco });
       }
 
       function spawnKostky() {
@@ -3295,6 +3313,36 @@
         const size = CELL - 2 * gap;
         ctx.fillStyle = color;
         ctx.fillRect(px, py, size, size);
+      }
+
+      function drawTaco(x, y) {
+        const px = x * CELL + 1;
+        const py = y * CELL + 1;
+        const size = CELL - 2;
+        const grad = ctx.createLinearGradient(px, py, px, py + size);
+        grad.addColorStop(0, '#fff3a0');
+        grad.addColorStop(1, '#e0a800');
+        ctx.fillStyle = grad;
+        ctx.fillRect(px, py, size, size);
+        // Taco: salát a rajče nad půlkruhovou skořápkou.
+        const cx = px + size / 2;
+        const cy = py + size * 0.62;
+        const r = size * 0.4;
+        ctx.fillStyle = '#3cb043';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.95, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#e53935';
+        ctx.fillRect(cx - r * 0.55, cy - r * 0.75, r * 0.35, r * 0.3);
+        ctx.fillRect(cx + r * 0.2, cy - r * 0.65, r * 0.35, r * 0.3);
+        ctx.fillStyle = '#f4b400';
+        ctx.strokeStyle = '#8d5a00';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy - r * 0.15, r, Math.PI * 0.05, Math.PI * 0.95);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
       }
 
       function drawGlowRect(x, y, t) {
@@ -3432,7 +3480,10 @@
         ctx.lineWidth = border;
         ctx.strokeRect(border / 2, border / 2, canvas.width - border, canvas.height - border);
 
-        kostky.forEach(k => drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1));
+        kostky.forEach((k) => {
+          if (k.taco) drawTaco(k.x, k.y);
+          else drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1);
+        });
 
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
@@ -3503,9 +3554,14 @@
 
         const eatenIndex = kostky.findIndex(k => k.x === newHead.x && k.y === newHead.y);
         if (eatenIndex !== -1) {
-          kostky.splice(eatenIndex, 1);
+          const [eaten] = kostky.splice(eatenIndex, 1);
           const growth = equippedSkin === 'rainbow' ? RAINBOW_GROWTH_PER_KOSTKA : 1;
-          score += growth;
+          if (eaten.taco) {
+            score += TACO_SCORE;
+            diamanty += TACO_DIAMANTY;
+          } else {
+            score += growth;
+          }
           const tail = snake[snake.length - 1];
           for (let i = 1; i < growth; i++) {
             snake.push({ x: tail.x, y: tail.y });
