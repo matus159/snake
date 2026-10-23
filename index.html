@@ -1950,6 +1950,72 @@
     /* Obchod na mobilu: nižší lišta, posuvný obsah, cena vlevo od hada.
        Je na konci, aby přebil základní styly obchodu. */
     @media (pointer: coarse) and (orientation: landscape) {
+      /* Hrací pole přes celou výšku obrazovky, ať je had co největší. */
+      body {
+        padding: 4px;
+        justify-content: center;
+        box-sizing: border-box;
+        height: 100vh;
+        min-height: 0;
+      }
+
+      .game-wrapper {
+        padding: 4px;
+        max-width: calc(100vw - 8px);
+      }
+
+      .canvas-container {
+        height: calc(100vh - 16px);
+        max-height: calc(100vh - 16px);
+      }
+
+      /* Diamanty a gems jen jako ikonka a číslo vlevo vedle pole, během hry. */
+      .controls {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 30;
+        margin: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        pointer-events: none;
+      }
+
+      body:not(.in-game) .controls,
+      body.shop-open .controls {
+        display: none;
+      }
+
+      .controls p {
+        font-size: 0;
+      }
+
+      .controls p span {
+        font-size: 1rem;
+      }
+
+      .controls .currency-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 4px;
+      }
+
+      /* V obchodě větší počet diamantů a gems, ať je dobře vidět. */
+      .shop-top-bar .shop-stat-label {
+        font-size: 0.95rem;
+      }
+
+      .shop-top-bar .shop-stat-value {
+        font-size: 1.4rem;
+      }
+
+      .shop-top-bar .currency-icon {
+        width: 1.3em;
+        height: 1.3em;
+      }
+
       /* Výběr režimu: menší karty, aby se vešly i na malý telefon. */
       .mode-select-wrap {
         gap: 0.4rem;
