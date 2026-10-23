@@ -2526,7 +2526,9 @@
         const stopCol = COLS - 1;
         const endCol = COLS + SEGMENTS;
         let head;
-        if (t <= 2600) head = Math.floor(-1 + (stopCol + 1) * (t / 2600));
+        // had začíná uprostřed plochy
+        const startCol = Math.floor(COLS / 2);
+        if (t <= 2600) head = Math.floor(startCol + (stopCol - startCol) * (t / 2600));
         else if (t <= 3300) head = stopCol;
         else if (t <= 5300) head = Math.floor(stopCol + (endCol - stopCol) * ((t - 3300) / 2000));
         else head = endCol;
