@@ -73,6 +73,36 @@
       margin-right: 0.2em;
     }
 
+    .tacos-music {
+      position: fixed;
+      left: 12px;
+      bottom: 12px;
+      z-index: 40;
+      width: 200px;
+      height: 113px;
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .tacos-music iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    @media (pointer: coarse) and (orientation: landscape) {
+      .tacos-music {
+        left: auto;
+        right: 12px;
+        top: 12px;
+        bottom: auto;
+        width: 128px;
+        height: 72px;
+      }
+    }
+
     .tacos-event-banner {
       padding: 0.4rem 0.9rem;
       border: 1px solid #ffd700;
@@ -2188,6 +2218,9 @@
       <span class="rotate-icon" aria-hidden="true">⟳</span>
       <span>Otoč telefon na šířku</span>
     </div>
+    <div class="tacos-music hidden" id="tacosMusic">
+      <div id="tacosMusicPlayer"></div>
+    </div>
     <div class="touch-controls" id="touchControls">
       <button type="button" class="touch-btn touch-up" data-dir="up" aria-label="Nahoru">▲</button>
       <button type="button" class="touch-btn touch-left" data-dir="left" aria-label="Doleva">◀</button>
@@ -2239,6 +2272,8 @@
       const TACO_CHANCE = 0.25;
       const TACO_SCORE = 2;
       const TACO_DIAMANTY = 1;
+      // Hudba tacos eventu: oficiální přehrávač YouTube, hraje jen když had jede.
+      const TACOS_MUSIC_VIDEO_ID = 'W-3DWBv0CvU';
       const RAINBOW_SCORE_PER_KOSTKA = 10;
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
@@ -4779,6 +4814,7 @@
         // Dotykové ovládání: Esc během hry mimo obchod, šipky jen když had jede.
         document.body.classList.toggle('in-game', running || multiInGame);
         document.body.classList.toggle('shop-open', shopOverlay.classList.contains('visible'));
+        syncTacosMusic();
         document.body.classList.toggle('steering', (running && !paused) || multiInGame);
         if (multiInGame) {
           drawMultiplayer();
@@ -4795,6 +4831,43 @@
           if (running) draw();
         }
         requestAnimationFrame(loop);
+      }
+
+      const tacosMusicEl = document.getElementById('tacosMusic');
+      let tacosPlayer = null;
+      let tacosPlayerReady = false;
+      let tacosMusicOn = false;
+
+      function loadTacosMusic() {
+        if (!TACOS_EVENT || !TACOS_MUSIC_VIDEO_ID) return;
+        window.onYouTubeIframeAPIReady = () => {
+          tacosPlayer = new YT.Player('tacosMusicPlayer', {
+            videoId: TACOS_MUSIC_VIDEO_ID,
+            playerVars: { loop: 1, playlist: TACOS_MUSIC_VIDEO_ID, playsinline: 1, rel: 0 },
+            events: {
+              onReady: () => {
+                tacosPlayerReady = true;
+                if (tacosMusicOn) {
+                  tacosMusicEl.classList.remove('hidden');
+                  tacosPlayer.playVideo();
+                }
+              },
+            },
+          });
+        };
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+      }
+
+      function syncTacosMusic() {
+        const on = TACOS_EVENT && gameMode === 'single' && running && !paused;
+        if (on === tacosMusicOn) return;
+        tacosMusicOn = on;
+        if (!tacosPlayerReady) return;
+        tacosMusicEl.classList.toggle('hidden', !on);
+        if (on) tacosPlayer.playVideo();
+        else tacosPlayer.pauseVideo();
       }
 
       function start() {
@@ -5030,6 +5103,7 @@
 
       loadPlayerProfile();
       updateOwnerPanel();
+      loadTacosMusic();
       initGame();
       fetchPendingGiftsFromServer();
       if (playerName && isPlayerBanned(playerName)) {
