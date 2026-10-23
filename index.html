@@ -171,6 +171,9 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
+      /* Obsah, který se nevejde, se posouvá uvnitř okna a nenatahuje stránku. */
+      overflow-y: auto;
+      justify-content: safe center;
     }
 
     .overlay.visible {
@@ -326,6 +329,26 @@
 
       .info-keys {
         display: none;
+      }
+    }
+
+    /* Mobil: hra se vejde na obrazovku bez přibližování a oddalování. */
+    @media (pointer: coarse) {
+      html,
+      body {
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      body {
+        touch-action: manipulation;
+      }
+
+      /* iPhone při psaní do políčka s menším písmem sám přiblíží stránku. */
+      input,
+      select,
+      textarea {
+        font-size: 16px !important;
       }
     }
 
@@ -1927,6 +1950,32 @@
     /* Obchod na mobilu: nižší lišta, posuvný obsah, cena vlevo od hada.
        Je na konci, aby přebil základní styly obchodu. */
     @media (pointer: coarse) and (orientation: landscape) {
+      /* Výběr režimu: menší karty, aby se vešly i na malý telefon. */
+      .mode-select-wrap {
+        gap: 0.4rem;
+        padding: 0.5rem;
+      }
+
+      .mode-select-layout {
+        justify-content: center;
+        gap: 1rem;
+        padding: 0;
+      }
+
+      .mode-card {
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+      }
+
+      .mode-icons {
+        min-height: 40px;
+        transform: scale(0.75);
+      }
+
+      .mode-title {
+        font-size: 0.85rem;
+      }
+
       .shop-top-bar {
         padding: 6px 12px;
       }
