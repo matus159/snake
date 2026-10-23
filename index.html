@@ -748,20 +748,6 @@
       overflow-y: auto;
     }
 
-    .gift-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 0.85rem;
-      padding: 1.25rem 1.5rem 1rem;
-      overflow-y: auto;
-      width: 100%;
-      box-sizing: border-box;
-      min-height: 0;
-    }
-
     #shopWardrobeView {
       overflow: hidden;
     }
@@ -964,168 +950,12 @@
       gap: 0.65rem;
     }
 
-    .shop-gift-box {
-      width: 64px;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid rgba(255, 107, 150, 0.5);
-      border-radius: 6px;
-      background: rgba(255, 107, 150, 0.12);
-      cursor: pointer;
-      font-size: 0.6rem;
-      font-weight: 700;
-      color: #ff8fab;
-      text-align: center;
-      line-height: 1.2;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-
-    .shop-gift-box:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 12px rgba(255, 107, 150, 0.35);
-    }
-
-    .gift-panel-title {
-      margin: 0;
-      font-size: 1.05rem;
-      color: #ff8fab;
-      letter-spacing: 0.04em;
-    }
-
     .gift-hint {
       margin: 0;
       font-size: 0.8rem;
       color: #aaa;
       text-align: center;
       max-width: 320px;
-    }
-
-    .gift-form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      width: 100%;
-      max-width: 320px;
-    }
-
-    .gift-form label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      font-size: 0.75rem;
-      color: #c9a227;
-    }
-
-    .gift-form input,
-    .gift-form select {
-      font-family: inherit;
-      font-size: 0.85rem;
-      padding: 0.5rem 0.65rem;
-      border: 1px solid rgba(255, 107, 150, 0.35);
-      border-radius: 6px;
-      background: #12121a;
-      color: #e8e8e8;
-    }
-
-    .gift-form input:focus,
-    .gift-form select:focus {
-      outline: 2px solid rgba(255, 143, 171, 0.45);
-      outline-offset: 1px;
-    }
-
-    .gift-form .btn {
-      margin-top: 0.25rem;
-      background: linear-gradient(135deg, #ff8fab, #e63980);
-      color: #1a0810;
-      box-shadow: 0 0 14px rgba(255, 107, 150, 0.3);
-    }
-
-    .gift-form .btn:hover {
-      box-shadow: 0 0 20px rgba(255, 107, 150, 0.45);
-    }
-
-    .gift-result {
-      margin: 0;
-      min-height: 1.2em;
-      font-size: 0.8rem;
-      color: #00ff88;
-      text-align: center;
-    }
-
-    .gift-result.error {
-      color: #ff8fab;
-    }
-
-    .gift-skin-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      justify-content: center;
-    }
-
-    .gift-skin-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.45rem;
-      border: 2px solid rgba(255, 255, 255, 0.12);
-      border-radius: 6px;
-      background: rgba(18, 18, 26, 0.9);
-      cursor: pointer;
-      font-size: 0.62rem;
-      color: #e8e8e8;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-
-    .gift-skin-option.selected {
-      border-color: #ff8fab;
-      box-shadow: 0 0 10px rgba(255, 107, 150, 0.35);
-    }
-
-    .gift-inbox {
-      width: 100%;
-      max-width: 320px;
-      margin-top: 0.5rem;
-    }
-
-    .gift-inbox-title {
-      margin: 0 0 0.5rem;
-      font-size: 0.8rem;
-      color: #ffd700;
-    }
-
-    .gift-inbox-list {
-      list-style: none;
-      margin: 0;
-      padding: 0.65rem;
-      background: rgba(18, 18, 26, 0.95);
-      border: 1px solid rgba(255, 107, 150, 0.25);
-      border-radius: 8px;
-      max-height: 140px;
-      overflow-y: auto;
-    }
-
-    .gift-inbox-list li {
-      font-size: 0.72rem;
-      color: #ccc;
-      padding: 0.35rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .gift-inbox-list li:last-child {
-      border-bottom: none;
-    }
-
-    .gift-inbox-list li.empty {
-      color: #666;
-      font-style: italic;
-    }
-
-    .gift-inbox-list strong {
-      color: #ff8fab;
     }
 
     .wardrobe-layout {
@@ -2316,41 +2146,6 @@
             </div>
             <div class="shop-right-column">
               <div class="shop-wardrobe-box" id="shopWardrobeBtn">Šatna</div>
-              <div class="shop-gift-box" id="shopGiftBtn">Dárek</div>
-            </div>
-          </div>
-        </div>
-        <div id="shopGiftView" class="shop-view hidden">
-          <div class="gift-panel">
-            <h3 class="gift-panel-title">Dárek pro jiného hráče</h3>
-            <p class="gift-hint">Pošli diamanty, gems nebo skin ze své šatny jinému hráči – nebo sám sobě.</p>
-            <form class="gift-form" id="giftForm">
-              <label>
-                Jméno příjemce
-                <input type="text" id="giftRecipientInput" placeholder="např. Karel" maxlength="24" autocomplete="off">
-              </label>
-              <label>
-                Typ dárku
-                <select id="giftTypeSelect">
-                  <option value="diamanty">Diamanty</option>
-                  <option value="gems">Gems</option>
-                  <option value="skin">Skin ze šatny</option>
-                </select>
-              </label>
-              <label id="giftAmountWrap">
-                Počet
-                <input type="number" id="giftAmountInput" min="1" max="9999" value="10">
-              </label>
-              <div id="giftSkinWrap" class="hidden">
-                <span class="gift-inbox-title">Vyber skin k odeslání</span>
-                <div class="gift-skin-options" id="giftSkinOptions"></div>
-              </div>
-              <button type="submit" class="btn">Odeslat dárek</button>
-            </form>
-            <p class="gift-result" id="giftResult"></p>
-            <div class="gift-inbox">
-              <p class="gift-inbox-title">Přijaté dárky</p>
-              <ul class="gift-inbox-list" id="giftInboxList"></ul>
             </div>
           </div>
         </div>
@@ -2500,7 +2295,7 @@
       const PROGRESS_RESET_KEY = 'snake-progress-reset';
       const PROGRESS_RESET_ID = '2026-10-22';
 
-      // Jednorázově smaže všem hráčům diamanty, gemy, hady a dárky.
+      // Jednorázově smaže všem hráčům diamanty, gemy a hady.
       // Pro další plošné vymazání stačí změnit PROGRESS_RESET_ID.
       function resetAllProgressOnce() {
         try {
@@ -2513,7 +2308,6 @@
       }
       resetAllProgressOnce();
       const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10 };
-      const GIFTABLE_SKINS = ['red', 'white', 'blue', 'pink'];
       const SCORE_PER_DIAMANT = 5;
       const DIAMANTS_PER_GEM = 100;
       const WHEEL_SPIN_COST = 1200;
@@ -2557,7 +2351,6 @@
       let playerName = localStorage.getItem(PLAYER_NAME_KEY) || '';
       let gameMode = null;
       let multiWs = null;
-      let giftSyncWs = null;
       let multiPlayerId = null;
       let multiInGame = false;
       let lastMultiServerScore = 0;
@@ -2577,9 +2370,7 @@
       ];
       let equippedSkin = 'default';
       let wardrobe = [];
-      let giftLog = [];
       let weekendWheelSpinDate = null;
-      let selectedGiftSkin = null;
       let diamanty = 0;
       let gems = 0;
 
@@ -2626,18 +2417,7 @@
       const shopGemsTopEl = document.getElementById('shopGemsTop');
       const shopMainView = document.getElementById('shopMainView');
       const shopWardrobeView = document.getElementById('shopWardrobeView');
-      const shopGiftView = document.getElementById('shopGiftView');
       const shopWardrobeBtn = document.getElementById('shopWardrobeBtn');
-      const shopGiftBtn = document.getElementById('shopGiftBtn');
-      const giftForm = document.getElementById('giftForm');
-      const giftRecipientInput = document.getElementById('giftRecipientInput');
-      const giftTypeSelect = document.getElementById('giftTypeSelect');
-      const giftAmountWrap = document.getElementById('giftAmountWrap');
-      const giftAmountInput = document.getElementById('giftAmountInput');
-      const giftSkinWrap = document.getElementById('giftSkinWrap');
-      const giftSkinOptions = document.getElementById('giftSkinOptions');
-      const giftInboxList = document.getElementById('giftInboxList');
-      const giftResultEl = document.getElementById('giftResult');
       const wardrobeSkinsList = document.getElementById('wardrobeSkinsList');
       const wardrobeShowcase = document.getElementById('wardrobeShowcase');
       const wheelSpinner = document.getElementById('wheelSpinner');
@@ -2697,35 +2477,12 @@
         bansChannel = null;
       }
 
-      let giftsChannel = null;
-      try {
-        giftsChannel = new BroadcastChannel('snake-gifts');
-        giftsChannel.onmessage = (e) => {
-          if (e.data?.type !== 'gift-delivered') return;
-          if (e.data.recipientId !== getProfileId(playerName)) return;
-          const r = e.data.recipient;
-          if (!r) return;
-          diamanty = parseInt(r.diamanty, 10) || 0;
-          gems = parseInt(r.gems, 10) || 0;
-          if (Array.isArray(r.wardrobe)) wardrobe = [...r.wardrobe];
-          if (Array.isArray(r.giftLog)) giftLog = [...r.giftLog];
-          saveProgress();
-          refreshCurrencyUI();
-          if (shopView === 'gift') renderGiftInbox();
-          if (giftLog[0]) {
-            showShopMessage(`Dostal jsi dárek od ${giftLog[0].from}!`);
-          }
-        };
-      } catch {
-        giftsChannel = null;
-      }
-
       function getProfileId(name) {
         return (name || '').trim().toLowerCase();
       }
 
       function defaultProfile() {
-        return { diamanty: 0, gems: 0, wardrobe: [], equippedSkin: 'default', giftLog: [], weekendWheelSpinDate: null };
+        return { diamanty: 0, gems: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null };
       }
 
       function readProfiles() {
@@ -2776,7 +2533,6 @@
           gems = 0;
           wardrobe = [];
           equippedSkin = 'default';
-          giftLog = [];
           weekendWheelSpinDate = null;
           return;
         }
@@ -2785,7 +2541,6 @@
         gems = parseInt(profile.gems, 10) || 0;
         wardrobe = Array.isArray(profile.wardrobe) ? [...profile.wardrobe] : [];
         equippedSkin = profile.equippedSkin || 'default';
-        giftLog = Array.isArray(profile.giftLog) ? [...profile.giftLog] : [];
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
       }
 
@@ -3039,13 +2794,6 @@
         shopMessageTimer = setTimeout(() => shopMessage.classList.remove('visible'), 2500);
       }
 
-      function showGiftMessage(text, isError = false) {
-        showShopMessage(text);
-        if (!giftResultEl) return;
-        giftResultEl.textContent = text;
-        giftResultEl.classList.toggle('error', isError);
-      }
-
       function saveProgress() {
         const id = getProfileId(playerName);
         if (!id) return;
@@ -3055,7 +2803,6 @@
           gems,
           wardrobe: [...wardrobe],
           equippedSkin,
-          giftLog: [...giftLog],
           weekendWheelSpinDate,
         };
         writeProfiles(profiles);
@@ -3339,18 +3086,11 @@
           setMultiStatus(msg.message || 'Chyba serveru.');
           return;
         }
-        if (msg.type === 'pendingGifts') {
-          (msg.gifts || []).forEach(applyRemoteGift);
-          return;
-        }
         if (msg.type === 'welcome') {
           multiPlayerId = msg.id;
           multiLobbyPlayers = msg.players || [];
           updateMultiShareUrl(msg.shareUrl);
           updateMultiLobbyUi();
-          if (multiWs && playerName) {
-            multiWs.send(JSON.stringify({ type: 'watchGifts', name: playerName }));
-          }
           return;
         }
         if (msg.type === 'lobby') {
@@ -3555,7 +3295,6 @@
         loadPlayerProfile();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
-        fetchPendingGiftsFromServer();
         if (isPlayerBanned(playerName)) {
           showBanOverlay();
           return;
@@ -3981,370 +3720,6 @@
         shopView = 'main';
         shopMainView.classList.remove('hidden');
         shopWardrobeView.classList.add('hidden');
-        shopGiftView.classList.add('hidden');
-      }
-
-      function getOwnedGiftableSkins() {
-        return GIFTABLE_SKINS.filter((skinId) => wardrobe.includes(skinId));
-      }
-
-      function formatGiftInboxItem(entry) {
-        if (entry.type === 'diamanty') {
-          return `<strong>${entry.from}</strong> poslal ${entry.value} diamantů`;
-        }
-        if (entry.type === 'gems') {
-          return `<strong>${entry.from}</strong> poslal ${entry.value} gems`;
-        }
-        if (entry.type === 'skin') {
-          return `<strong>${entry.from}</strong> poslal skin ${SKIN_NAMES[entry.value] || entry.value}`;
-        }
-        return `<strong>${entry.from}</strong> poslal dárek`;
-      }
-
-      function renderGiftInbox() {
-        if (!giftInboxList) return;
-        if (giftLog.length === 0) {
-          giftInboxList.innerHTML = '<li class="empty">Zatím žádné dárky</li>';
-          return;
-        }
-        giftInboxList.innerHTML = giftLog
-          .slice(0, 8)
-          .map((entry) => `<li>${formatGiftInboxItem(entry)}</li>`)
-          .join('');
-      }
-
-      function renderGiftSkinOptions() {
-        if (!giftSkinOptions) return;
-        const owned = getOwnedGiftableSkins();
-        if (owned.length === 0) {
-          giftSkinOptions.innerHTML = '<p class="gift-hint">Nemáš žádný skin k odeslání. Kup si ho v obchodě.</p>';
-          selectedGiftSkin = null;
-          return;
-        }
-        if (!selectedGiftSkin || !owned.includes(selectedGiftSkin)) {
-          selectedGiftSkin = owned[0];
-        }
-        giftSkinOptions.innerHTML = owned.map((skinId) => `
-          <button type="button" class="gift-skin-option${selectedGiftSkin === skinId ? ' selected' : ''}" data-skin="${skinId}">
-            ${getSkinPreviewHtml(skinId)}
-            <span>${SKIN_NAMES[skinId]}</span>
-          </button>
-        `).join('');
-      }
-
-      function updateGiftFormVisibility() {
-        const giftType = giftTypeSelect?.value || 'diamanty';
-        const isSkin = giftType === 'skin';
-        giftAmountWrap?.classList.toggle('hidden', isSkin);
-        giftSkinWrap?.classList.toggle('hidden', !isSkin);
-        if (isSkin) {
-          renderGiftSkinOptions();
-        }
-      }
-
-      function serverGiftsAvailable() {
-        return location.protocol !== 'file:';
-      }
-
-      function giftAlreadyReceived(gift) {
-        return giftLog.some((g) =>
-          g.from === gift.from &&
-          g.type === gift.type &&
-          g.value === gift.value &&
-          Math.abs((g.at || 0) - (gift.at || 0)) < 5000
-        );
-      }
-
-      function applyRemoteGift(gift) {
-        if (!gift || !gift.type || giftAlreadyReceived(gift)) return;
-        if (gift.type === 'diamanty') {
-          diamanty += parseInt(gift.value, 10) || 0;
-        } else if (gift.type === 'gems') {
-          gems = getGemsBalance() + (parseInt(gift.value, 10) || 0);
-        } else if (gift.type === 'skin') {
-          const skinId = gift.value;
-          if (GIFTABLE_SKINS.includes(skinId) && !wardrobe.includes(skinId)) {
-            wardrobe.push(skinId);
-          }
-        }
-        giftLog.unshift({
-          from: gift.from || '?',
-          type: gift.type,
-          value: gift.value,
-          at: gift.at || Date.now(),
-        });
-        giftLog = giftLog.slice(0, 8);
-        saveProgress();
-        refreshCurrencyUI();
-        if (shopView === 'gift') renderGiftInbox();
-        showShopMessage(`Dostal jsi dárek od ${gift.from}!`);
-      }
-
-      function handleGiftSyncMessage(event) {
-        try {
-          const msg = JSON.parse(event.data);
-          if (msg.type === 'pendingGifts') {
-            (msg.gifts || []).forEach(applyRemoteGift);
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-
-      function connectGiftSync() {
-        if (!serverGiftsAvailable() || !playerName) return;
-        if (multiWs && multiWs.readyState === WebSocket.OPEN) {
-          multiWs.send(JSON.stringify({ type: 'watchGifts', name: playerName }));
-          return;
-        }
-        if (giftSyncWs && (giftSyncWs.readyState === WebSocket.OPEN || giftSyncWs.readyState === WebSocket.CONNECTING)) {
-          return;
-        }
-        giftSyncWs = new WebSocket(getMultiWsUrl());
-        giftSyncWs.onopen = () => {
-          giftSyncWs.send(JSON.stringify({ type: 'watchGifts', name: playerName }));
-        };
-        giftSyncWs.onmessage = handleGiftSyncMessage;
-        giftSyncWs.onclose = () => {
-          giftSyncWs = null;
-          setTimeout(connectGiftSync, 3000);
-        };
-        giftSyncWs.onerror = () => {
-          giftSyncWs?.close();
-        };
-      }
-
-      function fetchPendingGiftsFromServer() {
-        connectGiftSync();
-      }
-
-      function relayGiftToServer(recipientName, giftType, giftValue) {
-        return new Promise((resolve) => {
-          if (!serverGiftsAvailable()) {
-            resolve(false);
-            return;
-          }
-          const ws = multiWs && multiWs.readyState === WebSocket.OPEN ? multiWs : new WebSocket(getMultiWsUrl());
-          const isTemp = ws !== multiWs;
-          let done = false;
-          const finish = (ok) => {
-            if (done) return;
-            done = true;
-            if (isTemp && ws.readyState === WebSocket.OPEN) ws.close();
-            resolve(ok);
-          };
-          const onMessage = (event) => {
-            try {
-              const msg = JSON.parse(event.data);
-              if (msg.type === 'giftSent') {
-                ws.removeEventListener('message', onMessage);
-                finish(true);
-              }
-            } catch {
-              /* ignore */
-            }
-          };
-          const sendGiftMsg = () => {
-            ws.addEventListener('message', onMessage);
-            ws.send(JSON.stringify({
-              type: 'sendGift',
-              fromName: playerName,
-              toName: recipientName,
-              giftType,
-              value: giftValue,
-            }));
-          };
-          if (ws.readyState === WebSocket.OPEN) {
-            sendGiftMsg();
-          } else {
-            ws.addEventListener('open', sendGiftMsg);
-            ws.addEventListener('error', () => finish(false));
-          }
-          setTimeout(() => {
-            ws.removeEventListener('message', onMessage);
-            finish(false);
-          }, 5000);
-        });
-      }
-
-      function pushGiftLog(profile, fromName, type, value) {
-        if (!profile.giftLog) profile.giftLog = [];
-        profile.giftLog.unshift({ from: fromName, type, value, at: Date.now() });
-        profile.giftLog = profile.giftLog.slice(0, 8);
-      }
-
-      async function sendGiftToPlayer(recipientName, giftType, giftValue) {
-        const recipientId = getProfileId(recipientName);
-        const senderId = getProfileId(playerName);
-        const isSelf = recipientId === senderId;
-        if (!playerName || !senderId) {
-          showGiftMessage('Nejdřív musíš mít jméno', true);
-          return false;
-        }
-        if (!recipientId) {
-          showGiftMessage('Zadej jméno příjemce', true);
-          return false;
-        }
-
-        bankDiamantyToGems();
-        const profiles = readProfiles();
-        const recipient = { ...defaultProfile(), ...profiles[recipientId] };
-        recipient.diamanty = parseInt(recipient.diamanty, 10) || 0;
-        recipient.gems = parseInt(recipient.gems, 10) || 0;
-        recipient.wardrobe = Array.isArray(recipient.wardrobe) ? [...recipient.wardrobe] : [];
-        recipient.giftLog = Array.isArray(recipient.giftLog) ? [...recipient.giftLog] : [];
-
-        if (giftType === 'diamanty') {
-          const amount = parseInt(giftValue, 10);
-          if (!amount || amount < 1) {
-            showGiftMessage('Zadej platný počet diamantů', true);
-            return false;
-          }
-          if (!isSelf) {
-            if (getAffordableDiamantValue() < amount) {
-              showGiftMessage(`Nemáš dost diamantů (máš ${getAffordableDiamantValue()} celkem)`, true);
-              return false;
-            }
-            if (!payDiamantCost(amount)) {
-              showGiftMessage('Diamanty se nepodařilo odečíst', true);
-              return false;
-            }
-            recipient.diamanty += amount;
-          }
-          pushGiftLog(recipient, playerName, 'diamanty', amount);
-        } else if (giftType === 'gems') {
-          const amount = parseInt(giftValue, 10);
-          if (!amount || amount < 1) {
-            showGiftMessage('Zadej platný počet gems', true);
-            return false;
-          }
-          if (!isSelf) {
-            const balance = getGemsBalance();
-            if (balance < amount) {
-              showGiftMessage(`Nemáš dost gems (máš ${balance})`, true);
-              return false;
-            }
-            gems = balance - amount;
-            recipient.gems = (parseInt(recipient.gems, 10) || 0) + amount;
-          }
-          pushGiftLog(recipient, playerName, 'gems', amount);
-        } else if (giftType === 'skin') {
-          const skinId = giftValue;
-          if (!GIFTABLE_SKINS.includes(skinId)) {
-            showGiftMessage('Tento skin nejde poslat', true);
-            return false;
-          }
-          if (!wardrobe.includes(skinId)) {
-            showGiftMessage('Tento skin nemáš ve šatně', true);
-            return false;
-          }
-          if (!isSelf && recipient.wardrobe.includes(skinId)) {
-            showGiftMessage(`${recipientName} už tento skin má`, true);
-            return false;
-          }
-          if (!isSelf) {
-            recipient.wardrobe.push(skinId);
-          }
-          pushGiftLog(recipient, playerName, 'skin', skinId);
-        } else {
-          return false;
-        }
-
-        if (isSelf) {
-          giftLog = [...recipient.giftLog];
-          profiles[senderId] = {
-            diamanty,
-            gems,
-            wardrobe: [...wardrobe],
-            equippedSkin,
-            giftLog,
-            weekendWheelSpinDate,
-          };
-          writeProfiles(profiles);
-          refreshCurrencyUI();
-          return { ok: true, delivery: 'self' };
-        }
-
-        profiles[senderId] = {
-          diamanty,
-          gems,
-          wardrobe: [...wardrobe],
-          equippedSkin,
-          giftLog: [...giftLog],
-          weekendWheelSpinDate,
-        };
-        profiles[recipientId] = recipient;
-        writeProfiles(profiles);
-        if (giftsChannel) {
-          giftsChannel.postMessage({
-            type: 'gift-delivered',
-            recipientId,
-            recipient: { ...recipient },
-          });
-        }
-
-        let delivery = 'local';
-        if (serverGiftsAvailable()) {
-          const delivered = await relayGiftToServer(recipientName, giftType, giftValue);
-          delivery = delivered ? 'server' : 'local';
-        }
-
-        refreshCurrencyUI();
-        return { ok: true, delivery };
-      }
-
-      function openGiftShop() {
-        shopView = 'gift';
-        shopMainView.classList.add('hidden');
-        shopWardrobeView.classList.add('hidden');
-        shopGiftView.classList.remove('hidden');
-        if (giftResultEl) {
-          giftResultEl.textContent = '';
-          giftResultEl.classList.remove('error');
-        }
-        refreshCurrencyUI();
-        updateGiftFormVisibility();
-        renderGiftInbox();
-        fetchPendingGiftsFromServer();
-      }
-
-      async function handleGiftSubmit(e) {
-        e.preventDefault();
-        const recipientName = giftRecipientInput?.value.trim() || '';
-        const giftType = giftTypeSelect?.value || 'diamanty';
-        const giftValue = giftType === 'skin'
-          ? selectedGiftSkin
-          : parseInt(giftAmountInput?.value, 10);
-
-        if (giftType === 'skin' && !giftValue) {
-          showGiftMessage('Vyber skin k odeslání', true);
-          return;
-        }
-
-        const result = await sendGiftToPlayer(recipientName, giftType, giftValue);
-        if (!result?.ok) return;
-
-        const isSelf = result.delivery === 'self';
-        if (isSelf) {
-          if (giftType === 'diamanty') {
-            showGiftMessage(`Poslal jsi si ${giftValue} diamantů – dárek je v přijatých dárcích`);
-          } else if (giftType === 'gems') {
-            showGiftMessage(`Poslal jsi si ${giftValue} gems – dárek je v přijatých dárcích`);
-          } else {
-            showGiftMessage(`Poslal jsi si skin ${SKIN_NAMES[giftValue]} – dárek je v přijatých dárcích`);
-          }
-        } else if (result.delivery === 'server') {
-          showGiftMessage(`Dárek odeslán hráči ${recipientName} přes server`);
-        } else if (giftType === 'diamanty') {
-          showGiftMessage(`Posláno ${giftValue} diamantů hráči ${recipientName} (stejný prohlížeč)`);
-        } else if (giftType === 'gems') {
-          showGiftMessage(`Posláno ${giftValue} gems hráči ${recipientName} (stejný prohlížeč)`);
-        } else {
-          showGiftMessage(`Skin ${SKIN_NAMES[giftValue]} poslán hráči ${recipientName} (stejný prohlížeč)`);
-        }
-
-        if (giftRecipientInput) giftRecipientInput.value = '';
-        renderGiftInbox();
       }
 
       function getSkinPreviewHtml(skinId) {
@@ -5066,7 +4441,6 @@
         resetEggVisual();
         shopMainView.classList.add('hidden');
         shopWardrobeView.classList.remove('hidden');
-        shopGiftView.classList.add('hidden');
         refreshCurrencyUI();
         renderWardrobeSkins();
       }
@@ -5085,7 +4459,7 @@
       }
 
       function shopBack() {
-        if (shopView === 'wardrobe' || shopView === 'gift') {
+        if (shopView === 'wardrobe') {
           showShopMain();
         } else {
           closeShop();
@@ -5242,7 +4616,7 @@
       function pressEscape() {
         if (!running || multiInGame) return;
         if (shopOverlay.classList.contains('visible')) {
-          if (shopView === 'wardrobe' || shopView === 'gift') {
+          if (shopView === 'wardrobe') {
             showShopMain();
           } else {
             closeShop();
@@ -5333,17 +4707,6 @@
       shopBlueSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('blue'));
       shopPinkSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('pink'));
       shopWardrobeBtn.addEventListener('click', openWardrobe);
-      shopGiftBtn.addEventListener('click', openGiftShop);
-      if (giftForm) giftForm.addEventListener('submit', handleGiftSubmit);
-      if (giftTypeSelect) giftTypeSelect.addEventListener('change', updateGiftFormVisibility);
-      if (giftSkinOptions) {
-        giftSkinOptions.addEventListener('click', (e) => {
-          const btn = e.target.closest('.gift-skin-option');
-          if (!btn?.dataset.skin) return;
-          selectedGiftSkin = btn.dataset.skin;
-          renderGiftSkinOptions();
-        });
-      }
       wheelSpinBtn.addEventListener('click', spinWheel);
       eggCrackBtn.addEventListener('click', crackEgg);
       wardrobeSkinsList.addEventListener('click', (e) => {
@@ -5384,26 +4747,17 @@
           checkCurrentPlayerBan();
         }
         if (e.key === PROFILES_KEY) {
-          const prevGiftCount = giftLog.length;
           loadPlayerProfile();
           refreshCurrencyUI();
-          if (giftLog.length > prevGiftCount && giftLog[0]) {
-            showShopMessage(`Dostal jsi dárek od ${giftLog[0].from}!`);
-          }
-          if (shopView === 'gift') {
-            renderGiftInbox();
-          }
         }
       });
       window.addEventListener('snake-bans-updated', checkCurrentPlayerBan);
       window.addEventListener('focus', () => {
         checkCurrentPlayerBan();
-        connectGiftSync();
       });
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
           checkCurrentPlayerBan();
-          connectGiftSync();
         }
       });
       if (bansChannel) {
@@ -5425,7 +4779,6 @@
       updateOwnerPanel();
       loadTacosMusic();
       initGame();
-      fetchPendingGiftsFromServer();
       if (playerName && isPlayerBanned(playerName)) {
         showBanOverlay();
       } else {

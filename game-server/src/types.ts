@@ -19,13 +19,6 @@ export interface Kostka {
   taco?: boolean;
 }
 
-export interface Gift {
-  from: string;
-  type: string;
-  value: string | number;
-  at: number;
-}
-
 export interface Player {
   id: string;
   ws: WebSocket;
@@ -41,7 +34,4 @@ export interface Player {
 
 export interface WsAttachment {
   playerId?: string;
-  giftWatchName?: string | null;
 }
-
-export type GiftQueueData = Record<string, Gift[]>;
