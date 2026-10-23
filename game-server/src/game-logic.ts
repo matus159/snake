@@ -14,17 +14,23 @@ export const TACO_SCORE = 2;
 export const TACOS_TIME_ZONE = 'Europe/Prague';
 const TACOS_WEEKDAY_WINDOW = [16 * 60, 16 * 60 + 15];
 const TACOS_WEEKEND_WINDOW = [15 * 60, 15 * 60 + 45];
+// Dny (RRRR-MM-DD, český čas), kdy tacos event běží celý den.
+const TACOS_ALL_DAY_DATES: string[] = ['2026-10-23'];
 
 export function isTacosEventActive(now: Date = new Date()): boolean {
   if (!TACOS_EVENT) return false;
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: TACOS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
   }).formatToParts(now);
   const get = (type: string) => parts.find((p) => p.type === type)?.value;
+  if (TACOS_ALL_DAY_DATES.includes(`${get('year')}-${get('month')}-${get('day')}`)) return true;
   const minutes = Number(get('hour')) * 60 + Number(get('minute'));
   const weekend = get('weekday') === 'Sat' || get('weekday') === 'Sun';
   const [from, to] = weekend ? TACOS_WEEKEND_WINDOW : TACOS_WEEKDAY_WINDOW;
