@@ -103,6 +103,33 @@
       }
     }
 
+    .six-seven {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 200;
+      font-size: clamp(4rem, 22vmin, 12rem);
+      font-weight: 800;
+      color: #ffd700;
+      text-shadow: 0 0 24px rgba(255, 215, 0, 0.8), 0 6px 0 #b8860b;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.3);
+    }
+
+    .six-seven.visible {
+      animation: six-seven-pop 2.5s ease-out forwards;
+    }
+
+    @keyframes six-seven-pop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-10deg); }
+      15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(6deg); }
+      30% { transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
+      45% { transform: translate(-50%, -50%) scale(1.05) rotate(4deg); }
+      80% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4) rotate(0deg); }
+    }
+
     /* Disko světla během tacos eventu */
     .disco-lights {
       display: none;
@@ -2111,6 +2138,7 @@
 </head>
 <body>
   <div class="disco-lights" aria-hidden="true"></div>
+  <div class="six-seven" id="sixSeven" role="status">67</div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="gradDiamond" x1="0" y1="0" x2="0" y2="1">
@@ -2981,6 +3009,27 @@
           shopDiamantyTopEl.textContent = diamanty;
           shopGemsTopEl.textContent = gems;
         }
+        check67();
+      }
+
+      // Hláška „67“, když hráč dosáhne přesně 67 diamantů nebo gems.
+      const sixSevenEl = document.getElementById('sixSeven');
+      let last67Diamanty = null;
+      let last67Gems = null;
+      let sixSevenTimer = null;
+
+      function check67() {
+        const g = getGemsBalance();
+        const reached = (last67Diamanty !== null && diamanty === 67 && last67Diamanty !== 67)
+          || (last67Gems !== null && g === 67 && last67Gems !== 67);
+        last67Diamanty = diamanty;
+        last67Gems = g;
+        if (!reached) return;
+        sixSevenEl.classList.remove('visible');
+        void sixSevenEl.offsetWidth;
+        sixSevenEl.classList.add('visible');
+        clearTimeout(sixSevenTimer);
+        sixSevenTimer = setTimeout(() => sixSevenEl.classList.remove('visible'), 2500);
       }
 
       function showShopMessage(text) {
