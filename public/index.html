@@ -86,6 +86,30 @@
       background: #000;
     }
 
+    /* Přehrávač zůstává načtený i mimo hru (mobil jinak hudbu nespustí), jen je neviditelný. */
+    .tacos-music.tacos-music-off {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tacos-music-hint {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.55);
+      color: #ffd700;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .tacos-music.muted .tacos-music-hint {
+      display: flex;
+    }
+
     .tacos-music iframe {
       display: block;
       width: 100%;
@@ -2204,8 +2228,9 @@
       <span class="rotate-icon" aria-hidden="true">⟳</span>
       <span>Otoč telefon na šířku</span>
     </div>
-    <div class="tacos-music hidden" id="tacosMusic">
+    <div class="tacos-music tacos-music-off" id="tacosMusic">
       <div id="tacosMusicPlayer"></div>
+      <div class="tacos-music-hint">🔇 Klepni pro zvuk</div>
     </div>
     <div class="joystick" id="joystick" aria-label="Ovládání">
       <div class="joystick-knob" id="joystickKnob"></div>
@@ -4504,10 +4529,7 @@
             events: {
               onReady: () => {
                 tacosPlayerReady = true;
-                if (tacosMusicOn) {
-                  tacosMusicEl.classList.remove('hidden');
-                  tacosPlayer.playVideo();
-                }
+                if (tacosMusicOn) playTacosMusic();
               },
             },
           });
@@ -4517,15 +4539,46 @@
         document.head.appendChild(tag);
       }
 
+      let tacosAutoplayCheck = null;
+
+      function playTacosMusic() {
+        tacosPlayer.playVideo();
+        // Když prohlížeč (hlavně na mobilu) nedovolí pustit zvuk, pustí se potichu
+        // a zvuk se zapne při dalším klepnutí.
+        clearTimeout(tacosAutoplayCheck);
+        tacosAutoplayCheck = setTimeout(() => {
+          if (!tacosMusicOn || !tacosPlayerReady) return;
+          if (tacosPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+            tacosPlayer.mute();
+            tacosPlayer.playVideo();
+            tacosMusicEl.classList.add('muted');
+          }
+        }, 1500);
+      }
+
       function syncTacosMusic() {
         const on = tacosActive && ((gameMode === 'single' && running && !paused) || multiInGame);
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
+        tacosMusicEl.classList.toggle('tacos-music-off', !on);
         if (!tacosPlayerReady) return;
-        tacosMusicEl.classList.toggle('hidden', !on);
-        if (on) tacosPlayer.playVideo();
+        if (on) playTacosMusic();
         else tacosPlayer.pauseVideo();
       }
+
+      // Mobil pustí zvuk jen přímo při klepnutí, proto hudbu spouštíme i z klepnutí.
+      function kickTacosMusic() {
+        syncTacosMusic();
+        if (!tacosMusicOn || !tacosPlayerReady) return;
+        if (tacosPlayer.isMuted()) {
+          tacosPlayer.unMute();
+          tacosMusicEl.classList.remove('muted');
+        }
+        if (tacosPlayer.getPlayerState() !== YT.PlayerState.PLAYING) playTacosMusic();
+      }
+      document.addEventListener('click', kickTacosMusic);
+      document.addEventListener('touchend', kickTacosMusic);
+      document.addEventListener('keydown', kickTacosMusic);
 
       function start() {
         if (!playerName || gameMode !== 'single') return;
