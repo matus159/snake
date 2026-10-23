@@ -2509,7 +2509,7 @@
       }
 
       // Změna názvu klíče = všichni uvidí animaci znovu.
-      const TACOS_INTRO_KEY = 'snake-tacos-intro-2';
+      const TACOS_INTRO_KEY = 'snake-tacos-intro-3';
       const TACOS_INTRO_MS = 7000;
       let tacosIntroPlaying = false;
       let tacosIntroStart = 0;
@@ -2531,7 +2531,7 @@
       function finishTacosIntro() {
         if (!tacosIntroPlaying) return;
         tacosIntroPlaying = false;
-        document.body.classList.remove('tacos-intro-on');
+        // Okna nad plochou (i menu) zůstanou schovaná ještě během odpočtu.
         document.body.classList.toggle('tacos-disco', tacosActive);
         draw();
         startTacosCountdown();
@@ -2556,6 +2556,7 @@
         setTimeout(() => {
           tacosCountdownActive = false;
           tacosCountdownEl.classList.remove('visible');
+          document.body.classList.remove('tacos-intro-on');
           lastTick = performance.now();
         }, TACOS_COUNTDOWN.length * TACOS_COUNTDOWN_STEP_MS);
       }
