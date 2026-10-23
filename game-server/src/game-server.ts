@@ -173,6 +173,7 @@ export class GameServer implements DurableObject {
       direction: { x: 1, y: 0 },
       nextDirection: { x: 1, y: 0 },
       score: 0,
+      tacos: 0,
       alive: true,
       colorIndex: this.players.size % 8,
     });
@@ -259,6 +260,7 @@ export class GameServer implements DurableObject {
         name: p.name,
         snake: p.snake,
         score: p.score,
+        tacos: p.tacos,
         alive: p.alive,
         colorIndex: p.colorIndex,
       })),
@@ -294,6 +296,7 @@ export class GameServer implements DurableObject {
       slotIndex += 1;
       p.alive = true;
       p.score = 0;
+      p.tacos = 0;
       p.snake = makeSnake(slot);
       p.direction = { ...slot.dir };
       p.nextDirection = { ...slot.dir };
@@ -334,12 +337,14 @@ export class GameServer implements DurableObject {
         id: p.id,
         name: p.name,
         score: p.score,
+        tacos: p.tacos,
         alive: p.alive,
       })),
     });
     for (const p of this.players.values()) {
       p.alive = true;
       p.score = 0;
+      p.tacos = 0;
       p.snake = [];
     }
     this.kostky = [];
@@ -354,6 +359,7 @@ export class GameServer implements DurableObject {
     for (const p of this.players.values()) {
       p.alive = true;
       p.score = 0;
+      p.tacos = 0;
       p.snake = [];
       p.direction = { x: 1, y: 0 };
       p.nextDirection = { x: 1, y: 0 };

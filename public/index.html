@@ -2346,6 +2346,7 @@
       let multiPlayerId = null;
       let multiInGame = false;
       let lastMultiServerScore = 0;
+      let lastMultiServerTacos = 0;
       let multiServerState = { kostky: [], players: [] };
       let multiLobbyPlayers = [];
       let multiShareUrl = '';
@@ -3014,6 +3015,7 @@
         multiPlayerId = null;
         multiInGame = false;
         lastMultiServerScore = 0;
+        lastMultiServerTacos = 0;
         multiServerState = { kostky: [], players: [] };
         multiLobbyPlayers = [];
       }
@@ -3069,6 +3071,16 @@
         };
       }
 
+      // Každé taco snědené v multiplayeru přidá diamant (server posílá jejich počet).
+      function applyMultiTacosFromServer(serverTacos = 0) {
+        const gained = Math.max(0, serverTacos - lastMultiServerTacos);
+        lastMultiServerTacos = serverTacos;
+        if (gained > 0) {
+          diamanty += gained * TACO_DIAMANTY;
+          updateScoreDisplay();
+        }
+      }
+
       function applyMultiScoreFromServer(serverScore) {
         const gained = Math.max(0, serverScore - lastMultiServerScore);
         lastMultiServerScore = serverScore;
@@ -3108,6 +3120,7 @@
           running = true;
           paused = false;
           lastMultiServerScore = 0;
+          lastMultiServerTacos = 0;
           score = 0;
           multiOverlay.classList.remove('visible');
           multiGameOverOverlay.classList.remove('visible');
@@ -3122,6 +3135,7 @@
           const me = multiServerState.players.find((p) => p.id === multiPlayerId);
           if (me) {
             applyMultiScoreFromServer(me.score);
+            applyMultiTacosFromServer(me.tacos);
           }
           if (me && !me.alive && multiInGame) {
             multiInGame = false;
@@ -3139,6 +3153,7 @@
           const winner = (msg.players || []).find((p) => p.id === msg.winnerId);
           if (me) {
             applyMultiScoreFromServer(me.score);
+            applyMultiTacosFromServer(me.tacos);
           }
           if (winner && winner.id === multiPlayerId) {
             multiGameOverText.textContent = 'Vyhrál jsi!';
@@ -3193,7 +3208,8 @@
         ctx.strokeRect(border / 2, border / 2, canvas.width - border, canvas.height - border);
 
         (multiServerState.kostky || []).forEach((k) => {
-          drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1);
+          if (k.taco) drawTaco(k.x, k.y);
+          else drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1);
         });
 
         (multiServerState.players || []).forEach((p) => {
@@ -4861,7 +4877,7 @@
       }
 
       function syncTacosMusic() {
-        const on = TACOS_EVENT && gameMode === 'single' && running && !paused;
+        const on = TACOS_EVENT && ((gameMode === 'single' && running && !paused) || multiInGame);
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;

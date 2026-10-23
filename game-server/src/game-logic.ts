@@ -5,6 +5,10 @@ export const ROWS = 36;
 export const SPEED_MS = 120;
 export const MAX_KOSTKY = 23;
 export const KOSTKA_SPAWN_MS = 2000;
+// Tacos event (musí sedět s TACOS_EVENT v index.html): část kostek je zlatá s tacos.
+export const TACOS_EVENT = true;
+export const TACO_CHANCE = 0.25;
+export const TACO_SCORE = 2;
 
 export const SPAWN_SLOTS = [
   { x: 8, y: Math.floor(ROWS / 2), dir: { x: 1, y: 0 } },
@@ -61,7 +65,8 @@ export function spawnOneKostka(
   if (free.length === 0) return hueCounter;
   const cell = free[randInt(0, free.length)];
   const hue = (hueCounter * 360) / 24 % 360;
-  kostky.push({ x: cell.x, y: cell.y, hue });
+  const taco = TACOS_EVENT && Math.random() < TACO_CHANCE;
+  kostky.push({ x: cell.x, y: cell.y, hue, taco });
   return hueCounter + 1;
 }
 
@@ -130,8 +135,13 @@ export function tickGame(players: Map<string, Player>, kostky: Kostka[]): TickRe
     player.snake.unshift(newHead);
     const eatenIndex = kostky.findIndex((k) => k.x === newHead.x && k.y === newHead.y);
     if (eatenIndex !== -1) {
-      kostky.splice(eatenIndex, 1);
-      player.score += 1;
+      const [eaten] = kostky.splice(eatenIndex, 1);
+      if (eaten.taco) {
+        player.score += TACO_SCORE;
+        player.tacos += 1;
+      } else {
+        player.score += 1;
+      }
     } else {
       player.snake.pop();
     }
