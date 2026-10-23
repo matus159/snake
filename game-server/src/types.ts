@@ -16,6 +16,7 @@ export interface Kostka {
   x: number;
   y: number;
   hue: number;
+  taco?: boolean;
 }
 
 export interface Gift {
@@ -33,6 +34,7 @@ export interface Player {
   direction: Direction;
   nextDirection: Direction;
   score: number;
+  tacos: number;
   alive: boolean;
   colorIndex: number;
 }
