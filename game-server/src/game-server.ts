@@ -8,9 +8,7 @@ import {
   spawnOneKostka,
   tickGame,
 } from './game-logic';
-import type { Env, Gift, GiftQueueData, Kostka, Player, WsAttachment } from './types';
-
-const PROGRESS_RESET_ID = '2026-10-22';
+import type { Env, Kostka, Player, WsAttachment } from './types';
 
 function send(ws: WebSocket, msg: unknown) {
   try {
@@ -31,8 +29,6 @@ function setAttachment(ws: WebSocket, attachment: WsAttachment) {
 export class GameServer implements DurableObject {
   private state: DurableObjectState;
   private players = new Map<string, Player>();
-  private giftListeners = new Map<string, Set<WebSocket>>();
-  private giftQueue: GiftQueueData = {};
   private gameStatus: 'lobby' | 'playing' = 'lobby';
   private kostky: Kostka[] = [];
   private hueCounter = 0;
@@ -42,13 +38,8 @@ export class GameServer implements DurableObject {
   constructor(state: DurableObjectState, _env: Env) {
     this.state = state;
     this.state.blockConcurrencyWhile(async () => {
-      // Jednorázově zahodí dárky čekající ve frontě (plošné vymazání postupu).
-      if ((await this.state.storage.get<string>('progressResetId')) !== PROGRESS_RESET_ID) {
-        await this.state.storage.delete('giftQueue');
-        await this.state.storage.put('progressResetId', PROGRESS_RESET_ID);
-      }
-      const stored = await this.state.storage.get<GiftQueueData>('giftQueue');
-      if (stored) this.giftQueue = stored;
+      // Dárky už ve hře nejsou: smaže starou frontu nedoručených dárků.
+      await this.state.storage.delete('giftQueue');
     });
   }
 
@@ -79,18 +70,6 @@ export class GameServer implements DurableObject {
 
     const type = msg.type as string;
 
-    if (type === 'sendGift') {
-      this.handleSendGift(ws, msg);
-      return;
-    }
-    if (type === 'watchGifts') {
-      this.handleWatchGifts(ws, msg);
-      return;
-    }
-    if (type === 'fetchGifts') {
-      this.handleFetchGifts(ws, msg);
-      return;
-    }
     if (type === 'join') {
       await this.handleJoin(ws, msg);
       return;
@@ -127,12 +106,11 @@ export class GameServer implements DurableObject {
 
     if (type === 'leaveLobby') {
       await this.removePlayer(attachment.playerId!);
-      setAttachment(ws, { giftWatchName: attachment.giftWatchName ?? null });
+      setAttachment(ws, {});
     }
   }
 
   async webSocketClose(ws: WebSocket) {
-    this.unwatchGifts(ws);
     const attachment = getAttachment(ws);
     if (attachment.playerId) {
       await this.removePlayer(attachment.playerId);
@@ -182,42 +160,6 @@ export class GameServer implements DurableObject {
     this.broadcastLobby();
   }
 
-  private handleSendGift(ws: WebSocket, msg: Record<string, unknown>) {
-    const fromName = String(msg.fromName || '').trim().slice(0, 20);
-    const toKey = String(msg.toName || '').trim().toLowerCase();
-    const giftType = msg.giftType;
-    const value = msg.value;
-    if (!fromName || !toKey || !giftType) {
-      send(ws, { type: 'error', message: 'Neplatný dárek.' });
-      return;
-    }
-
-    const gift: Gift = {
-      from: fromName,
-      type: String(giftType),
-      value: value as string | number,
-      at: Date.now(),
-    };
-
-    const live = this.deliverGiftLive(toKey, gift);
-    if (!live) {
-      this.queueGift(toKey, gift);
-    }
-    send(ws, { type: 'giftSent', toName: msg.toName });
-  }
-
-  private handleWatchGifts(ws: WebSocket, msg: Record<string, unknown>) {
-    const nameLower = String(msg.name || '').trim().toLowerCase();
-    if (!nameLower) return;
-    this.watchGifts(ws, nameLower);
-  }
-
-  private handleFetchGifts(ws: WebSocket, msg: Record<string, unknown>) {
-    const nameLower = String(msg.name || '').trim().toLowerCase();
-    if (!nameLower) return;
-    this.deliverPendingGiftsToWs(ws, nameLower);
-  }
-
   private lobbySnapshot() {
     return {
       type: 'lobby',
@@ -241,10 +183,6 @@ export class GameServer implements DurableObject {
       shareUrl: snap.shareUrl,
       players: snap.players,
     });
-    const player = this.players.get(id);
-    if (player) {
-      this.deliverPendingGiftsToWs(ws, player.name.toLowerCase());
-    }
   }
 
   private broadcastLobby() {
@@ -380,77 +318,5 @@ export class GameServer implements DurableObject {
     }
     this.broadcastLobby();
     if (this.gameStatus === 'playing') this.broadcastState();
-  }
-
-  private async saveGiftQueue() {
-    await this.state.storage.put('giftQueue', this.giftQueue);
-  }
-
-  private queueGift(toKey: string, gift: Gift) {
-    if (!this.giftQueue[toKey]) this.giftQueue[toKey] = [];
-    this.giftQueue[toKey].push(gift);
-    this.state.waitUntil(this.saveGiftQueue());
-  }
-
-  private takeGifts(toKey: string): Gift[] {
-    const gifts = this.giftQueue[toKey] || [];
-    if (gifts.length) {
-      delete this.giftQueue[toKey];
-      this.state.waitUntil(this.saveGiftQueue());
-    }
-    return gifts;
-  }
-
-  private findOnlinePlayerByName(nameLower: string) {
-    return [...this.players.values()].find((p) => p.name.toLowerCase() === nameLower);
-  }
-
-  private deliverPendingGiftsToWs(ws: WebSocket, nameLower: string) {
-    const gifts = this.takeGifts(nameLower);
-    if (gifts.length) {
-      send(ws, { type: 'pendingGifts', gifts });
-    }
-  }
-
-  private unwatchGifts(ws: WebSocket) {
-    const attachment = getAttachment(ws);
-    const key = attachment.giftWatchName;
-    if (!key) return;
-    const set = this.giftListeners.get(key);
-    if (set) {
-      set.delete(ws);
-      if (!set.size) this.giftListeners.delete(key);
-    }
-    setAttachment(ws, { ...attachment, giftWatchName: null });
-  }
-
-  private watchGifts(ws: WebSocket, nameLower: string) {
-    this.unwatchGifts(ws);
-    if (!nameLower) return;
-    if (!this.giftListeners.has(nameLower)) this.giftListeners.set(nameLower, new Set());
-    this.giftListeners.get(nameLower)!.add(ws);
-    const attachment = getAttachment(ws);
-    setAttachment(ws, { ...attachment, giftWatchName: nameLower });
-    this.deliverPendingGiftsToWs(ws, nameLower);
-  }
-
-  private deliverGiftLive(toKey: string, gift: Gift): boolean {
-    const sent = new Set<WebSocket>();
-    let delivered = false;
-    const online = this.findOnlinePlayerByName(toKey);
-    if (online) {
-      send(online.ws, { type: 'pendingGifts', gifts: [gift] });
-      sent.add(online.ws);
-      delivered = true;
-    }
-    const listeners = this.giftListeners.get(toKey);
-    if (listeners) {
-      for (const lws of listeners) {
-        if (sent.has(lws)) continue;
-        send(lws, { type: 'pendingGifts', gifts: [gift] });
-        delivered = true;
-      }
-    }
-    return delivered;
   }
 }
