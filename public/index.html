@@ -136,6 +136,36 @@
       cursor: pointer;
     }
 
+    .tacos-countdown {
+      position: absolute;
+      left: 50%;
+      top: 16px;
+      z-index: 30;
+      padding: 0.4rem 1.4rem;
+      border-radius: 12px;
+      background: rgba(10, 10, 18, 0.85);
+      border: 2px solid #ffd700;
+      color: #ffd700;
+      font-size: clamp(1.4rem, 6vmin, 3rem);
+      font-weight: 800;
+      text-shadow: 0 0 16px rgba(255, 215, 0, 0.7);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateX(-50%);
+    }
+
+    .tacos-countdown.visible {
+      animation: tacos-countdown-pop 0.9s ease-out forwards;
+    }
+
+    @keyframes tacos-countdown-pop {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+      25% { opacity: 1; transform: translateX(-50%) scale(1.15); }
+      40% { transform: translateX(-50%) scale(1); }
+      85% { opacity: 1; }
+      100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    }
+
     .six-seven {
       position: fixed;
       left: 50%;
@@ -2046,6 +2076,7 @@
   <div class="game-wrapper">
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
+      <div class="tacos-countdown" id="tacosCountdown" role="status"></div>
       <div id="modeSelectOverlay" class="overlay visible">
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
@@ -2501,10 +2532,31 @@
         tacosIntroPlaying = false;
         document.body.classList.remove('tacos-intro-on');
         document.body.classList.toggle('tacos-disco', tacosActive);
-        // Po animaci je hra pozastavená, hráč ji pustí sám (Esc / Pokračovat).
-        lastTick = performance.now();
-        if (gameMode === 'single' && running && !paused) pauseGame();
         draw();
+        startTacosCountdown();
+      }
+
+      // Po animaci nahoře: „Jdeme na to!“, 3, 2, 1, „Teď!“. Hra mezitím stojí a pak jede dál.
+      const TACOS_COUNTDOWN = ['Jdeme na to!', '3', '2', '1', 'Teď!'];
+      const TACOS_COUNTDOWN_STEP_MS = 900;
+      const tacosCountdownEl = document.getElementById('tacosCountdown');
+      let tacosCountdownActive = false;
+
+      function startTacosCountdown() {
+        tacosCountdownActive = true;
+        TACOS_COUNTDOWN.forEach((text, i) => {
+          setTimeout(() => {
+            tacosCountdownEl.textContent = text;
+            tacosCountdownEl.classList.remove('visible');
+            void tacosCountdownEl.offsetWidth;
+            tacosCountdownEl.classList.add('visible');
+          }, i * TACOS_COUNTDOWN_STEP_MS);
+        });
+        setTimeout(() => {
+          tacosCountdownActive = false;
+          tacosCountdownEl.classList.remove('visible');
+          lastTick = performance.now();
+        }, TACOS_COUNTDOWN.length * TACOS_COUNTDOWN_STEP_MS);
       }
 
       document.querySelector('.canvas-container').addEventListener('click', () => {
@@ -4666,7 +4718,7 @@
           else drawTacosIntroBoard(t);
           return requestAnimationFrame(loop);
         }
-        if (!running || paused) return requestAnimationFrame(loop);
+        if (!running || paused || tacosCountdownActive) return requestAnimationFrame(loop);
         if (now - lastKostkaSpawn >= KOSTKA_SPAWN_MS) {
           lastKostkaSpawn = now;
           spawnOneKostka();
