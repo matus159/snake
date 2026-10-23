@@ -2473,8 +2473,8 @@
         if (now - tacosCheckedAt < 1000) return;
         tacosCheckedAt = now;
         tacosActive = isTacosEventActive();
-        document.body.classList.toggle('tacos-disco', tacosActive);
         if (tacosActive) maybePlayTacosIntro();
+        document.body.classList.toggle('tacos-disco', tacosActive && !tacosIntroPlaying);
       }
 
       const TACOS_INTRO_KEY = 'snake-tacos-intro';
@@ -2500,6 +2500,7 @@
         if (!tacosIntroPlaying) return;
         tacosIntroPlaying = false;
         document.body.classList.remove('tacos-intro-on');
+        document.body.classList.toggle('tacos-disco', tacosActive);
         // Po animaci je hra pozastavená, hráč ji pustí sám (Esc / Pokračovat).
         lastTick = performance.now();
         if (gameMode === 'single' && running && !paused) pauseGame();
@@ -2510,72 +2511,20 @@
         if (tacosIntroPlaying) finishTacosIntro();
       });
 
-      // Animace na hrací ploše (ms): černý had s disko náhrdelníkem leze k pravé stěně,
-      // stěna se otevře, had vleze dovnitř a stěna se zavře. Hráčův had tu není.
+      // Animace na hrací ploše (ms): černý had s disko náhrdelníkem leze k pravému okraji,
+      // okraj se otevře, had projde ven a okraj se zavře. Disko začne až potom.
       function drawTacosIntroBoard(t) {
         const w = canvas.width;
         const h = canvas.height;
         const row = Math.floor(ROWS / 2);
         const SEGMENTS = 8;
-        const wallCol = COLS - 1;
 
         ctx.fillStyle = '#12121a';
         ctx.fillRect(0, 0, w, h);
-        drawDiscoFloor();
 
-        // disko koule nahoře a točící se barevné paprsky
-        const ballX = w / 2;
-        const ballY = CELL * 2.5;
-        const colors = ['255, 0, 128', '0, 200, 255', '255, 220, 0', '120, 255, 0', '186, 85, 255', '255, 120, 0'];
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        colors.forEach((rgb, i) => {
-          const a = Math.PI / 2 + Math.sin(t / 900 + i * 1.1) * 1.1;
-          const len = h * 1.2;
-          const spread = 0.09;
-          ctx.fillStyle = `rgba(${rgb}, 0.16)`;
-          ctx.beginPath();
-          ctx.moveTo(ballX, ballY);
-          ctx.lineTo(ballX + Math.cos(a - spread) * len, ballY + Math.sin(a - spread) * len);
-          ctx.lineTo(ballX + Math.cos(a + spread) * len, ballY + Math.sin(a + spread) * len);
-          ctx.closePath();
-          ctx.fill();
-          // světelná skvrna na podlaze
-          const sx = ballX + Math.cos(a) * (h * 0.8);
-          const sy = ballY + Math.sin(a) * (h * 0.8);
-          const spot = ctx.createRadialGradient(sx, sy, 0, sx, sy, CELL * 5);
-          spot.addColorStop(0, `rgba(${rgb}, 0.35)`);
-          spot.addColorStop(1, `rgba(${rgb}, 0)`);
-          ctx.fillStyle = spot;
-          ctx.fillRect(sx - CELL * 5, sy - CELL * 5, CELL * 10, CELL * 10);
-        });
-        ctx.restore();
-        ctx.strokeStyle = '#888';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(ballX, 0);
-        ctx.lineTo(ballX, ballY - CELL);
-        ctx.stroke();
-        for (let yy = -2; yy <= 2; yy++) {
-          for (let xx = -2; xx <= 2; xx++) {
-            if (xx * xx + yy * yy > 5) continue;
-            const flash = (Math.sin(t / 120 + xx * 3 + yy * 7) + 1) / 2;
-            const v = Math.round(150 + flash * 105);
-            ctx.fillStyle = `rgb(${v}, ${v}, ${Math.min(255, v + 20)})`;
-            ctx.fillRect(ballX + xx * 8 - 3.5, ballY + yy * 8 - 3.5, 7, 7);
-          }
-        }
-
-        // stěna: 0 zavřená, 1 otevřená (3 políčka na řádku hada)
-        let open = 0;
-        if (t > 2600 && t <= 3300) open = (t - 2600) / 700;
-        else if (t > 3300 && t <= 5400) open = 1;
-        else if (t > 5400 && t <= 6100) open = 1 - (t - 5400) / 700;
-        open = open * open * (3 - 2 * open);
-
-        // černý had po políčkách jako ve hře
-        const stopCol = wallCol - 1;
-        const endCol = wallCol + SEGMENTS;
+        // černý had po políčkách, stejné barvy jako černý had ve hře
+        const stopCol = COLS - 1;
+        const endCol = COLS + SEGMENTS;
         let head;
         if (t <= 2600) head = Math.floor(-1 + (stopCol + 1) * (t / 2600));
         else if (t <= 3300) head = stopCol;
@@ -2583,68 +2532,50 @@
         else head = endCol;
         for (let i = SEGMENTS - 1; i >= 0; i--) {
           const x = head - i;
-          if (x < 0 || x >= wallCol) continue;
-          const v = Math.round(55 - (i / SEGMENTS) * 30);
-          drawRect(x, row, `rgb(${v}, ${v}, ${v + 6})`, 1);
-          // světlý obrys, ať je černý had na tmavé ploše vidět
-          ctx.strokeStyle = 'rgba(230, 230, 255, 0.85)';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x * CELL + 1.5, row * CELL + 1.5, CELL - 3, CELL - 3);
+          if (x < 0 || x >= COLS) continue;
+          const v = Math.round(120 - (i / Math.max(SEGMENTS - 1, 1)) * 70);
+          drawRect(x, row, `rgb(${v}, ${v}, ${v})`, 1);
           if (i === 0) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(x * CELL + 12, row * CELL + 5, 5, 5);
             ctx.fillStyle = '#000';
-            ctx.fillRect(x * CELL + 14, row * CELL + 6, 3, 3);
+            ctx.beginPath();
+            ctx.arc(x * CELL + CELL / 2, row * CELL + CELL / 2, CELL / 5, 0, Math.PI * 2);
+            ctx.fill();
           }
           if (i === 1) {
             // zlatý náhrdelník s disko koulí
             const cx = x * CELL + CELL / 2;
-            const cy = row * CELL + CELL;
             ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(cx, row * CELL + CELL / 2, CELL / 2, Math.PI * 0.15, Math.PI * 0.85);
             ctx.stroke();
-            const ball = ctx.createRadialGradient(cx - 2, cy + 3, 1, cx, cy + 5, 6);
+            const by = row * CELL + CELL + 5;
+            const ball = ctx.createRadialGradient(cx - 2, by - 2, 1, cx, by, 6);
             ball.addColorStop(0, '#fff');
             ball.addColorStop(0.5, '#ffd700');
             ball.addColorStop(1, '#b8860b');
             ctx.fillStyle = ball;
             ctx.beginPath();
-            ctx.arc(cx, cy + 5, 6, 0, Math.PI * 2);
+            ctx.arc(cx, by, 6, 0, Math.PI * 2);
             ctx.fill();
-            if (Math.sin(t / 90) > 0) {
-              ctx.fillStyle = '#fff';
-              ctx.fillRect(cx - 1, cy - 4, 2, 8);
-              ctx.fillRect(cx - 4, cy - 1, 8, 2);
-            }
           }
         }
 
-        // pravá stěna z cihel, uprostřed se otvírá
-        const doorRows = 3 * open;
-        const doorTop = (row + 0.5 - doorRows / 2) * CELL;
-        const doorBottom = (row + 0.5 + doorRows / 2) * CELL;
-        for (let r = 0; r < ROWS * 2; r++) {
-          const y = r * (CELL / 2);
-          const off = r % 2 ? CELL / 2 : 0;
-          for (let x = wallCol * CELL - off; x < w; x += CELL) {
-            const top = y + 1;
-            const bottom = y + CELL / 2 - 1;
-            if (bottom > doorTop && top < doorBottom) continue;
-            ctx.fillStyle = r % 3 ? '#7a3b2e' : '#8c4535';
-            ctx.fillRect(Math.max(x, wallCol * CELL) + 1, top, CELL - 2, CELL / 2 - 2);
-          }
-        }
-        if (doorRows > 0.05) {
-          ctx.fillStyle = '#05050a';
-          ctx.fillRect(wallCol * CELL, doorTop, CELL, doorBottom - doorTop);
-        }
-
+        // okraj plochy; vpravo se uprostřed otevře mezera na 3 políčka
+        let open = 0;
+        if (t > 2600 && t <= 3300) open = (t - 2600) / 700;
+        else if (t > 3300 && t <= 5400) open = 1;
+        else if (t > 5400 && t <= 6100) open = 1 - (t - 5400) / 700;
+        open = open * open * (3 - 2 * open);
         const border = 2;
         ctx.strokeStyle = '#2a2a3a';
         ctx.lineWidth = border;
         ctx.strokeRect(border / 2, border / 2, w - border, h - border);
+        if (open > 0.01) {
+          const gap = 3 * CELL * open;
+          ctx.fillStyle = '#12121a';
+          ctx.fillRect(w - border - 1, (row + 0.5) * CELL - gap / 2, border + 1, gap);
+        }
       }
 
       const gameOverOverlay = document.getElementById('gameOverOverlay');
@@ -4791,7 +4722,7 @@
       }
 
       function syncTacosMusic() {
-        const on = tacosActive && ((gameMode === 'single' && running && !paused) || multiInGame);
+        const on = tacosActive && !tacosIntroPlaying && ((gameMode === 'single' && running && !paused) || multiInGame);
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;
