@@ -127,6 +127,26 @@
       }
     }
 
+    /* Úvodní animace tacos eventu: černý had se zlatým náhrdelníkem vleze do zdi. */
+    .tacos-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      display: none;
+      background: rgba(5, 5, 12, 0.92);
+      cursor: pointer;
+    }
+
+    .tacos-intro.visible {
+      display: block;
+    }
+
+    .tacos-intro canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
     .six-seven {
       position: fixed;
       left: 50%;
@@ -2006,6 +2026,7 @@
 <body>
   <div class="disco-lights" aria-hidden="true"></div>
   <div class="six-seven" id="sixSeven" role="status">67</div>
+  <div class="tacos-intro" id="tacosIntro" aria-hidden="true"><canvas id="tacosIntroCanvas"></canvas></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="gradDiamond" x1="0" y1="0" x2="0" y2="1">
@@ -2324,6 +2345,10 @@
         const [from, to] = weekend ? TACOS_WEEKEND_WINDOW : TACOS_WEEKDAY_WINDOW;
         return minutes >= from && minutes < to;
       }
+      // Den eventu podle českého času – úvodní animace se ukáže jednou za event.
+      function tacosEventKey(now = new Date()) {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: TACOS_TIME_ZONE }).format(now);
+      }
       const TACO_SCORE = 2;
       const TACO_DIAMANTY = 1;
       // Hudba tacos eventu: oficiální přehrávač YouTube, hraje jen když had jede.
@@ -2461,6 +2486,177 @@
         tacosCheckedAt = now;
         tacosActive = isTacosEventActive();
         document.body.classList.toggle('tacos-disco', tacosActive);
+        if (tacosActive) maybePlayTacosIntro();
+      }
+
+      const TACOS_INTRO_KEY = 'snake-tacos-intro';
+      const TACOS_INTRO_MS = 6000;
+      const tacosIntroEl = document.getElementById('tacosIntro');
+      const tacosIntroCanvas = document.getElementById('tacosIntroCanvas');
+      let tacosIntroPlaying = false;
+
+      function maybePlayTacosIntro() {
+        // V multiplayeru se hra zastavit nedá, animace počká na konec kola.
+        if (tacosIntroPlaying || multiInGame) return;
+        const key = tacosEventKey();
+        let seen = null;
+        try { seen = localStorage.getItem(TACOS_INTRO_KEY); } catch {}
+        if (seen === key) return;
+        try { localStorage.setItem(TACOS_INTRO_KEY, key); } catch {}
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        playTacosIntro();
+      }
+
+      function playTacosIntro() {
+        tacosIntroPlaying = true;
+        tacosIntroEl.classList.add('visible');
+        const c = tacosIntroCanvas;
+        const ictx = c.getContext('2d');
+        const start = performance.now();
+        let done = false;
+
+        function finish() {
+          if (done) return;
+          done = true;
+          tacosIntroPlaying = false;
+          tacosIntroEl.classList.remove('visible');
+          // Po animaci je hra pozastavená, hráč ji pustí sám (Esc / Pokračovat).
+          lastTick = performance.now();
+          if (gameMode === 'single' && running && !paused) pauseGame();
+        }
+        tacosIntroEl.onclick = finish;
+
+        function frame(now) {
+          if (done) return;
+          const t = now - start;
+          if (t >= TACOS_INTRO_MS) return finish();
+          const dpr = window.devicePixelRatio || 1;
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+            c.width = Math.round(w * dpr);
+            c.height = Math.round(h * dpr);
+          }
+          ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          drawTacosIntro(ictx, w, h, t);
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      // Časová osa (ms): had leze ke zdi, zeď se otevře, had vleze dovnitř, zeď se zavře.
+      function drawTacosIntro(g, w, h, t) {
+        const seg = Math.max(18, Math.min(w, h) / 14);
+        const groundY = h * 0.62;
+        const wallX = w * 0.68;
+        const wallW = seg * 3;
+        const doorH = seg * 2.6;
+        const SEGMENTS = 8;
+
+        // pozadí s disko světly
+        g.fillStyle = '#0a0a14';
+        g.fillRect(0, 0, w, h);
+        ['255, 0, 128', '0, 200, 255', '255, 220, 0', '120, 255, 0'].forEach((rgb, i) => {
+          const a = t / 700 + (i * Math.PI) / 2;
+          const x = w / 2 + Math.cos(a) * w * 0.35;
+          const y = h * 0.4 + Math.sin(a * 1.3) * h * 0.25;
+          const grad = g.createRadialGradient(x, y, 0, x, y, Math.min(w, h) * 0.5);
+          grad.addColorStop(0, `rgba(${rgb}, 0.28)`);
+          grad.addColorStop(1, `rgba(${rgb}, 0)`);
+          g.fillStyle = grad;
+          g.fillRect(0, 0, w, h);
+        });
+        g.fillStyle = '#1a1a26';
+        g.fillRect(0, groundY + seg / 2, w, h - groundY);
+
+        // dveře ve zdi: 0 zavřeno, 1 otevřeno
+        let open = 0;
+        if (t > 2200 && t <= 2900) open = (t - 2200) / 700;
+        else if (t > 2900 && t <= 4800) open = 1;
+        else if (t > 4800 && t <= 5500) open = 1 - (t - 4800) / 700;
+        open = open * open * (3 - 2 * open);
+
+        // had: hlava jede zleva ke zdi a pak dál do zdi
+        const startX = -seg * SEGMENTS;
+        const stopX = wallX - seg * 0.8;
+        const endX = wallX + wallW + seg * (SEGMENTS + 1);
+        let headX;
+        if (t <= 2200) headX = startX + (stopX - startX) * (t / 2200);
+        else if (t <= 2900) headX = stopX;
+        else if (t <= 4700) headX = stopX + (endX - stopX) * ((t - 2900) / 1800);
+        else headX = endX;
+        const wiggle = t <= 2900 ? 1 : 0.4;
+
+        g.save();
+        // za zdí není had vidět
+        g.beginPath();
+        g.rect(0, 0, wallX, h);
+        g.clip();
+        for (let i = SEGMENTS - 1; i >= 0; i--) {
+          const x = headX - i * seg * 0.95;
+          const y = groundY + Math.sin(x / (seg * 1.6) - t / 180) * seg * 0.35 * wiggle;
+          const shade = Math.round(70 - (i / SEGMENTS) * 40);
+          g.fillStyle = `rgb(${shade}, ${shade}, ${shade + 6})`;
+          g.beginPath();
+          g.arc(x, y, seg * 0.55, 0, Math.PI * 2);
+          g.fill();
+          if (i === 0) {
+            // oči
+            g.fillStyle = '#fff';
+            g.beginPath();
+            g.arc(x + seg * 0.2, y - seg * 0.2, seg * 0.14, 0, Math.PI * 2);
+            g.fill();
+            g.fillStyle = '#000';
+            g.beginPath();
+            g.arc(x + seg * 0.25, y - seg * 0.2, seg * 0.07, 0, Math.PI * 2);
+            g.fill();
+          }
+          if (i === 1) {
+            // zlatý náhrdelník s disko koulí
+            g.strokeStyle = '#ffd700';
+            g.lineWidth = seg * 0.14;
+            g.beginPath();
+            g.arc(x, y, seg * 0.5, Math.PI * 0.15, Math.PI * 0.85);
+            g.stroke();
+            const bx = x;
+            const by = y + seg * 0.65;
+            const ball = g.createRadialGradient(bx - seg * 0.06, by - seg * 0.06, 1, bx, by, seg * 0.22);
+            ball.addColorStop(0, '#ffffff');
+            ball.addColorStop(0.5, '#ffd700');
+            ball.addColorStop(1, '#b8860b');
+            g.fillStyle = ball;
+            g.beginPath();
+            g.arc(bx, by, seg * 0.22, 0, Math.PI * 2);
+            g.fill();
+            const sparkle = (Math.sin(t / 90) + 1) / 2;
+            g.fillStyle = `rgba(255, 255, 255, ${0.4 + sparkle * 0.6})`;
+            g.fillRect(bx - seg * 0.03, by - seg * 0.38, seg * 0.06, seg * 0.22);
+            g.fillRect(bx - seg * 0.11, by - seg * 0.3, seg * 0.22, seg * 0.06);
+          }
+        }
+        g.restore();
+
+        // zeď z cihel s otvorem
+        const doorTop = groundY - doorH * 0.6;
+        const gap = doorH * open;
+        const brickH = seg * 0.6;
+        g.save();
+        g.beginPath();
+        g.rect(wallX, 0, wallW, h);
+        g.rect(wallX, doorTop + doorH / 2 - gap / 2, wallW, gap);
+        g.clip('evenodd');
+        for (let y = 0, row = 0; y < groundY + seg / 2; y += brickH, row++) {
+          const off = row % 2 ? seg * 0.55 : 0;
+          for (let x = wallX - off; x < wallX + wallW; x += seg * 1.1) {
+            g.fillStyle = row % 3 ? '#7a3b2e' : '#8c4535';
+            g.fillRect(x + 1, y + 1, seg * 1.1 - 2, brickH - 2);
+          }
+        }
+        g.restore();
+        if (gap > 1) {
+          g.fillStyle = '#05050a';
+          g.fillRect(wallX, doorTop + doorH / 2 - gap / 2, wallW, gap);
+        }
       }
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       const pauseOverlay = document.getElementById('pauseOverlay');
@@ -4542,7 +4738,7 @@
           drawMultiplayer();
           return requestAnimationFrame(loop);
         }
-        if (!running || paused) return requestAnimationFrame(loop);
+        if (!running || paused || tacosIntroPlaying) return requestAnimationFrame(loop);
         if (now - lastKostkaSpawn >= KOSTKA_SPAWN_MS) {
           lastKostkaSpawn = now;
           spawnOneKostka();
