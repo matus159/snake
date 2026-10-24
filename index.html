@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.26.1">
+  <meta name="snake-version" content="1.27.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -3925,11 +3925,13 @@
         if (eatenIndex !== -1) {
           // Had vždy naroste jen o 1, bonus z taca a hada jde jen do skóre a diamantů.
           const [eaten] = kostky.splice(eatenIndex, 1);
+          const skinScore = SKIN_SCORE_PER_KOSTKA[equippedSkin] || 1;
           if (eaten.taco) {
-            score += TACO_SCORE;
+            // taco: +1 diamant a 2 skóre, k tomu bonus hada navíc oproti základnímu hadovi
+            score += TACO_SCORE + (skinScore - 1);
             diamanty += TACO_DIAMANTY;
           } else {
-            score += SKIN_SCORE_PER_KOSTKA[equippedSkin] || 1;
+            score += skinScore;
           }
           updateScoreDisplay();
           spawnOneKostka();

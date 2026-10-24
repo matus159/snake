@@ -9,4 +9,4 @@ Kolik skore da jedna kostka podle hada (hra pro jednoho hrace)
 - cerny: 4
 - zarici: 5
 - duhovy: 10
-- taco: vzdy 2 skore a 1 diamant navic, u kazdeho hada stejne
+- taco: 1 diamant a 2 skore, k tomu bonus hada navic (napr. duhovy +9 skore, zarici +4)
