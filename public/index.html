@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.27.0">
+  <meta name="snake-version" content="1.27.1">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -4795,35 +4795,49 @@
         }
       }
 
-      // Nová verze hry: hra si každou minutu stáhne svou stránku a porovná ji s tou,
-      // se kterou se načetla. Když se liší, ukáže „Upravování“ a načte se znovu.
+      // Nová verze hry („Upravování“). Číslo verze je v <meta name="snake-version"> a při každé
+      // změně hry se zvyšuje. Obrazovka se ukáže:
+      //  - hráčům s otevřenou hrou, když se na webu objeví nová verze (pak se hra načte znovu),
+      //  - hráčům, kteří hru otevřou a naposledy viděli starší verzi.
       const UPDATE_CHECK_MS = 60000;
       const UPDATE_SCREEN_MS = 5000;
+      const SEEN_VERSION_KEY = 'snake-seen-version';
+      const GAME_VERSION = document.querySelector('meta[name="snake-version"]')?.content || '';
       const updateScreenEl = document.getElementById('updateScreen');
       const updateSnakeCanvas = document.getElementById('updateSnake');
-      let pageFingerprint = null;
       let updatePending = false;
+      let updateReload = false;
       let updateShowing = false;
 
-      async function fetchPageFingerprint() {
-        const res = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) return null;
-        const text = await res.text();
-        let h = 5381;
-        for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-        return `${text.length}:${h}`;
+      function rememberSeenVersion() {
+        try { localStorage.setItem(SEEN_VERSION_KEY, GAME_VERSION); } catch {}
       }
 
+      // Po otevření hry: naposledy viděná verze je starší → ukázat „Upravování“ (bez znovunačtení).
+      (() => {
+        let seen = null;
+        try { seen = localStorage.getItem(SEEN_VERSION_KEY); } catch {}
+        // Hráč, který hru už hrál (má jméno), ale ještě nemá uloženou verzi, ji taky uvidí.
+        if (GAME_VERSION && seen !== GAME_VERSION && (seen || playerName)) {
+          updatePending = true;
+        } else {
+          rememberSeenVersion();
+        }
+      })();
+
       async function checkForUpdate() {
-        if (updatePending || location.protocol === 'file:') return;
+        if (updatePending || !GAME_VERSION || location.protocol === 'file:') return;
         try {
-          const fp = await fetchPageFingerprint();
-          if (!fp) return;
-          if (pageFingerprint === null) pageFingerprint = fp;
-          else if (fp !== pageFingerprint) updatePending = true;
+          const res = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const text = await res.text();
+          const m = text.match(/<meta name="snake-version" content="([^"]+)"/);
+          if (m && m[1] !== GAME_VERSION) {
+            updatePending = true;
+            updateReload = true;
+          }
         } catch {}
       }
-      checkForUpdate();
       setInterval(checkForUpdate, UPDATE_CHECK_MS);
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) checkForUpdate();
@@ -4837,7 +4851,16 @@
         bankScoreToDiamanty();
         saveProgress();
         updateScreenEl.classList.add('visible');
-        setTimeout(() => location.reload(), UPDATE_SCREEN_MS);
+        setTimeout(() => {
+          if (updateReload) {
+            location.reload();
+            return;
+          }
+          rememberSeenVersion();
+          updatePending = false;
+          updateShowing = false;
+          updateScreenEl.classList.remove('visible');
+        }, UPDATE_SCREEN_MS);
       }
 
       function drawUpdateSnake(now) {
