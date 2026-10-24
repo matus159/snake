@@ -3616,6 +3616,43 @@
         if (tacoImg.complete && tacoImg.naturalWidth) {
           ctx.drawImage(tacoImg, px + 1, py + 1, size - 2, size - 2);
         }
+        drawTacoSparkles(x, y);
+      }
+
+      // Zlaté třpytky kolem tacos kostky – blikají a každá kostka má jiný rytmus.
+      const TACO_SPARKLES = [
+        { dx: -0.2, dy: -0.15, phase: 0 },
+        { dx: 1.15, dy: 1.1, phase: 3.1 },
+      ];
+
+      function drawTacoSparkles(x, y) {
+        const t = performance.now() / 260;
+        const seed = (x * 7 + y * 13) % 10;
+        ctx.save();
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = 'rgba(255, 215, 0, 0.9)';
+        ctx.shadowBlur = 4;
+        TACO_SPARKLES.forEach((sp) => {
+          // bliknou jen krátce, většinu času nejsou vidět
+          const pulse = (Math.sin(t + sp.phase + seed) - 0.5) * 2;
+          if (pulse <= 0) return;
+          const cx = (x + sp.dx) * CELL;
+          const cy = (y + sp.dy) * CELL;
+          const r = CELL * 0.24 * pulse;
+          const w = r * 0.28;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - r);
+          ctx.lineTo(cx + w, cy - w);
+          ctx.lineTo(cx + r, cy);
+          ctx.lineTo(cx + w, cy + w);
+          ctx.lineTo(cx, cy + r);
+          ctx.lineTo(cx - w, cy + w);
+          ctx.lineTo(cx - r, cy);
+          ctx.lineTo(cx - w, cy - w);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.restore();
       }
 
       function drawGlowRect(x, y, t) {
