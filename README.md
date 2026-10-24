@@ -23,6 +23,10 @@ npm run deploy
 
 Nebo push na `main` → GitHub Actions deployne automaticky (potřebuje Cloudflare secrets).
 
+## Statistiky návštěv
+
+Návštěvnost měří **Cloudflare Web Analytics** (bez cookies). Zapíná se v Cloudflare: Workers & Pages → projekt → Metrics → Web Analytics. Měřicí kód Cloudflare přidává do stránky sám při každém nasazení, v `index.html` není. Statistiky jsou v Cloudflare pod Analytics & Logs → Web Analytics.
+
 ## Autoři obrázků
 
 Obrázek taca (Tacos event) je z [Twemoji](https://github.com/jdecked/twemoji) © Twitter, Inc. a další přispěvatelé, licence [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
