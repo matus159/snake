@@ -10,10 +10,10 @@ export const TACOS_EVENT = true;
 export const TACO_CHANCE = 0.25;
 export const TACO_SCORE = 2;
 // Tacos event běží jen v určitý čas (český čas, Europe/Prague):
-// po–pá 16:00–16:15, so–ne 15:00–15:45. Musí sedět s index.html.
+// po–pá 16:00–16:15, so–ne celý den. Musí sedět s index.html.
 export const TACOS_TIME_ZONE = 'Europe/Prague';
 const TACOS_WEEKDAY_WINDOW = [16 * 60, 16 * 60 + 15];
-const TACOS_WEEKEND_WINDOW = [15 * 60, 15 * 60 + 45];
+const TACOS_WEEKEND_WINDOW = [0, 24 * 60];
 // Dny (RRRR-MM-DD, český čas), kdy tacos event běží celý den.
 const TACOS_ALL_DAY_DATES: string[] = ['2026-10-23'];
 
