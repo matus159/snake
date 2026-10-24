@@ -166,6 +166,52 @@
       100% { opacity: 1; transform: translateX(-50%) scale(1); }
     }
 
+    /* Obrazovka „Upravování“ při nové verzi hry */
+    .update-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      background: #0f0f1a;
+    }
+
+    .update-screen.visible {
+      display: flex;
+    }
+
+    .update-screen canvas {
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .update-text {
+      font-size: clamp(2rem, 9vmin, 4.5rem);
+      font-weight: 800;
+      color: #fff;
+      -webkit-text-stroke: 2px #000;
+      paint-order: stroke fill;
+      text-shadow: 0 0 2px #000, 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000;
+      letter-spacing: 0.04em;
+    }
+
+    .update-qr {
+      display: none;
+      width: 150px;
+      height: 150px;
+      border-radius: 6px;
+    }
+
+    /* QR kód jen na počítači */
+    @media (pointer: fine) {
+      .update-qr {
+        display: block;
+      }
+    }
+
     .six-seven {
       position: fixed;
       left: 50%;
@@ -2045,6 +2091,11 @@
 <body>
   <div class="disco-lights" aria-hidden="true"></div>
   <div class="six-seven" id="sixSeven" role="status">67</div>
+  <div class="update-screen" id="updateScreen" role="alert">
+    <canvas id="updateSnake" width="320" height="80" aria-hidden="true"></canvas>
+    <div class="update-text">Upravování</div>
+    <svg viewBox="0 0 33 33" class="update-qr" shape-rendering="crispEdges" role="img" aria-label="QR kód na hru"><path fill="#fff" d="M0 0h33v33h-33z"/><path class="qrline" stroke="#000" d="M2 2.5h7m1 0h1m1 0h3m1 0h2m2 0h3m1 0h7m-29 1h1m5 0h1m2 0h1m3 0h3m1 0h1m2 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m3 0h6m3 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h1m1 0h1m1 0h1m3 0h5m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h2m2 0h1m2 0h3m1 0h2m-20 1h1m1 0h1m1 0h4m2 0h2m2 0h2m2 0h5m1 0h2m1 0h1m-28 1h2m1 0h2m1 0h1m5 0h4m3 0h1m1 0h1m3 0h1m1 0h1m-28 1h1m1 0h4m1 0h2m1 0h2m1 0h1m2 0h3m2 0h1m3 0h2m-28 1h1m2 0h3m4 0h1m2 0h1m1 0h1m2 0h2m1 0h4m1 0h2m-27 1h1m4 0h1m2 0h3m1 0h1m1 0h3m2 0h1m1 0h2m-24 1h4m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m-26 1h2m2 0h1m3 0h2m4 0h2m2 0h1m1 0h1m4 0h2m-28 1h1m1 0h2m3 0h1m1 0h1m1 0h4m1 0h1m3 0h1m1 0h1m-22 1h2m2 0h2m5 0h2m2 0h1m1 0h3m-21 1h1m3 0h1m1 0h2m2 0h3m1 0h1m5 0h2m2 0h1m1 0h2m-29 1h1m1 0h1m3 0h4m1 0h1m1 0h1m7 0h1m1 0h6m-27 1h3m2 0h1m1 0h3m5 0h4m2 0h3m1 0h2m-29 1h1m3 0h5m1 0h2m1 0h1m1 0h2m1 0h1m1 0h5m1 0h1m1 0h1m-21 1h3m1 0h1m1 0h1m1 0h2m2 0h1m3 0h1m2 0h2m-29 1h7m1 0h3m1 0h2m2 0h1m3 0h1m1 0h1m1 0h4m-28 1h1m5 0h1m1 0h3m4 0h1m2 0h1m1 0h1m3 0h1m1 0h2m-28 1h1m1 0h3m1 0h1m4 0h1m2 0h1m1 0h2m2 0h6m1 0h2m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h5m1 0h4m-28 1h1m1 0h3m1 0h1m2 0h1m3 0h2m1 0h2m1 0h2m3 0h1m1 0h1m1 0h1m-29 1h1m5 0h1m1 0h7m1 0h6m1 0h1m3 0h1m-28 1h7m2 0h1m1 0h4m2 0h1m2 0h2m2 0h2m1 0h1"/></svg>
+  </div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="gradDiamond" x1="0" y1="0" x2="0" y2="1">
@@ -4740,7 +4791,80 @@
         }
       }
 
+      // Nová verze hry: hra si každou minutu stáhne svou stránku a porovná ji s tou,
+      // se kterou se načetla. Když se liší, ukáže „Upravování“ a načte se znovu.
+      const UPDATE_CHECK_MS = 60000;
+      const UPDATE_SCREEN_MS = 5000;
+      const updateScreenEl = document.getElementById('updateScreen');
+      const updateSnakeCanvas = document.getElementById('updateSnake');
+      let pageFingerprint = null;
+      let updatePending = false;
+      let updateShowing = false;
+
+      async function fetchPageFingerprint() {
+        const res = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const text = await res.text();
+        let h = 5381;
+        for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+        return `${text.length}:${h}`;
+      }
+
+      async function checkForUpdate() {
+        if (updatePending || location.protocol === 'file:') return;
+        try {
+          const fp = await fetchPageFingerprint();
+          if (!fp) return;
+          if (pageFingerprint === null) pageFingerprint = fp;
+          else if (fp !== pageFingerprint) updatePending = true;
+        } catch {}
+      }
+      checkForUpdate();
+      setInterval(checkForUpdate, UPDATE_CHECK_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) checkForUpdate();
+      });
+
+      function maybeShowUpdateScreen() {
+        if (!updatePending || updateShowing) return;
+        // Uprostřed kola hráče nevyhodíme – počká se na pauzu, konec hry nebo menu.
+        if ((running && !paused) || multiInGame || tacosIntroPlaying || tacosCountdownActive) return;
+        updateShowing = true;
+        bankScoreToDiamanty();
+        saveProgress();
+        updateScreenEl.classList.add('visible');
+        setTimeout(() => location.reload(), UPDATE_SCREEN_MS);
+      }
+
+      function drawUpdateSnake(now) {
+        const g = updateSnakeCanvas.getContext('2d');
+        const w = updateSnakeCanvas.width;
+        const h = updateSnakeCanvas.height;
+        const cell = 26;
+        const SEGMENTS = 10;
+        g.clearRect(0, 0, w, h);
+        for (let i = SEGMENTS - 1; i >= 0; i--) {
+          // duhový had jako ve hře, hlava vpravo, tělo se vlní
+          const x = w / 2 + (SEGMENTS / 2 - 1 - i) * cell;
+          const y = h / 2 - cell / 2 + Math.sin(now / 220 - i * 0.7) * 10;
+          const hue = ((now / 18 + i * 16) % 360 + 360) % 360;
+          g.fillStyle = `hsl(${hue}, 92%, 58%)`;
+          g.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+          if (i === 0) {
+            g.fillStyle = '#000';
+            g.beginPath();
+            g.arc(x + cell / 2, y + cell / 2, cell / 5, 0, Math.PI * 2);
+            g.fill();
+          }
+        }
+      }
+
       function loop(now) {
+        maybeShowUpdateScreen();
+        if (updateShowing) {
+          drawUpdateSnake(now);
+          return requestAnimationFrame(loop);
+        }
         // Dotykové ovládání: Esc během hry mimo obchod, šipky jen když had jede.
         document.body.classList.toggle('in-game', running || multiInGame);
         document.body.classList.toggle('shop-open', shopOverlay.classList.contains('visible'));
