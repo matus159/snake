@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.29.0">
+  <meta name="snake-version" content="1.30.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -2204,6 +2204,31 @@
         margin: -32px 0 0 -32px;
       }
     }
+
+    /* Mobil na šířku: formulář účtu (3 políčka) se musí vejít i s tlačítkem. */
+    @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+      #nameOverlay h2 {
+        margin-bottom: 0.3rem;
+      }
+
+      #nameOverlay .account-tabs {
+        margin-bottom: 0.4rem;
+      }
+
+      #nameOverlay .name-input {
+        margin-bottom: 0.4rem;
+        padding: 0.3rem 0.6rem;
+      }
+
+      #nameOverlay .account-warning {
+        max-width: 420px;
+        margin-bottom: 0.3rem;
+      }
+
+      #nameOverlay .account-msg {
+        margin: 0 0 0.3rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2296,8 +2321,9 @@
         </div>
         <form class="account-form" id="accountForm" autocomplete="on">
           <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Jméno" autocomplete="username">
+          <input type="password" id="accountSecondNameInput" class="name-input" maxlength="20" placeholder="2. jméno (tajné)" autocomplete="off">
           <input type="password" id="accountPasswordInput" class="name-input" maxlength="40" placeholder="Heslo" autocomplete="current-password">
-          <p class="account-warning" id="accountWarning">Nepoužívej heslo, které máš jinde – kdo zná tvoje jméno, může si ho ve hře zobrazit.</p>
+          <p class="account-warning" id="accountWarning">2. jméno se nikde neukáže – nikomu ho neříkej, kdo ho zná, může si zobrazit tvoje heslo. Nepoužívej heslo, které máš jinde.</p>
           <p class="account-msg" id="accountMsg"></p>
           <button class="btn" id="nameBtn" type="submit">Vytvořit účet</button>
           <button type="button" class="account-link" id="forgotBtn">Zapomněl jsem heslo</button>
@@ -2680,6 +2706,7 @@
       const multiLobbyBtn = document.getElementById('multiLobbyBtn');
       const playerNameInput = document.getElementById('playerNameInput');
       const accountPasswordInput = document.getElementById('accountPasswordInput');
+      const accountSecondNameInput = document.getElementById('accountSecondNameInput');
       const accountForm = document.getElementById('accountForm');
       const accountMsg = document.getElementById('accountMsg');
       const accountWarning = document.getElementById('accountWarning');
@@ -3304,9 +3331,10 @@
         multiGameOverOverlay.classList.remove('visible');
         setAccountMode(mode);
         if (!playerNameInput.value) playerNameInput.value = nameBeforeAccounts;
+        accountSecondNameInput.value = '';
         accountPasswordInput.value = '';
         nameOverlay.classList.add('visible');
-        (playerNameInput.value ? accountPasswordInput : playerNameInput).focus();
+        (playerNameInput.value ? accountSecondNameInput : playerNameInput).focus();
       }
 
       async function accountApi(action, body) {
@@ -3332,16 +3360,21 @@
       async function submitAccount() {
         if (accountBusy) return;
         const name = playerNameInput.value.trim();
+        const secondName = accountSecondNameInput.value.trim();
         const password = accountPasswordInput.value;
         if (!name) {
           playerNameInput.focus();
+          return;
+        }
+        if (!secondName) {
+          accountSecondNameInput.focus();
           return;
         }
         accountBusy = true;
         nameBtn.disabled = true;
         try {
           if (accountMode === 'forgot') {
-            const r = await accountApi('forgot', { name });
+            const r = await accountApi('forgot', { name, secondName });
             if (r.ok) showAccountMessage(`Heslo hráče ${r.data.name}: ${r.data.password}`, true);
             else showAccountMessage(r.error);
             return;
@@ -3350,7 +3383,7 @@
             accountPasswordInput.focus();
             return;
           }
-          const body = { name, password };
+          const body = { name, secondName, password };
           if (accountMode === 'register') {
             // postup z hraní bez účtu (stejné jméno v tomhle prohlížeči) se převede do účtu
             const local = readProfiles()[getProfileId(name)];
@@ -3361,7 +3394,7 @@
             showAccountMessage(r.error);
             return;
           }
-          accountSession = { name: r.data.name, password };
+          accountSession = { name: r.data.name, secondName, password };
           localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountSession));
           applyServerProfile(r.data.name, r.data.profile);
           playerName = r.data.name;

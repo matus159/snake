@@ -1,6 +1,6 @@
-// Účty hráčů: jméno + heslo a uložený postup (diamanty, gems, hadi).
+// Účty hráčů: jméno + tajné 2. jméno + heslo a uložený postup (diamanty, gems, hadi).
 // Ukládá se do úložiště Durable Objectu pod klíčem `account:<jméno malými písmeny>`.
-// Pozor: heslo je uložené tak, aby ho šlo ukázat v „Zapomněl jsem heslo“.
+// Pozor: heslo je uložené tak, aby ho šlo ukázat v „Zapomněl jsem heslo“ (jen se správným 2. jménem).
 
 export interface AccountProfile {
   diamanty: number;
@@ -12,6 +12,8 @@ export interface AccountProfile {
 
 interface Account {
   name: string;
+  // tajné 2. jméno – nikde se neukazuje, chce se při přihlášení a u zapomenutého hesla
+  secondName?: string;
   password: string;
   profile: AccountProfile;
   createdAt: number;
@@ -53,6 +55,10 @@ function cleanProfile(raw: unknown): AccountProfile {
   };
 }
 
+function sameSecondName(a: string | undefined, b: string): boolean {
+  return !!a && a.toLowerCase() === b.toLowerCase();
+}
+
 function accountKey(name: string): string {
   return `account:${name.toLowerCase()}`;
 }
@@ -68,6 +74,7 @@ export async function handleAccountRequest(request: Request, storage: DurableObj
   const action = new URL(request.url).pathname.replace('/api/account/', '');
   const name = String(body.name ?? '').trim();
   const password = String(body.password ?? '');
+  const secondName = String(body.secondName ?? '').trim();
 
   if (name.length < NAME_MIN || name.length > NAME_MAX) {
     return json({ error: `Jméno musí mít ${NAME_MIN}–${NAME_MAX} znaků.` }, 400);
@@ -76,8 +83,14 @@ export async function handleAccountRequest(request: Request, storage: DurableObj
   const account = await storage.get<Account>(key);
 
   if (action === 'forgot') {
-    if (!account) return json({ error: 'Hráč s tímhle jménem neexistuje.' }, 404);
+    if (!account || !sameSecondName(account.secondName, secondName)) {
+      return json({ error: 'Špatné jméno nebo 2. jméno.' }, 404);
+    }
     return json({ name: account.name, password: account.password });
+  }
+
+  if ((action === 'register' || action === 'login') && (secondName.length < NAME_MIN || secondName.length > NAME_MAX)) {
+    return json({ error: `2. jméno musí mít ${NAME_MIN}–${NAME_MAX} znaků.` }, 400);
   }
 
   if (action === 'register') {
@@ -87,6 +100,7 @@ export async function handleAccountRequest(request: Request, storage: DurableObj
     if (account) return json({ error: 'Tohle jméno už má jiný hráč. Vyber jiné nebo se přihlas.' }, 409);
     const created: Account = {
       name,
+      secondName,
       password,
       // postup z tohohle prohlížeče (staré hraní bez účtu) se převede do nového účtu
       profile: body.profile ? cleanProfile(body.profile) : emptyProfile(),
@@ -97,10 +111,17 @@ export async function handleAccountRequest(request: Request, storage: DurableObj
   }
 
   if (!account || account.password !== password) {
-    return json({ error: 'Špatné jméno nebo heslo.' }, 401);
+    return json({ error: 'Špatné jméno, 2. jméno nebo heslo.' }, 401);
   }
 
   if (action === 'login') {
+    if (!account.secondName) {
+      // účty z doby před 2. jménem si ho nastaví při prvním přihlášení
+      account.secondName = secondName;
+      await storage.put(key, account);
+    } else if (!sameSecondName(account.secondName, secondName)) {
+      return json({ error: 'Špatné jméno, 2. jméno nebo heslo.' }, 401);
+    }
     return json({ name: account.name, profile: account.profile });
   }
 
