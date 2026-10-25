@@ -9,7 +9,6 @@ import {
   tickGame,
 } from './game-logic';
 import type { Env, Kostka, Player, WsAttachment } from './types';
-import { handleAccountRequest } from './accounts';
 
 function send(ws: WebSocket, msg: unknown) {
   try {
@@ -45,9 +44,6 @@ export class GameServer implements DurableObject {
   }
 
   async fetch(request: Request): Promise<Response> {
-    if (new URL(request.url).pathname.startsWith('/api/account/')) {
-      return handleAccountRequest(request, this.state.storage);
-    }
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('WebSocket required', { status: 426 });
     }
