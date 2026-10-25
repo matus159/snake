@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.27.4">
+  <meta name="snake-version" content="1.28.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -490,8 +490,8 @@
       }
     }
 
-    /* Na mobilu jen na šířku: na výšku se ukáže výzva k otočení telefonu. */
-    @media (pointer: coarse) and (orientation: portrait) {
+    /* Na telefonu jen na šířku: na výšku se ukáže výzva k otočení. Tablety jdou i na výšku. */
+    @media (pointer: coarse) and (orientation: portrait) and (max-width: 700px) {
       .rotate-overlay {
         display: flex;
       }
@@ -2086,6 +2086,60 @@
       #shopWardrobeView .wardrobe-scroll {
         flex: none;
         overflow: visible;
+      }
+    }
+
+    /* Tablet na šířku (skoro čtvercová obrazovka): plocha se zúží, aby joystick a diamanty
+       měly místo vedle ní a nepřekrývaly hada. */
+    @media (pointer: coarse) and (orientation: landscape) and (max-aspect-ratio: 16/10) {
+      .canvas-container {
+        max-width: calc(100vw - 320px);
+      }
+
+      .game-wrapper {
+        max-width: none;
+      }
+
+      .controls {
+        left: -130px;
+      }
+    }
+
+    /* Malý telefon na šířku (třeba iPhone SE): menší joystick, ať nezasahuje do plochy. */
+    @media (pointer: coarse) and (orientation: landscape) and (max-height: 330px) {
+      .joystick {
+        width: 76px;
+        height: 76px;
+        right: 4px;
+        bottom: 4px;
+      }
+
+      .joystick-knob {
+        width: 34px;
+        height: 34px;
+        margin: -17px 0 0 -17px;
+      }
+    }
+
+    /* Tablet na výšku: plocha přes celou šířku, joystick vpravo dole pod ní. */
+    @media (pointer: coarse) and (orientation: portrait) and (min-width: 701px) {
+      .canvas-container {
+        height: auto;
+        max-height: none;
+        width: 100%;
+      }
+
+      .joystick {
+        width: 150px;
+        height: 150px;
+        right: 30px;
+        bottom: 30px;
+      }
+
+      .joystick-knob {
+        width: 64px;
+        height: 64px;
+        margin: -32px 0 0 -32px;
       }
     }
   </style>
@@ -5094,13 +5148,14 @@
 
       const joystick = document.getElementById('joystick');
       const joystickKnob = document.getElementById('joystickKnob');
-      const JOYSTICK_RADIUS = 40;
       const JOYSTICK_DEAD_ZONE = 12;
       let joystickPointer = null;
       let joystickDir = null;
 
       function moveJoystick(e) {
         const rect = joystick.getBoundingClientRect();
+        // jak daleko jde kolečko od středu – podle velikosti joysticku (telefon, tablet)
+        const JOYSTICK_RADIUS = rect.width * 0.36;
         let dx = e.clientX - (rect.left + rect.width / 2);
         let dy = e.clientY - (rect.top + rect.height / 2);
         const dist = Math.hypot(dx, dy);
