@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.29.0">
+  <meta name="snake-version" content="1.30.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -716,68 +716,6 @@
     #banTimeLeft {
       color: #00d9ff;
       font-weight: 700;
-    }
-
-    .account-tabs {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .account-tab {
-      font-family: inherit;
-      font-size: 0.85rem;
-      font-weight: 700;
-      padding: 0.45rem 0.9rem;
-      border-radius: 6px;
-      border: 1px solid rgba(0, 217, 255, 0.4);
-      background: transparent;
-      color: #00d9ff;
-      cursor: pointer;
-    }
-
-    .account-tab.active {
-      background: linear-gradient(90deg, #00d9ff, #00ff88);
-      color: #0a0a12;
-      border-color: transparent;
-    }
-
-    .account-form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .account-warning {
-      max-width: 260px;
-      margin: 0 0 0.8rem;
-      font-size: 0.7rem;
-      color: #c9a227;
-      text-align: center;
-    }
-
-    .account-msg {
-      min-height: 1.2em;
-      max-width: 280px;
-      margin: 0 0 0.8rem;
-      font-size: 0.8rem;
-      text-align: center;
-      color: #ff6b6b;
-    }
-
-    .account-msg.ok {
-      color: #00ff88;
-    }
-
-    .account-link {
-      margin-top: 0.8rem;
-      font-family: inherit;
-      font-size: 0.75rem;
-      background: none;
-      border: none;
-      color: #00d9ff;
-      text-decoration: underline;
-      cursor: pointer;
     }
 
     .name-input {
@@ -2249,7 +2187,7 @@
       <div id="modeSelectOverlay" class="overlay visible">
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
-          <button type="button" class="btn btn-small" id="changeNameModeBtn">Odhlásit se</button>
+          <button type="button" class="btn btn-small" id="changeNameModeBtn">Změnit jméno</button>
           <div class="mode-select-layout">
           <button type="button" class="mode-card" id="singlePlayerBtn">
             <div class="mode-icons">
@@ -2289,26 +2227,16 @@
         <button class="btn" id="multiLobbyBtn">Zpět do lobby</button>
       </div>
       <div id="nameOverlay" class="overlay">
-        <h2 id="nameOverlayTitle">Vytvořit účet</h2>
-        <div class="account-tabs">
-          <button type="button" class="account-tab" id="accTabRegister">Vytvořit účet</button>
-          <button type="button" class="account-tab" id="accTabLogin">Přihlásit</button>
-        </div>
-        <form class="account-form" id="accountForm" autocomplete="on">
-          <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Jméno" autocomplete="username">
-          <input type="password" id="accountPasswordInput" class="name-input" maxlength="40" placeholder="Heslo" autocomplete="current-password">
-          <p class="account-warning" id="accountWarning">Nepoužívej heslo, které máš jinde – kdo zná tvoje jméno, může si ho ve hře zobrazit.</p>
-          <p class="account-msg" id="accountMsg"></p>
-          <button class="btn" id="nameBtn" type="submit">Vytvořit účet</button>
-          <button type="button" class="account-link" id="forgotBtn">Zapomněl jsem heslo</button>
-        </form>
+        <h2 id="nameOverlayTitle">Zadej jméno</h2>
+        <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Tvé jméno" autocomplete="off">
+        <button class="btn" id="nameBtn">Pokračovat</button>
       </div>
       <div id="startOverlay" class="overlay">
         <h2 id="startGreeting">Připraven?</h2>
         <p><span class="info-keys">Stiskni mezerník nebo klikni na tlačítko</span><span class="info-touch">Klepni na tlačítko</span></p>
         <div class="start-name-row">
           <button class="btn" id="startBtn">Začít hru</button>
-          <button class="btn btn-small" id="changeNameStartBtn">Odhlásit se</button>
+          <button class="btn btn-small" id="changeNameStartBtn">Změnit jméno</button>
         </div>
       </div>
       <div id="gameOverOverlay" class="overlay">
@@ -2628,13 +2556,6 @@
       let blackSnakeAnim = null;
 
       let playerName = localStorage.getItem(PLAYER_NAME_KEY) || '';
-      // Účet: jméno a heslo přihlášeného hráče (bez přihlášení se nehraje).
-      const ACCOUNT_KEY = 'snake-account';
-      let accountSession = null;
-      try { accountSession = JSON.parse(localStorage.getItem(ACCOUNT_KEY) || 'null'); } catch {}
-      // jméno z doby před účty – předvyplní se při vytvoření účtu
-      const nameBeforeAccounts = accountSession ? '' : playerName;
-      if (!accountSession) playerName = '';
       let gameMode = null;
       let multiWs = null;
       let multiPlayerId = null;
@@ -2679,13 +2600,6 @@
       const multiGameOverText = document.getElementById('multiGameOverText');
       const multiLobbyBtn = document.getElementById('multiLobbyBtn');
       const playerNameInput = document.getElementById('playerNameInput');
-      const accountPasswordInput = document.getElementById('accountPasswordInput');
-      const accountForm = document.getElementById('accountForm');
-      const accountMsg = document.getElementById('accountMsg');
-      const accountWarning = document.getElementById('accountWarning');
-      const accTabRegister = document.getElementById('accTabRegister');
-      const accTabLogin = document.getElementById('accTabLogin');
-      const forgotBtn = document.getElementById('forgotBtn');
       const nameBtn = document.getElementById('nameBtn');
       const startGreeting = document.getElementById('startGreeting');
       const playerNameDisplay = document.getElementById('playerNameDisplay');
@@ -3228,7 +3142,6 @@
           weekendWheelSpinDate,
         };
         writeProfiles(profiles);
-        scheduleProfileSync();
       }
 
       function getGemsBalance() {
@@ -3275,168 +3188,20 @@
         updateOwnerPanel();
       }
 
-      let accountMode = 'register';
-      let accountBusy = false;
-
-      function setAccountMode(mode) {
-        accountMode = mode;
-        const titles = { register: 'Vytvořit účet', login: 'Přihlásit', forgot: 'Zapomněl jsem heslo' };
-        const buttons = { register: 'Vytvořit účet', login: 'Přihlásit', forgot: 'Ukázat heslo' };
-        nameOverlayTitle.textContent = titles[mode];
-        nameBtn.textContent = buttons[mode];
-        accTabRegister.classList.toggle('active', mode === 'register');
-        accTabLogin.classList.toggle('active', mode !== 'register');
-        accountPasswordInput.classList.toggle('hidden', mode === 'forgot');
-        accountPasswordInput.autocomplete = mode === 'register' ? 'new-password' : 'current-password';
-        accountWarning.classList.toggle('hidden', mode !== 'register');
-        forgotBtn.textContent = mode === 'forgot' ? 'Zpět na přihlášení' : 'Zapomněl jsem heslo';
-        forgotBtn.classList.toggle('hidden', mode === 'register');
-        showAccountMessage('');
-      }
-
-      function showAccountMessage(text, ok = false) {
-        accountMsg.textContent = text;
-        accountMsg.classList.toggle('ok', ok);
-      }
-
-      function showAccountScreen(mode) {
+      function openChangeName() {
+        const changing = Boolean(playerName);
+        nameOverlayTitle.textContent = changing ? 'Změnit jméno' : 'Zadej jméno';
+        nameBtn.textContent = changing ? 'Uložit' : 'Pokračovat';
+        playerNameInput.value = playerName || '';
         hideAllMenuOverlays();
         multiGameOverOverlay.classList.remove('visible');
-        setAccountMode(mode);
-        if (!playerNameInput.value) playerNameInput.value = nameBeforeAccounts;
-        accountPasswordInput.value = '';
         nameOverlay.classList.add('visible');
-        (playerNameInput.value ? accountPasswordInput : playerNameInput).focus();
-      }
-
-      async function accountApi(action, body) {
-        try {
-          const res = await fetch(`/api/account/${action}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-          const data = await res.json().catch(() => ({}));
-          return res.ok ? { ok: true, data } : { ok: false, error: data.error || 'Něco se nepovedlo.' };
-        } catch {
-          return { ok: false, error: 'Server není dostupný, zkus to za chvíli.' };
-        }
-      }
-
-      function applyServerProfile(name, profile) {
-        const profiles = readProfiles();
-        profiles[getProfileId(name)] = { ...defaultProfile(), ...profile };
-        writeProfiles(profiles);
-      }
-
-      async function submitAccount() {
-        if (accountBusy) return;
-        const name = playerNameInput.value.trim();
-        const password = accountPasswordInput.value;
-        if (!name) {
-          playerNameInput.focus();
-          return;
-        }
-        accountBusy = true;
-        nameBtn.disabled = true;
-        try {
-          if (accountMode === 'forgot') {
-            const r = await accountApi('forgot', { name });
-            if (r.ok) showAccountMessage(`Heslo hráče ${r.data.name}: ${r.data.password}`, true);
-            else showAccountMessage(r.error);
-            return;
-          }
-          if (!password) {
-            accountPasswordInput.focus();
-            return;
-          }
-          const body = { name, password };
-          if (accountMode === 'register') {
-            // postup z hraní bez účtu (stejné jméno v tomhle prohlížeči) se převede do účtu
-            const local = readProfiles()[getProfileId(name)];
-            if (local) body.profile = local;
-          }
-          const r = await accountApi(accountMode === 'register' ? 'register' : 'login', body);
-          if (!r.ok) {
-            showAccountMessage(r.error);
-            return;
-          }
-          accountSession = { name: r.data.name, password };
-          localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountSession));
-          applyServerProfile(r.data.name, r.data.profile);
-          playerName = r.data.name;
-          localStorage.setItem(PLAYER_NAME_KEY, playerName);
-          loadPlayerProfile();
-          updatePlayerNameDisplay();
-          refreshCurrencyUI();
-          if (isPlayerBanned(playerName)) {
-            showBanOverlay();
-            return;
-          }
-          afterNameSaved();
-        } finally {
-          accountBusy = false;
-          nameBtn.disabled = false;
-        }
-      }
-
-      function logout() {
-        flushProfileSync();
-        accountSession = null;
-        localStorage.removeItem(ACCOUNT_KEY);
-        playerName = '';
-        localStorage.removeItem(PLAYER_NAME_KEY);
-        loadPlayerProfile();
-        updatePlayerNameDisplay();
-        refreshCurrencyUI();
-        gameMode = null;
-        playerNameInput.value = '';
-        showAccountScreen('login');
-      }
-
-      // Postup se ukládá i na server, aby účet fungoval na každém zařízení.
-      let profileSyncTimer = null;
-
-      function scheduleProfileSync() {
-        if (!accountSession) return;
-        clearTimeout(profileSyncTimer);
-        profileSyncTimer = setTimeout(flushProfileSync, 1500);
-      }
-
-      function flushProfileSync() {
-        clearTimeout(profileSyncTimer);
-        profileSyncTimer = null;
-        if (!accountSession || getProfileId(accountSession.name) !== getProfileId(playerName)) return;
-        const profile = readProfiles()[getProfileId(playerName)];
-        if (!profile) return;
-        const payload = JSON.stringify({ ...accountSession, profile });
-        try {
-          fetch('/api/account/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true,
-          }).catch(() => {});
-        } catch {}
-      }
-      window.addEventListener('pagehide', flushProfileSync);
-
-      // Po otevření hry se přihlášení ověří a postup se vezme ze serveru.
-      async function verifyAccountSession() {
-        if (!accountSession) return;
-        const r = await accountApi('login', accountSession);
-        if (r.ok) {
-          applyServerProfile(r.data.name, r.data.profile);
-          loadPlayerProfile();
-          refreshCurrencyUI();
-        } else if (r.error && !r.error.startsWith('Server')) {
-          logout();
-        }
+        playerNameInput.focus();
+        if (changing) playerNameInput.select();
       }
 
       function afterNameSaved() {
         nameOverlay.classList.remove('visible');
-        showAccountMessage('');
         if (gameMode === 'single') showStartScreen();
         else if (gameMode === 'multi') showMultiLobby();
         else showModeSelect();
@@ -3483,7 +3248,9 @@
           return;
         }
         if (!playerName) {
-          showAccountScreen('register');
+          nameOverlay.classList.add('visible');
+          playerNameInput.value = '';
+          playerNameInput.focus();
           return;
         }
         enterSelectedMode();
@@ -3848,11 +3615,28 @@
           startGreeting.textContent = `Ahoj, ${playerName}!`;
           startOverlay.classList.add('visible');
         } else {
-          showAccountScreen('login');
+          nameOverlay.classList.add('visible');
         }
         updatePlayerNameDisplay();
       }
 
+      function savePlayerName() {
+        const name = playerNameInput.value.trim();
+        if (!name) {
+          playerNameInput.focus();
+          return;
+        }
+        playerName = name;
+        localStorage.setItem(PLAYER_NAME_KEY, playerName);
+        loadPlayerProfile();
+        updatePlayerNameDisplay();
+        refreshCurrencyUI();
+        if (isPlayerBanned(playerName)) {
+          showBanOverlay();
+          return;
+        }
+        afterNameSaved();
+      }
       const startBtn = document.getElementById('startBtn');
       const restartBtn = document.getElementById('restartBtn');
 
@@ -5301,7 +5085,7 @@
           if (nameOverlay.classList.contains('visible')) {
             if (e.code === 'Enter') {
               e.preventDefault();
-              submitAccount();
+              savePlayerName();
             }
             return;
           }
@@ -5454,21 +5238,18 @@
           unequipSkin();
         }
       });
-      accountForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        submitAccount();
-      });
-      accTabRegister.addEventListener('click', () => setAccountMode('register'));
-      accTabLogin.addEventListener('click', () => setAccountMode('login'));
-      forgotBtn.addEventListener('click', () => setAccountMode(accountMode === 'forgot' ? 'login' : 'forgot'));
-      changeNameModeBtn.addEventListener('click', logout);
-      changeNameStartBtn.addEventListener('click', logout);
+      nameBtn.addEventListener('click', savePlayerName);
+      changeNameModeBtn.addEventListener('click', openChangeName);
+      changeNameStartBtn.addEventListener('click', openChangeName);
       singlePlayerBtn.addEventListener('click', () => selectGameMode('single'));
       multiPlayerBtn.addEventListener('click', () => selectGameMode('multi'));
       multiBackBtn.addEventListener('click', showModeSelect);
       multiStartBtn.addEventListener('click', requestMultiStart);
       multiReconnectBtn.addEventListener('click', connectMultiplayer);
       multiLobbyBtn.addEventListener('click', returnToMultiLobby);
+      playerNameInput.addEventListener('keydown', (e) => {
+        if (e.code === 'Enter') savePlayerName();
+      });
 
       ownerScoreInput.addEventListener('input', applyOwnerInputs);
       ownerDiamantyInput.addEventListener('input', applyOwnerInputs);
@@ -5518,14 +5299,11 @@
       updateOwnerPanel();
       loadTacosMusic();
       initGame();
-      if (!accountSession) {
-        showAccountScreen('register');
-      } else if (playerName && isPlayerBanned(playerName)) {
+      if (playerName && isPlayerBanned(playerName)) {
         showBanOverlay();
       } else {
         showModeSelect();
       }
-      verifyAccountSession();
       refreshCurrencyUI();
       draw();
       requestAnimationFrame(loop);
