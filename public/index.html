@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.32.0">
+  <meta name="snake-version" content="1.33.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -1950,7 +1950,7 @@
         max-height: calc(100vh - 16px);
       }
 
-      /* Diamanty a gems jen jako ikonka a číslo vlevo vedle pole, během hry. */
+      /* Diamanty jen jako ikonka a číslo vlevo vedle pole, během hry. */
       .controls {
         position: absolute;
         left: 10px;
@@ -1983,7 +1983,7 @@
         margin-right: 4px;
       }
 
-      /* V obchodě větší počet diamantů a gems, ať je dobře vidět. */
+      /* V obchodě větší počet diamantů, ať je dobře vidět. */
       .shop-top-bar .shop-stat-label {
         font-size: 0.95rem;
       }
@@ -2242,7 +2242,6 @@
       <div id="gameOverOverlay" class="overlay">
         <h2>Konec hry</h2>
         <p>Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="finalDiamanty">0</span></p>
-        <p>Gems: <svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg><span id="finalGems">0</span></p>
         <button class="btn" id="restartBtn">Hrát znovu</button>
       </div>
       <div id="pauseOverlay" class="overlay">
@@ -2290,10 +2289,6 @@
             <div class="shop-stat shop-stat-diamond">
               <div class="shop-stat-label"><svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>Diamanty</div>
               <div class="shop-stat-value" id="shopDiamantyTop">0</div>
-            </div>
-            <div class="shop-stat shop-stat-gems">
-              <div class="shop-stat-label"><svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg>Gems</div>
-              <div class="shop-stat-value" id="shopGemsTop">0</div>
             </div>
           </div>
         </div>
@@ -2356,7 +2351,7 @@
                       <canvas id="wheelCanvas" width="180" height="180"></canvas>
                     </div>
                   </div>
-                  <button type="button" class="wheel-gems-cost" id="wheelSpinBtn"><svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg>1200 gems</button>
+                  <button type="button" class="wheel-gems-cost" id="wheelSpinBtn"><svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>12000 diamantů</button>
                   <p class="wheel-result" id="wheelResult"></p>
                   <p class="wheel-weekend-hint" id="wheelWeekendHint"></p>
                 </div>
@@ -2371,7 +2366,7 @@
                         <div class="egg-prize-reveal" id="eggPrizeReveal"></div>
                       </div>
                     </div>
-                    <span class="egg-price-box" id="eggPriceBox">2000 gems</span>
+                    <span class="egg-price-box" id="eggPriceBox">20000 diamantů</span>
                   </button>
                   <p class="wheel-result" id="eggResult"></p>
                   <p class="gift-hint egg-prize-hint">Občas padne vzácný duhový had (~10 % šance).</p>
@@ -2387,7 +2382,6 @@
     </div>
     <div class="controls">
       <p class="diamond-row">Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="diamanty">0</span></p>
-      <p class="gems-row">Gems: <svg class="currency-icon" aria-hidden="true"><use href="#iconGem"/></svg><span id="gems">0</span></p>
     </div>
     <button type="button" class="touch-btn touch-esc" id="touchEscBtn" aria-label="Esc">Esc</button>
     <div class="rotate-overlay">
@@ -2405,7 +2399,6 @@
     <div id="ownerPanel" class="owner-panel">
       <label>Skóre: <input type="number" id="ownerScore" min="0" value="0"></label>
       <label>Diamanty: <input type="number" id="ownerDiamanty" min="0" value="0"></label>
-      <label>Gems: <input type="number" id="ownerGems" min="0" value="0"></label>
       <button type="button" class="btn owner-chat-btn" id="ownerChatBtn">Chat (Enter)</button>
     </div>
   </div>
@@ -2524,9 +2517,10 @@
       resetAllProgressOnce();
       const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10 };
       const SCORE_PER_DIAMANT = 5;
+      // Gems už ve hře nejsou: staré gems se převedou na diamanty (1 gem = 10 diamantů).
       const DIAMANTS_PER_GEM = 10;
-      const WHEEL_SPIN_COST = 1200;
-      const EGG_CRACK_COST = 2000;
+      const WHEEL_SPIN_COST = 12000;
+      const EGG_CRACK_COST = 20000;
       const WHEEL_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'yellow', 'black'];
       const EGG_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'yellow', 'black', 'gold', 'rainbow'];
       const SKIN_NAMES = {
@@ -2588,7 +2582,6 @@
       let wardrobe = [];
       let weekendWheelSpinDate = null;
       let diamanty = 0;
-      let gems = 0;
 
       const nameOverlay = document.getElementById('nameOverlay');
       const modeSelectOverlay = document.getElementById('modeSelectOverlay');
@@ -2758,7 +2751,6 @@
       const shopBtn = document.getElementById('shopBtn');
       const shopBackBtn = document.getElementById('shopBackBtn');
       const shopDiamantyTopEl = document.getElementById('shopDiamantyTop');
-      const shopGemsTopEl = document.getElementById('shopGemsTop');
       const shopMainView = document.getElementById('shopMainView');
       const shopWardrobeView = document.getElementById('shopWardrobeView');
       const shopWardrobeBtn = document.getElementById('shopWardrobeBtn');
@@ -2795,11 +2787,9 @@
       const shopYellowSkinBtn = document.getElementById('shopYellowSkinBtn');
       let shopView = 'main';
       const diamantyEl = document.getElementById('diamanty');
-      const gemsEl = document.getElementById('gems');
       const ownerPanel = document.getElementById('ownerPanel');
       const ownerScoreInput = document.getElementById('ownerScore');
       const ownerDiamantyInput = document.getElementById('ownerDiamanty');
-      const ownerGemsInput = document.getElementById('ownerGems');
       const ownerChatBtn = document.getElementById('ownerChatBtn');
       const ownerChatOverlay = document.getElementById('ownerChatOverlay');
       const ownerChatLog = document.getElementById('ownerChatLog');
@@ -2827,7 +2817,7 @@
       }
 
       function defaultProfile() {
-        return { diamanty: 0, gems: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null };
+        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null };
       }
 
       function readProfiles() {
@@ -2853,7 +2843,7 @@
         const id = getProfileId(playerName) || 'hrac';
         if (!profiles[id]) profiles[id] = defaultProfile();
         if (legacyDiamanty !== null) profiles[id].diamanty = parseInt(legacyDiamanty, 10) || 0;
-        if (legacyGems !== null) profiles[id].gems = parseInt(legacyGems, 10) || 0;
+        if (legacyGems !== null) profiles[id].diamanty += (parseInt(legacyGems, 10) || 0) * DIAMANTS_PER_GEM;
         if (legacyWardrobe !== null) {
           try {
             profiles[id].wardrobe = JSON.parse(legacyWardrobe) || [];
@@ -2875,15 +2865,13 @@
         const id = getProfileId(playerName);
         if (!id) {
           diamanty = 0;
-          gems = 0;
           wardrobe = [];
           equippedSkin = 'default';
           weekendWheelSpinDate = null;
           return;
         }
         const profile = profiles[id] || defaultProfile();
-        diamanty = parseInt(profile.diamanty, 10) || 0;
-        gems = parseInt(profile.gems, 10) || 0;
+        diamanty = (parseInt(profile.diamanty, 10) || 0) + (parseInt(profile.gems, 10) || 0) * DIAMANTS_PER_GEM;
         wardrobe = Array.isArray(profile.wardrobe) ? [...profile.wardrobe] : [];
         equippedSkin = profile.equippedSkin || 'default';
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
@@ -3088,13 +3076,11 @@
       function syncOwnerInputs() {
         ownerScoreInput.value = score;
         ownerDiamantyInput.value = diamanty;
-        ownerGemsInput.value = gems;
       }
 
       function applyOwnerInputs() {
         score = Math.max(0, parseInt(ownerScoreInput.value, 10) || 0);
         diamanty = Math.max(0, parseInt(ownerDiamantyInput.value, 10) || 0);
-        gems = Math.max(0, parseInt(ownerGemsInput.value, 10) || 0);
         updateScoreDisplay();
         if (shopView === 'wardrobe') updateWheelUi();
       }
@@ -3107,23 +3093,18 @@
       function updateShopCurrencyDisplay() {
         if (shopOverlay.classList.contains('visible')) {
           shopDiamantyTopEl.textContent = diamanty;
-          shopGemsTopEl.textContent = gems;
         }
         check67();
       }
 
-      // Hláška „67“, když hráč dosáhne přesně 67 diamantů nebo gems.
+      // Hláška „67“, když hráč dosáhne přesně 67 diamantů.
       const sixSevenEl = document.getElementById('sixSeven');
       let last67Diamanty = null;
-      let last67Gems = null;
       let sixSevenTimer = null;
 
       function check67() {
-        const g = getGemsBalance();
-        const reached = (last67Diamanty !== null && diamanty === 67 && last67Diamanty !== 67)
-          || (last67Gems !== null && g === 67 && last67Gems !== 67);
+        const reached = last67Diamanty !== null && diamanty === 67 && last67Diamanty !== 67;
         last67Diamanty = diamanty;
-        last67Gems = g;
         if (!reached) return;
         sixSevenEl.classList.remove('visible');
         void sixSevenEl.offsetWidth;
@@ -3145,7 +3126,6 @@
         const profiles = readProfiles();
         profiles[id] = {
           diamanty,
-          gems,
           wardrobe: [...wardrobe],
           equippedSkin,
           weekendWheelSpinDate,
@@ -3153,22 +3133,8 @@
         writeProfiles(profiles);
       }
 
-      function getGemsBalance() {
-        return Math.max(0, parseInt(gems, 10) || 0);
-      }
-
-      function bankDiamantyToGems() {
-        if (diamanty >= DIAMANTS_PER_GEM) {
-          gems = getGemsBalance() + Math.floor(diamanty / DIAMANTS_PER_GEM);
-          diamanty = diamanty % DIAMANTS_PER_GEM;
-          saveProgress();
-        }
-      }
-
       function refreshCurrencyUI() {
-        bankDiamantyToGems();
         diamantyEl.textContent = diamanty;
-        gemsEl.textContent = getGemsBalance();
         saveProgress();
         updateShopCurrencyDisplay();
         if (isOwner()) syncOwnerInputs();
@@ -3180,12 +3146,7 @@
           diamanty += Math.floor(score / 5);
           score = score % 5;
         }
-        if (diamanty >= DIAMANTS_PER_GEM) {
-          gems += Math.floor(diamanty / DIAMANTS_PER_GEM);
-          diamanty = diamanty % DIAMANTS_PER_GEM;
-        }
         diamantyEl.textContent = diamanty;
-        gemsEl.textContent = gems;
         saveProgress();
         updateShopCurrencyDisplay();
         if (isOwner()) syncOwnerInputs();
@@ -4026,7 +3987,6 @@
       }
 
       const finalDiamantyEl = document.getElementById('finalDiamanty');
-      const finalGemsEl = document.getElementById('finalGems');
 
       function gameOver() {
         running = false;
@@ -4037,7 +3997,6 @@
         bankScoreToDiamanty();
         saveProgress();
         finalDiamantyEl.textContent = diamanty;
-        finalGemsEl.textContent = gems;
         refreshCurrencyUI();
         gameOverOverlay.classList.add('visible');
       }
@@ -4084,7 +4043,7 @@
       }
 
       function getAffordableDiamantValue() {
-        return diamanty + Math.floor(score / SCORE_PER_DIAMANT) + gems * DIAMANTS_PER_GEM;
+        return diamanty + Math.floor(score / SCORE_PER_DIAMANT);
       }
 
       function payDiamantCost(cost) {
@@ -4099,13 +4058,6 @@
         while (remaining > 0 && score >= SCORE_PER_DIAMANT) {
           score -= SCORE_PER_DIAMANT;
           remaining -= 1;
-        }
-
-        while (remaining > 0 && gems > 0) {
-          gems -= 1;
-          const usedFromGem = Math.min(DIAMANTS_PER_GEM, remaining);
-          remaining -= usedFromGem;
-          diamanty += DIAMANTS_PER_GEM - usedFromGem;
         }
 
         return remaining === 0;
@@ -4202,8 +4154,7 @@
 
       function updateWheelUi() {
         if (!wheelSpinBtn) return;
-        bankDiamantyToGems();
-        const balance = getGemsBalance();
+        const balance = diamanty;
         const freeSpin = hasWeekendFreeSpin();
         const canSpin = !wheelSpinning && !eggCracking && (freeSpin || balance >= WHEEL_SPIN_COST);
         wheelSpinBtn.disabled = !canSpin;
@@ -4214,11 +4165,11 @@
         } else if (freeSpin && canSpin) {
           wheelSpinBtn.textContent = `Zatočit zdarma (${getWeekendDayLabel()})`;
         } else if (canSpin) {
-          wheelSpinBtn.textContent = `Zatočit (${WHEEL_SPIN_COST} gems)`;
+          wheelSpinBtn.textContent = `Zatočit (${WHEEL_SPIN_COST} diamantů)`;
         } else if (isWeekendDay() && !freeSpin) {
           wheelSpinBtn.textContent = 'Dnešní zdarma už využito';
         } else {
-          wheelSpinBtn.textContent = `${WHEEL_SPIN_COST} gems (máš ${balance})`;
+          wheelSpinBtn.textContent = `${WHEEL_SPIN_COST} diamantů (máš ${balance})`;
         }
         if (wheelWeekendHint) {
           if (freeSpin) {
@@ -4587,17 +4538,16 @@
 
       function updateEggUi() {
         if (!eggCrackBtn || !eggPriceBox) return;
-        bankDiamantyToGems();
-        const balance = getGemsBalance();
+        const balance = diamanty;
         const canCrack = !eggCracking && !wheelSpinning && balance >= EGG_CRACK_COST;
         eggCrackBtn.disabled = !canCrack;
         eggCrackBtn.classList.toggle('can-crack', canCrack);
         if (eggCracking) {
           eggPriceBox.textContent = 'Rozbíjí se…';
         } else if (canCrack) {
-          eggPriceBox.textContent = `${EGG_CRACK_COST} gems`;
+          eggPriceBox.textContent = `${EGG_CRACK_COST} diamantů`;
         } else {
-          eggPriceBox.textContent = `${EGG_CRACK_COST} gems (máš ${balance})`;
+          eggPriceBox.textContent = `${EGG_CRACK_COST} diamantů (máš ${balance})`;
         }
       }
 
@@ -4656,18 +4606,17 @@
 
       function spinWheel() {
         if (wheelSpinning || eggCracking) return;
-        bankDiamantyToGems();
-        const balance = getGemsBalance();
+        const balance = diamanty;
         const freeSpin = hasWeekendFreeSpin();
         if (!freeSpin && balance < WHEEL_SPIN_COST) {
-          wheelResultEl.textContent = `Potřebuješ ${WHEEL_SPIN_COST} gems (máš ${balance}).`;
+          wheelResultEl.textContent = `Potřebuješ ${WHEEL_SPIN_COST} diamantů (máš ${balance}).`;
           updateWheelUi();
           return;
         }
         if (freeSpin) {
           useWeekendFreeSpin();
         } else {
-          gems = balance - WHEEL_SPIN_COST;
+          diamanty = balance - WHEEL_SPIN_COST;
         }
         wheelSpinning = true;
         wheelResultEl.textContent = freeSpin
@@ -4751,14 +4700,13 @@
 
       function crackEgg() {
         if (eggCracking || wheelSpinning) return;
-        bankDiamantyToGems();
-        const balance = getGemsBalance();
+        const balance = diamanty;
         if (balance < EGG_CRACK_COST) {
-          eggResultEl.textContent = `Potřebuješ ${EGG_CRACK_COST} gems (máš ${balance}).`;
+          eggResultEl.textContent = `Potřebuješ ${EGG_CRACK_COST} diamantů (máš ${balance}).`;
           updateEggUi();
           return;
         }
-        gems = balance - EGG_CRACK_COST;
+        diamanty = balance - EGG_CRACK_COST;
         eggCracking = true;
         eggResultEl.textContent = 'Rozbíjí se…';
         resetEggVisual();
@@ -5284,7 +5232,6 @@
 
       ownerScoreInput.addEventListener('input', applyOwnerInputs);
       ownerDiamantyInput.addEventListener('input', applyOwnerInputs);
-      ownerGemsInput.addEventListener('input', applyOwnerInputs);
       ownerChatBtn.addEventListener('click', openOwnerChat);
       ownerChatCloseBtn.addEventListener('click', closeOwnerChat);
       ownerChatSendBtn.addEventListener('click', submitOwnerKick);
