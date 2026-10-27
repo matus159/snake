@@ -16,9 +16,12 @@ const TACOS_WEEKDAY_WINDOW = [16 * 60, 16 * 60 + 15];
 const TACOS_WEEKEND_WINDOW = [0, 24 * 60];
 // Dny (RRRR-MM-DD, český čas), kdy tacos event běží celý den.
 const TACOS_ALL_DAY_DATES: string[] = ['2026-10-23'];
+// Mimořádné tacos eventy navíc: [začátek, konec] (UTC). Musí sedět s index.html.
+const TACOS_EXTRA_WINDOWS: [string, string][] = [['2026-10-27T19:14:00Z', '2026-10-27T19:54:00Z']];
 
 export function isTacosEventActive(now: Date = new Date()): boolean {
   if (!TACOS_EVENT) return false;
+  if (TACOS_EXTRA_WINDOWS.some(([from, to]) => now >= new Date(from) && now < new Date(to))) return true;
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: TACOS_TIME_ZONE,
     year: 'numeric',
