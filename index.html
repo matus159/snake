@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.30.0">
+  <meta name="snake-version" content="1.31.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -3620,6 +3620,27 @@
         updatePlayerNameDisplay();
       }
 
+      // Dočasně (24 hodin) se na server posílá jméno a náhodné ID zařízení, aby šlo spočítat hráče.
+      function reportPlayerName() {
+        if (!playerName) return;
+        let device = '';
+        try {
+          device = localStorage.getItem('snake-device-id') || '';
+          if (!device) {
+            device = crypto.randomUUID();
+            localStorage.setItem('snake-device-id', device);
+          }
+        } catch {
+          return;
+        }
+        fetch('/api/stats/seen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: playerName, device }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+
       function savePlayerName() {
         const name = playerNameInput.value.trim();
         if (!name) {
@@ -3628,6 +3649,7 @@
         }
         playerName = name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
+        reportPlayerName();
         loadPlayerProfile();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
@@ -5298,6 +5320,7 @@
       loadPlayerProfile();
       updateOwnerPanel();
       loadTacosMusic();
+      reportPlayerName();
       initGame();
       if (playerName && isPlayerBanned(playerName)) {
         showBanOverlay();
