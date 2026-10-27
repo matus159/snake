@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.31.0">
+  <meta name="snake-version" content="1.32.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -2451,9 +2451,16 @@
       const TACOS_WEEKEND_WINDOW = [0, 24 * 60];
       // Dny (RRRR-MM-DD, český čas), kdy tacos event běží celý den.
       const TACOS_ALL_DAY_DATES = ['2026-10-23'];
+      // Mimořádné tacos eventy navíc: [začátek, konec] (UTC).
+      const TACOS_EXTRA_WINDOWS = [['2026-10-27T19:14:00Z', '2026-10-27T19:54:00Z']];
+
+      function extraTacosWindow(now) {
+        return TACOS_EXTRA_WINDOWS.find(([from, to]) => now >= new Date(from) && now < new Date(to));
+      }
 
       function isTacosEventActive(now = new Date()) {
         if (!TACOS_EVENT) return false;
+        if (extraTacosWindow(now)) return true;
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: TACOS_TIME_ZONE,
           year: 'numeric',
@@ -2473,6 +2480,8 @@
       }
       // Den eventu podle českého času – úvodní animace se ukáže jednou za event.
       function tacosEventKey(now = new Date()) {
+        const extra = extraTacosWindow(now);
+        if (extra) return extra[0];
         return new Intl.DateTimeFormat('en-CA', { timeZone: TACOS_TIME_ZONE }).format(now);
       }
       const TACO_SCORE = 2;
