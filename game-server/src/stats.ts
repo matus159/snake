@@ -1,10 +1,7 @@
-// Dočasné počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre, server si to 48 hodin pamatuje.
-// Po 48 hodinách od prvního záznamu se nové záznamy už neukládají.
+// Počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre a server si to pamatuje
+// natrvalo (původně jen 24 hodin, pak 48 hodin; teď bez konce).
 
-// Původně 24 hodin, prodlouženo o dalších 24 hodin.
-const WINDOW_MS = 48 * 60 * 60 * 1000;
-
-// Hráči, u kterých si server pamatuje, kdy naposledy zapnuli hru (i po skončení počítání).
+// Hráči, u kterých si server pamatuje, kdy naposledy zapnuli hru.
 // adamini owner pak vedle hrací plochy uvidí, že si hráč zapnul hru.
 const WATCHED_NAMES = ['robine'];
 
@@ -50,7 +47,6 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     if (body.open === true && WATCHED_NAMES.includes(name.toLowerCase())) {
       await storage.put(`opened:${name.toLowerCase()}`, now);
     }
-    if (start && now > start + WINDOW_MS) return json({ ok: false, ended: true });
     if (!start) await storage.put('stats:start', now);
     const key = `seen:${device}`;
     const entry = (await storage.get<Device>(key)) ?? { names: [], first: now, last: now };
@@ -91,7 +87,6 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     }
     return json({
       start: start ? new Date(start).toISOString() : null,
-      end: start ? new Date(start + WINDOW_MS).toISOString() : null,
       devices: devices.length,
       differentNames: names.size,
       devicesWithMoreNames: devices.filter((d) => d.names.length > 1).map((d) => d.names),
