@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.35.0">
+  <meta name="snake-version" content="1.36.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -2454,9 +2454,27 @@
         return TACOS_EXTRA_WINDOWS.find(([from, to]) => now >= new Date(from) && now < new Date(to));
       }
 
+      // Dárek pro hráče Robine: při prvním připojení mu jednou poběží tacos event na 5 minut.
+      const ROBINE_TACOS_KEY = 'snake-robine-tacos';
+      const ROBINE_TACOS_MS = 5 * 60 * 1000;
+
+      function robineTacosEnd() {
+        try {
+          return Number(localStorage.getItem(ROBINE_TACOS_KEY)) || 0;
+        } catch {
+          return 0;
+        }
+      }
+
+      function maybeStartRobineTacos() {
+        if (getProfileId(playerName) !== 'robine' || robineTacosEnd()) return;
+        try { localStorage.setItem(ROBINE_TACOS_KEY, String(Date.now() + ROBINE_TACOS_MS)); } catch {}
+      }
+
       function isTacosEventActive(now = new Date()) {
         if (!TACOS_EVENT) return false;
         if (extraTacosWindow(now)) return true;
+        if (now.getTime() < robineTacosEnd()) return true;
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: TACOS_TIME_ZONE,
           year: 'numeric',
@@ -2478,6 +2496,7 @@
       function tacosEventKey(now = new Date()) {
         const extra = extraTacosWindow(now);
         if (extra) return extra[0];
+        if (now.getTime() < robineTacosEnd()) return `robine-${robineTacosEnd()}`;
         return new Intl.DateTimeFormat('en-CA', { timeZone: TACOS_TIME_ZONE }).format(now);
       }
       const TACO_SCORE = 2;
@@ -3631,6 +3650,7 @@
         }
         playerName = name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
+        maybeStartRobineTacos();
         bestGameScore = 0;
         loadPlayerProfile();
         reportPlayerName();
@@ -5292,6 +5312,7 @@
 
       loadPlayerProfile();
       updateOwnerPanel();
+      maybeStartRobineTacos();
       loadTacosMusic();
       reportPlayerName();
       initGame();
