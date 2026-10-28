@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.37.0">
+  <meta name="snake-version" content="1.38.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -537,6 +537,41 @@
     .gems-row span {
       font-weight: 700;
       color: #ba55ff;
+    }
+
+    /* Upozornění pro adamini owner, že si Robine zapnul hru – vpravo vedle hrací plochy. */
+    .player-notice {
+      position: absolute;
+      top: 16px;
+      left: calc(100% + 14px);
+      width: 170px;
+      z-index: 50;
+      padding: 0.6rem 0.8rem;
+      border-radius: 10px;
+      background: rgba(10, 10, 18, 0.92);
+      border: 1px solid #00ff88;
+      box-shadow: 0 0 18px rgba(0, 255, 136, 0.35);
+      color: #00ff88;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .player-notice.visible {
+      opacity: 1;
+    }
+
+    /* Když vedle plochy není místo, ukáže se nahoře přes plochu. */
+    @media (max-width: 1250px), (pointer: coarse) {
+      .player-notice {
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        white-space: nowrap;
+      }
     }
 
     .player-name {
@@ -2181,6 +2216,7 @@
   <p class="info"><span class="info-keys">Šipky nebo WASD</span><span class="info-touch">Hýbej joystickem nebo přejeď prstem</span> · sbírej kostky, narůstáš · neudeř se do sebe ani do okraje</p>
 
   <div class="game-wrapper">
+    <div class="player-notice" id="playerNotice" role="status"></div>
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
       <div class="tacos-countdown" id="tacosCountdown" role="status"></div>
@@ -3622,7 +3658,7 @@
       }
 
       // Dočasně (24 hodin) se na server posílá jméno, náhodné ID zařízení, diamanty a nejlepší skóre.
-      function reportPlayerName() {
+      function reportPlayerName(open = false) {
         if (!playerName) return;
         let device = '';
         try {
@@ -3637,9 +3673,50 @@
         fetch('/api/stats/seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: playerName, device, diamanty, bestScore: bestGameScore }),
+          body: JSON.stringify({ name: playerName, device, diamanty, bestScore: bestGameScore, open }),
           keepalive: true,
         }).catch(() => {});
+      }
+
+      // adamini owner uvidí vedle hrací plochy, když si Robine zapne hru.
+      const ROBINE_SEEN_KEY = 'snake-robine-opened-seen';
+      const ROBINE_POLL_MS = 15000;
+      const ROBINE_NOTICE_MS = 15000;
+      const playerNotice = document.getElementById('playerNotice');
+      let robinePollTimer = null;
+      let playerNoticeTimer = null;
+
+      function showPlayerNotice(text) {
+        playerNotice.textContent = text;
+        playerNotice.classList.add('visible');
+        clearTimeout(playerNoticeTimer);
+        playerNoticeTimer = setTimeout(() => playerNotice.classList.remove('visible'), ROBINE_NOTICE_MS);
+      }
+
+      async function checkRobineOpened() {
+        if (getProfileId(playerName) !== 'adamini owner') return;
+        let at = null;
+        try {
+          const res = await fetch('/api/stats/opened?name=robine', { cache: 'no-store' });
+          at = (await res.json()).at;
+        } catch {
+          return;
+        }
+        if (!at) return;
+        let seen = 0;
+        try { seen = Number(localStorage.getItem(ROBINE_SEEN_KEY)) || 0; } catch {}
+        if (at <= seen) return;
+        try { localStorage.setItem(ROBINE_SEEN_KEY, String(at)); } catch {}
+        // staré zapnutí (třeba když byl owner offline) se už neukazuje
+        if (Date.now() - at < 5 * 60 * 1000) showPlayerNotice('Robine si zapnul hru!');
+      }
+
+      function watchRobine() {
+        clearInterval(robinePollTimer);
+        robinePollTimer = null;
+        if (getProfileId(playerName) !== 'adamini owner') return;
+        checkRobineOpened();
+        robinePollTimer = setInterval(checkRobineOpened, ROBINE_POLL_MS);
       }
 
       function savePlayerName() {
@@ -3653,7 +3730,8 @@
         maybeStartRobineTacos();
         bestGameScore = 0;
         loadPlayerProfile();
-        reportPlayerName();
+        reportPlayerName(true);
+        watchRobine();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
         if (isPlayerBanned(playerName)) {
@@ -5314,7 +5392,8 @@
       updateOwnerPanel();
       maybeStartRobineTacos();
       loadTacosMusic();
-      reportPlayerName();
+      reportPlayerName(true);
+      watchRobine();
       initGame();
       if (playerName && isPlayerBanned(playerName)) {
         showBanOverlay();

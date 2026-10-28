@@ -4,6 +4,10 @@
 // Původně 24 hodin, prodlouženo o dalších 24 hodin.
 const WINDOW_MS = 48 * 60 * 60 * 1000;
 
+// Hráči, u kterých si server pamatuje, kdy naposledy zapnuli hru (i po skončení počítání).
+// adamini owner pak vedle hrací plochy uvidí, že si hráč zapnul hru.
+const WATCHED_NAMES = ['robine'];
+
 interface NameStats {
   diamanty: number;
   bestScore: number;
@@ -43,6 +47,9 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     const device = String(body.device ?? '').slice(0, 40);
     if (!name || !/^[a-z0-9-]{8,40}$/i.test(device)) return json({ ok: false }, 400);
     const now = Date.now();
+    if (body.open === true && WATCHED_NAMES.includes(name.toLowerCase())) {
+      await storage.put(`opened:${name.toLowerCase()}`, now);
+    }
     if (start && now > start + WINDOW_MS) return json({ ok: false, ended: true });
     if (!start) await storage.put('stats:start', now);
     const key = `seen:${device}`;
@@ -59,6 +66,12 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     }
     await storage.put(key, entry);
     return json({ ok: true });
+  }
+
+  if (action === 'opened' && request.method === 'GET') {
+    const name = (new URL(request.url).searchParams.get('name') ?? '').toLowerCase();
+    if (!WATCHED_NAMES.includes(name)) return json({ at: null });
+    return json({ at: (await storage.get<number>(`opened:${name}`)) ?? null });
   }
 
   if (action === 'report' && request.method === 'GET') {
