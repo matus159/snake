@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.33.0">
+  <meta name="snake-version" content="1.34.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -2425,6 +2425,9 @@
       let nextDirection = { x: 1, y: 0 };
       let kostky = [];
       let score = 0;
+      // Skóre posbírané v jedné hře (score se průběžně mění na diamanty) a nejlepší hra.
+      let gameScore = 0;
+      let bestGameScore = 0;
       let running = false;
       let paused = false;
       let lastTick = 0;
@@ -3383,6 +3386,7 @@
         lastMultiServerScore = serverScore;
         if (gained > 0) {
           score += gained;
+          addGameScore(gained);
           updateScoreDisplay();
         }
       }
@@ -3412,6 +3416,7 @@
           lastMultiServerScore = 0;
           lastMultiServerTacos = 0;
           score = 0;
+          gameScore = 0;
           multiOverlay.classList.remove('visible');
           multiGameOverOverlay.classList.remove('visible');
           drawMultiplayer();
@@ -3432,6 +3437,7 @@
             running = false;
             multiGameOverText.textContent = 'Prohrál jsi. Ostatní ještě hrají – nebo počkej na konec kola.';
             multiGameOverOverlay.classList.add('visible');
+            reportPlayerName();
           }
           if (multiInGame) drawMultiplayer();
           return;
@@ -3455,6 +3461,7 @@
             multiGameOverText.textContent = 'Kolo skončilo.';
           }
           multiGameOverOverlay.classList.add('visible');
+          reportPlayerName();
           return;
         }
       }
@@ -3590,7 +3597,12 @@
         updatePlayerNameDisplay();
       }
 
-      // Dočasně (24 hodin) se na server posílá jméno a náhodné ID zařízení, aby šlo spočítat hráče.
+      function addGameScore(points) {
+        gameScore += points;
+        bestGameScore = Math.max(bestGameScore, gameScore);
+      }
+
+      // Dočasně (24 hodin) se na server posílá jméno, náhodné ID zařízení, diamanty a nejlepší skóre.
       function reportPlayerName() {
         if (!playerName) return;
         let device = '';
@@ -3606,7 +3618,7 @@
         fetch('/api/stats/seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: playerName, device }),
+          body: JSON.stringify({ name: playerName, device, diamanty, bestScore: bestGameScore }),
           keepalive: true,
         }).catch(() => {});
       }
@@ -3619,8 +3631,9 @@
         }
         playerName = name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
-        reportPlayerName();
+        bestGameScore = 0;
         loadPlayerProfile();
+        reportPlayerName();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
         if (isPlayerBanned(playerName)) {
@@ -3656,6 +3669,7 @@
         nextDirection = { x: 1, y: 0 };
         bankScoreToDiamanty();
         score = 0;
+        gameScore = 0;
         hueCounter = 0;
         spawnKostky();
         lastKostkaSpawn = 0;
@@ -3975,9 +3989,11 @@
           if (eaten.taco) {
             // taco: +1 diamant a 2 skóre, k tomu bonus hada navíc oproti základnímu hadovi
             score += TACO_SCORE + (skinScore - 1);
+            addGameScore(TACO_SCORE + (skinScore - 1));
             diamanty += TACO_DIAMANTY;
           } else {
             score += skinScore;
+            addGameScore(skinScore);
           }
           updateScoreDisplay();
           spawnOneKostka();
@@ -3998,6 +4014,7 @@
         saveProgress();
         finalDiamantyEl.textContent = diamanty;
         refreshCurrencyUI();
+        reportPlayerName();
         gameOverOverlay.classList.add('visible');
       }
 

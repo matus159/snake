@@ -1,12 +1,23 @@
-// Dočasné počítání hráčů: hra pošle jméno a náhodné ID zařízení, server si to 24 hodin pamatuje.
+// Dočasné počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre, server si to 24 hodin pamatuje.
 // Po 24 hodinách od prvního záznamu se nové záznamy už neukládají.
 
 const WINDOW_MS = 24 * 60 * 60 * 1000;
+
+interface NameStats {
+  diamanty: number;
+  bestScore: number;
+}
 
 interface Device {
   names: string[];
   first: number;
   last: number;
+  stats?: Record<string, NameStats>;
+}
+
+function count(value: unknown): number {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 100_000_000) : 0;
 }
 
 function json(body: unknown, status = 200): Response {
@@ -37,21 +48,40 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     const entry = (await storage.get<Device>(key)) ?? { names: [], first: now, last: now };
     if (!entry.names.includes(name) && entry.names.length < 20) entry.names.push(name);
     entry.last = now;
+    if (entry.names.includes(name)) {
+      entry.stats ??= {};
+      const prev = entry.stats[name];
+      entry.stats[name] = {
+        diamanty: count(body.diamanty),
+        bestScore: Math.max(prev?.bestScore ?? 0, count(body.bestScore)),
+      };
+    }
     await storage.put(key, entry);
     return json({ ok: true });
   }
 
   if (action === 'report' && request.method === 'GET') {
     const devices = [...(await storage.list<Device>({ prefix: 'seen:' })).values()];
-    const names = new Map<string, number>();
-    for (const d of devices) for (const n of d.names) names.set(n, (names.get(n) ?? 0) + 1);
+    const names = new Map<string, { devices: number; diamanty: number | null; bestScore: number | null }>();
+    for (const d of devices) {
+      for (const n of d.names) {
+        const row = names.get(n) ?? { devices: 0, diamanty: null, bestScore: null };
+        row.devices += 1;
+        const s = d.stats?.[n];
+        if (s) {
+          row.diamanty = Math.max(row.diamanty ?? 0, s.diamanty);
+          row.bestScore = Math.max(row.bestScore ?? 0, s.bestScore);
+        }
+        names.set(n, row);
+      }
+    }
     return json({
       start: start ? new Date(start).toISOString() : null,
       end: start ? new Date(start + WINDOW_MS).toISOString() : null,
       devices: devices.length,
       differentNames: names.size,
       devicesWithMoreNames: devices.filter((d) => d.names.length > 1).map((d) => d.names),
-      names: Object.fromEntries([...names].sort((a, b) => b[1] - a[1])),
+      names: Object.fromEntries([...names].sort((a, b) => (b[1].diamanty ?? -1) - (a[1].diamanty ?? -1))),
     });
   }
 
