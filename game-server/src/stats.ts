@@ -1,7 +1,8 @@
-// Dočasné počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre, server si to 24 hodin pamatuje.
-// Po 24 hodinách od prvního záznamu se nové záznamy už neukládají.
+// Dočasné počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre, server si to 48 hodin pamatuje.
+// Po 48 hodinách od prvního záznamu se nové záznamy už neukládají.
 
-const WINDOW_MS = 24 * 60 * 60 * 1000;
+// Původně 24 hodin, prodlouženo o dalších 24 hodin.
+const WINDOW_MS = 48 * 60 * 60 * 1000;
 
 interface NameStats {
   diamanty: number;
