@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.50.0">
+  <meta name="snake-version" content="1.51.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2572,7 +2572,7 @@
                       <canvas id="wheelCanvas" width="180" height="180"></canvas>
                     </div>
                   </div>
-                  <button type="button" class="wheel-gems-cost" id="wheelSpinBtn"><svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>500 diamantů</button>
+                  <button type="button" class="wheel-gems-cost" id="wheelSpinBtn"><svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>100 diamantů</button>
                   <p class="wheel-result" id="wheelResult"></p>
                   <p class="wheel-weekend-hint" id="wheelWeekendHint"></p>
                 </div>
@@ -2587,7 +2587,7 @@
                         <div class="egg-prize-reveal" id="eggPrizeReveal"></div>
                       </div>
                     </div>
-                    <span class="egg-price-box" id="eggPriceBox">700 diamantů</span>
+                    <span class="egg-price-box" id="eggPriceBox">250 diamantů</span>
                   </button>
                   <p class="wheel-result" id="eggResult"></p>
                   <p class="gift-hint egg-prize-hint">Občas padne vzácný duhový had (~10 % šance).</p>
@@ -2762,8 +2762,8 @@
       const SCORE_PER_DIAMANT = 5;
       // Gems už ve hře nejsou: staré gems se převedou na diamanty (1 gem = 10 diamantů).
       const DIAMANTS_PER_GEM = 10;
-      const WHEEL_SPIN_COST = 500;
-      const EGG_CRACK_COST = 700;
+      const WHEEL_SPIN_COST = 100;
+      const EGG_CRACK_COST = 250;
       const WHEEL_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'yellow', 'black'];
       const EGG_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'yellow', 'black', 'gold', 'rainbow'];
       const SKIN_NAMES = {
