@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.40.0">
+  <meta name="snake-version" content="1.41.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -1764,8 +1764,11 @@
     }
 
     .leaderboard-box {
-      width: min(360px, 90%);
-      padding: 1rem 1.2rem;
+      width: min(560px, 90%);
+      max-height: calc(100% - 90px);
+      overflow-y: auto;
+      padding: 1.2rem 1.6rem;
+      font-size: 1.1rem;
       border-radius: 10px;
       background: rgba(15, 15, 26, 0.95);
       border: 1px solid rgba(0, 217, 255, 0.35);
@@ -1821,8 +1824,9 @@
       }
 
       .leaderboard-box {
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
+        max-height: calc(100% - 60px);
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
       }
 
       .leaderboard-box h2 {
@@ -3358,7 +3362,7 @@
         draw();
       }
 
-      // Žebříček podle diamantů ze serveru (bez ownerů a hráčů, u kterých diamanty neznáme).
+      // Žebříček podle diamantů ze serveru (všichni kromě ownerů; neznámé diamanty jako „?“).
       const leaderboardList = document.getElementById('leaderboardList');
       const leaderboardOverlay = document.getElementById('leaderboardOverlay');
 
@@ -3398,7 +3402,7 @@
           const dia = document.createElement('span');
           dia.className = 'lb-dia';
           dia.innerHTML = '<svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>';
-          dia.append(String(p.diamanty));
+          dia.append(p.diamanty == null ? '?' : String(p.diamanty));
           li.append(name, dia);
           leaderboardList.append(li);
         });

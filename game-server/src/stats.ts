@@ -71,17 +71,18 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
   }
 
   if (action === 'leaderboard' && request.method === 'GET') {
-    // Žebříček podle diamantů: jen hráči, u kterých server diamanty zná, a bez ownerů.
-    const best = new Map<string, number>();
+    // Žebříček podle diamantů: všichni hráči kromě ownerů. Kde server diamanty nezná, je null (na konci).
+    const best = new Map<string, number | null>();
     for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
-      for (const [n, s] of Object.entries(d.stats ?? {})) {
+      for (const n of d.names) {
         if (n.toLowerCase().includes('owner')) continue;
-        best.set(n, Math.max(best.get(n) ?? 0, s.diamanty));
+        const s = d.stats?.[n];
+        const prev = best.get(n) ?? null;
+        best.set(n, s ? Math.max(prev ?? 0, s.diamanty) : prev);
       }
     }
     const players = [...best]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .sort((a, b) => (b[1] ?? -1) - (a[1] ?? -1))
       .map(([name, diamanty]) => ({ name, diamanty }));
     return json({ players });
   }
