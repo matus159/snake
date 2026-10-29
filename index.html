@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.45.0">
+  <meta name="snake-version" content="1.46.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1796,6 +1796,32 @@
       color: #e0e0e0;
     }
 
+    .leaderboard-box li {
+      align-items: center;
+    }
+
+    .leaderboard-box .lb-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
+    }
+
+    /* Pořadí v kolečku */
+    .leaderboard-box .lb-rank {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.8em;
+      height: 1.8em;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #000;
+      font-size: 0.85em;
+      font-weight: 700;
+    }
+
     .leaderboard-box .lb-name {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -3415,12 +3441,18 @@
           const li = document.createElement('li');
           const name = document.createElement('span');
           name.className = 'lb-name';
-          name.textContent = `${i + 1}. ${p.name}`;
+          name.textContent = p.name;
+          const rank = document.createElement('span');
+          rank.className = 'lb-rank';
+          rank.textContent = String(i + 1);
+          const left = document.createElement('span');
+          left.className = 'lb-left';
+          left.append(rank, name);
           const dia = document.createElement('span');
           dia.className = 'lb-dia';
           dia.innerHTML = '<svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>';
           dia.append(String(p.diamanty));
-          li.append(name, dia);
+          li.append(left, dia);
           leaderboardList.append(li);
         });
       }
