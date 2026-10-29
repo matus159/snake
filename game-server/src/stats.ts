@@ -70,6 +70,22 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     return json({ at: (await storage.get<number>(`opened:${name}`)) ?? null });
   }
 
+  if (action === 'leaderboard' && request.method === 'GET') {
+    // Žebříček podle diamantů: jen hráči, u kterých server diamanty zná, a bez ownerů.
+    const best = new Map<string, number>();
+    for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
+      for (const [n, s] of Object.entries(d.stats ?? {})) {
+        if (n.toLowerCase().includes('owner')) continue;
+        best.set(n, Math.max(best.get(n) ?? 0, s.diamanty));
+      }
+    }
+    const players = [...best]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, diamanty]) => ({ name, diamanty }));
+    return json({ players });
+  }
+
   if (action === 'report' && request.method === 'GET') {
     const devices = [...(await storage.list<Device>({ prefix: 'seen:' })).values()];
     const names = new Map<string, { devices: number; diamanty: number | null; bestScore: number | null }>();
