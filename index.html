@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.38.0">
+  <meta name="snake-version" content="1.39.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -435,7 +435,8 @@
     .rotate-overlay {
       position: fixed;
       inset: 0;
-      z-index: 100;
+      /* nad „Upravováním“, aby na telefonu na výšku bylo nejdřív vidět „Otoč telefon“ */
+      z-index: 350;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -4991,8 +4992,12 @@
         if (!document.hidden) checkForUpdate();
       });
 
+      // Telefon na výšku: „Upravování“ počká, až hráč telefon otočí na šířku.
+      const phonePortraitQuery = window.matchMedia('(pointer: coarse) and (orientation: portrait) and (max-width: 700px)');
+
       function maybeShowUpdateScreen() {
         if (!updatePending || updateShowing) return;
+        if (phonePortraitQuery.matches) return;
         // Uprostřed kola hráče nevyhodíme – počká se na pauzu, konec hry nebo menu.
         if ((running && !paused) || multiInGame || tacosIntroPlaying || tacosCountdownActive) return;
         updateShowing = true;
