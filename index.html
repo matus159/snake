@@ -3362,7 +3362,7 @@
         draw();
       }
 
-      // Žebříček podle diamantů ze serveru (všichni kromě ownerů; neznámé diamanty jako „?“).
+      // Žebříček podle diamantů ze serveru (všichni kromě ownerů a hráčů, u kterých diamanty neznáme).
       const leaderboardList = document.getElementById('leaderboardList');
       const leaderboardOverlay = document.getElementById('leaderboardOverlay');
 
@@ -3402,7 +3402,7 @@
           const dia = document.createElement('span');
           dia.className = 'lb-dia';
           dia.innerHTML = '<svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>';
-          dia.append(p.diamanty == null ? '?' : String(p.diamanty));
+          dia.append(String(p.diamanty));
           li.append(name, dia);
           leaderboardList.append(li);
         });
