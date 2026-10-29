@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.39.0">
+  <meta name="snake-version" content="1.40.0">
   <title>Had – sbírej kostky</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -1751,6 +1751,69 @@
       z-index: 30;
     }
 
+    /* Žebříček hráčů podle diamantů – vpravo nahoře ve výběru režimu. */
+    .leaderboard {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1;
+      min-width: 170px;
+      max-width: 220px;
+      padding: 0.5rem 0.7rem;
+      border-radius: 8px;
+      background: rgba(15, 15, 26, 0.95);
+      border: 1px solid rgba(0, 217, 255, 0.35);
+      font-size: 0.8rem;
+    }
+
+    .leaderboard h3 {
+      margin: 0 0 0.35rem;
+      font-size: 0.85rem;
+      color: #ffd700;
+      text-align: center;
+    }
+
+    .leaderboard ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .leaderboard li {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding: 0.1rem 0;
+      color: #e0e0e0;
+    }
+
+    .leaderboard li .lb-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .leaderboard li .lb-dia {
+      color: #00d9ff;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .leaderboard .lb-empty {
+      color: #888;
+      text-align: center;
+    }
+
+    @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+      .leaderboard {
+        top: 6px;
+        right: 6px;
+        min-width: 130px;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+      }
+    }
+
     #multiOverlay {
       z-index: 29;
     }
@@ -2222,6 +2285,10 @@
       <canvas id="game" width="960" height="720"></canvas>
       <div class="tacos-countdown" id="tacosCountdown" role="status"></div>
       <div id="modeSelectOverlay" class="overlay visible">
+        <div class="leaderboard" id="leaderboard">
+          <h3>Žebříček</h3>
+          <ol id="leaderboardList"><li class="lb-empty">Načítám…</li></ol>
+        </div>
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
           <button type="button" class="btn btn-small" id="changeNameModeBtn">Změnit jméno</button>
@@ -3258,7 +3325,41 @@
         banOverlay.classList.remove('visible');
         modeSelectOverlay.classList.add('visible');
         updatePlayerNameDisplay();
+        loadLeaderboard();
         draw();
+      }
+
+      // Žebříček podle diamantů ze serveru (bez ownerů a hráčů, u kterých diamanty neznáme).
+      const leaderboardList = document.getElementById('leaderboardList');
+
+      async function loadLeaderboard() {
+        let players;
+        try {
+          const res = await fetch('/api/stats/leaderboard', { cache: 'no-store' });
+          players = (await res.json()).players;
+        } catch {
+          players = null;
+        }
+        leaderboardList.replaceChildren();
+        if (!Array.isArray(players) || !players.length) {
+          const li = document.createElement('li');
+          li.className = 'lb-empty';
+          li.textContent = players ? 'Zatím nikdo' : 'Nejde načíst';
+          leaderboardList.append(li);
+          return;
+        }
+        players.forEach((p, i) => {
+          const li = document.createElement('li');
+          const name = document.createElement('span');
+          name.className = 'lb-name';
+          name.textContent = `${i + 1}. ${p.name}`;
+          const dia = document.createElement('span');
+          dia.className = 'lb-dia';
+          dia.innerHTML = '<svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>';
+          dia.append(String(p.diamanty));
+          li.append(name, dia);
+          leaderboardList.append(li);
+        });
       }
 
       function enterSelectedMode() {
