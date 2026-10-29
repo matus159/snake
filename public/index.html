@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.49.0">
+  <meta name="snake-version" content="1.50.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2336,19 +2336,23 @@
       }
     }
 
-    /* Všechna písmena bílá s černým obtažením – kromě jména hráče. */
-    body *:not(svg, svg *, #playerNameDisplay, #modeSelectGreeting span) {
-      color: #fff !important;
-      -webkit-text-fill-color: #fff !important;
+    /* Všechna písmena v původních barvách, ale s černým obtažením. */
+    body *:not(svg, svg *, h1) {
       text-shadow:
         -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
         0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000, 1px 0 0 #000 !important;
     }
 
-    #playerNameDisplay,
-    #modeSelectGreeting span {
-      -webkit-text-fill-color: currentColor;
-      text-shadow: none;
+    /* Tlačítka mají tmavé písmo – s černým obtažením by nešlo přečíst, proto bílé. */
+    .btn {
+      color: #fff !important;
+    }
+
+    /* Nadpis má barevný přechod, obtažení přes stín by ho zakrylo – obtáhne se filtrem. */
+    h1 {
+      filter:
+        drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000)
+        drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000);
     }
   </style>
 </head>
