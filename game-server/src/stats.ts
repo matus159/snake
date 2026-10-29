@@ -71,7 +71,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
   }
 
   if (action === 'leaderboard' && request.method === 'GET') {
-    // Žebříček podle diamantů: jen hráči, u kterých server diamanty zná, a bez ownerů.
+    // Žebříček podle diamantů: všichni hráči kromě ownerů a kromě těch, u kterých server diamanty nezná.
     const best = new Map<string, number>();
     for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
       for (const [n, s] of Object.entries(d.stats ?? {})) {
@@ -81,7 +81,6 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     }
     const players = [...best]
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
       .map(([name, diamanty]) => ({ name, diamanty }));
     return json({ players });
   }
