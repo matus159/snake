@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.43.0">
+  <meta name="snake-version" content="1.44.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2274,6 +2274,21 @@
         height: 64px;
         margin: -32px 0 0 -32px;
       }
+    }
+
+    /* Všechna písmena bílá s černým obtažením – kromě jména hráče. */
+    body *:not(svg, svg *, #playerNameDisplay, #modeSelectGreeting span) {
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+      text-shadow:
+        -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+        0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000, 1px 0 0 #000 !important;
+    }
+
+    #playerNameDisplay,
+    #modeSelectGreeting span {
+      -webkit-text-fill-color: currentColor;
+      text-shadow: none;
     }
   </style>
 </head>
