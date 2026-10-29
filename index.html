@@ -1751,66 +1751,91 @@
       z-index: 30;
     }
 
-    /* Žebříček hráčů podle diamantů – vpravo nahoře ve výběru režimu. */
-    .leaderboard {
+    /* Žebříček: tlačítko vpravo nahoře ve výběru režimu, po kliknutí vlastní obrazovka. */
+    .leaderboard-btn {
       position: absolute;
       top: 12px;
       right: 12px;
       z-index: 1;
-      min-width: 170px;
-      max-width: 220px;
-      padding: 0.5rem 0.7rem;
-      border-radius: 8px;
-      background: rgba(15, 15, 26, 0.95);
-      border: 1px solid rgba(0, 217, 255, 0.35);
-      font-size: 0.8rem;
     }
 
-    .leaderboard h3 {
-      margin: 0 0 0.35rem;
-      font-size: 0.85rem;
+    #leaderboardOverlay {
+      z-index: 31;
+    }
+
+    .leaderboard-box {
+      width: min(360px, 90%);
+      padding: 1rem 1.2rem;
+      border-radius: 10px;
+      background: rgba(15, 15, 26, 0.95);
+      border: 1px solid rgba(0, 217, 255, 0.35);
+    }
+
+    .leaderboard-box h2 {
+      margin: 0 0 0.8rem;
       color: #ffd700;
       text-align: center;
     }
 
-    .leaderboard ol {
+    .leaderboard-box ol {
       margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    .leaderboard li {
+    .leaderboard-box li {
       display: flex;
       justify-content: space-between;
-      gap: 0.6rem;
-      padding: 0.1rem 0;
+      gap: 0.8rem;
+      padding: 0.25rem 0;
       color: #e0e0e0;
     }
 
-    .leaderboard li .lb-name {
+    .leaderboard-box .lb-name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .leaderboard li .lb-dia {
+    .leaderboard-box .lb-dia {
       color: #00d9ff;
       font-weight: 700;
       white-space: nowrap;
     }
 
-    .leaderboard .lb-empty {
+    .leaderboard-box .lb-empty {
+      justify-content: center;
       color: #888;
-      text-align: center;
+    }
+
+    .leaderboard-back {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
     }
 
     @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
-      .leaderboard {
+      .leaderboard-btn {
         top: 6px;
         right: 6px;
-        min-width: 130px;
-        padding: 0.3rem 0.5rem;
-        font-size: 0.7rem;
+      }
+
+      .leaderboard-box {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+      }
+
+      .leaderboard-box h2 {
+        margin-bottom: 0.3rem;
+      }
+
+      .leaderboard-box li {
+        padding: 0.1rem 0;
+      }
+
+      .leaderboard-back {
+        left: 8px;
+        bottom: 8px;
       }
     }
 
@@ -2285,10 +2310,7 @@
       <canvas id="game" width="960" height="720"></canvas>
       <div class="tacos-countdown" id="tacosCountdown" role="status"></div>
       <div id="modeSelectOverlay" class="overlay visible">
-        <div class="leaderboard" id="leaderboard">
-          <h3>Žebříček</h3>
-          <ol id="leaderboardList"><li class="lb-empty">Načítám…</li></ol>
-        </div>
+        <button type="button" class="btn btn-small leaderboard-btn" id="leaderboardBtn">Žebříček</button>
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
           <button type="button" class="btn btn-small" id="changeNameModeBtn">Změnit jméno</button>
@@ -2308,6 +2330,13 @@
           </button>
           </div>
         </div>
+      </div>
+      <div id="leaderboardOverlay" class="overlay">
+        <div class="leaderboard-box">
+          <h2>Žebříček</h2>
+          <ol id="leaderboardList"></ol>
+        </div>
+        <button type="button" class="btn leaderboard-back" id="leaderboardBackBtn">Zpět</button>
       </div>
       <div id="multiOverlay" class="overlay">
         <div class="multi-lobby-box">
@@ -3309,6 +3338,7 @@
         startOverlay.classList.remove('visible');
         multiOverlay.classList.remove('visible');
         multiGameOverOverlay.classList.remove('visible');
+        leaderboardOverlay.classList.remove('visible');
       }
 
       function showModeSelect() {
@@ -3325,14 +3355,26 @@
         banOverlay.classList.remove('visible');
         modeSelectOverlay.classList.add('visible');
         updatePlayerNameDisplay();
-        loadLeaderboard();
         draw();
       }
 
       // Žebříček podle diamantů ze serveru (bez ownerů a hráčů, u kterých diamanty neznáme).
       const leaderboardList = document.getElementById('leaderboardList');
+      const leaderboardOverlay = document.getElementById('leaderboardOverlay');
+
+      function openLeaderboard() {
+        modeSelectOverlay.classList.remove('visible');
+        leaderboardOverlay.classList.add('visible');
+        loadLeaderboard();
+      }
+
+      function closeLeaderboard() {
+        leaderboardOverlay.classList.remove('visible');
+        modeSelectOverlay.classList.add('visible');
+      }
 
       async function loadLeaderboard() {
+        leaderboardList.innerHTML = '<li class="lb-empty">Načítám…</li>';
         let players;
         try {
           const res = await fetch('/api/stats/leaderboard', { cache: 'no-store' });
@@ -5421,6 +5463,8 @@
       mainMenuBtn.addEventListener('click', quitToMainMenu);
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
+      document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
+      document.getElementById('leaderboardBackBtn').addEventListener('click', closeLeaderboard);
       shopSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('red'));
       shopWhiteSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('white'));
       shopBlueSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('blue'));
