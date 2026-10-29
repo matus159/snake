@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.52.0">
+  <meta name="snake-version" content="1.53.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2810,6 +2810,10 @@
       let multiPlayerId = null;
       let multiInGame = false;
       let lastMultiServerScore = 0;
+      // Hra pro více hráčů: bonus +10 % bodů, aby se vyplatilo hrát s ostatními.
+      const MULTI_SCORE_BONUS = 0.1;
+      let multiRoundGained = 0;
+      let multiBonusGiven = 0;
       let lastMultiServerTacos = 0;
       let multiServerState = { kostky: [], players: [] };
       let multiLobbyPlayers = [];
@@ -3681,8 +3685,12 @@
         const gained = Math.max(0, serverScore - lastMultiServerScore);
         lastMultiServerScore = serverScore;
         if (gained > 0) {
-          score += gained;
-          addGameScore(gained);
+          multiRoundGained += gained;
+          const bonusTotal = Math.floor(multiRoundGained * MULTI_SCORE_BONUS);
+          const extra = bonusTotal - multiBonusGiven;
+          multiBonusGiven = bonusTotal;
+          score += gained + extra;
+          addGameScore(gained + extra);
           updateScoreDisplay();
         }
       }
@@ -3711,6 +3719,8 @@
           paused = false;
           lastMultiServerScore = 0;
           lastMultiServerTacos = 0;
+          multiRoundGained = 0;
+          multiBonusGiven = 0;
           score = 0;
           gameScore = 0;
           multiOverlay.classList.remove('visible');
