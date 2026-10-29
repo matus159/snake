@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.48.0">
+  <meta name="snake-version" content="1.49.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1807,35 +1807,56 @@
       min-width: 0;
     }
 
-    /* Pořadí v kolečku */
+    /* Pořadí: 1.–3. místo jako medaile, od 4. místa jen číslo. */
     .leaderboard-box .lb-rank {
       flex: none;
+      position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       width: 1.8em;
       height: 1.8em;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #000;
       font-size: 0.85em;
       font-weight: 700;
     }
 
-    /* 1. místo zlatý, 2. stříbrný, 3. měděný kroužek – i uvnitř */
+    .leaderboard-box .lb-medal {
+      --medal: #ffd700;
+      --medal-dark: #b8860b;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fff8 0, transparent 45%), var(--medal);
+      border: 2px solid var(--medal-dark);
+      box-shadow: 0 0 0 1px #000, inset 0 0 0 2px #fff6;
+      margin-top: 0.35em;
+    }
+
+    /* stužka nad medailí */
+    .leaderboard-box .lb-medal::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 75%;
+      width: 1.1em;
+      height: 0.8em;
+      transform: translateX(-50%);
+      z-index: -1;
+      background: linear-gradient(90deg, #d62828 0 50%, #1d4ed8 50% 100%);
+      clip-path: polygon(0 0, 100% 0, 75% 100%, 25% 100%);
+    }
+
     .leaderboard-box .lb-rank-1 {
-      border-color: #ffd700;
-      background: #ffd700;
+      --medal: #ffd700;
+      --medal-dark: #b8860b;
     }
 
     .leaderboard-box .lb-rank-2 {
-      border-color: #c0c0c0;
-      background: #c0c0c0;
+      --medal: #c0c0c0;
+      --medal-dark: #7d7d7d;
     }
 
     .leaderboard-box .lb-rank-3 {
-      border-color: #c8763a;
-      background: #c8763a;
+      --medal: #c8763a;
+      --medal-dark: #8a4b1f;
     }
 
     .leaderboard-box .lb-name {
@@ -3459,8 +3480,8 @@
           name.className = 'lb-name';
           name.textContent = p.name;
           const rank = document.createElement('span');
-          rank.className = i < 3 ? `lb-rank lb-rank-${i + 1}` : 'lb-rank';
-          rank.textContent = String(i + 1);
+          rank.className = i < 3 ? `lb-rank lb-medal lb-rank-${i + 1}` : 'lb-rank';
+          rank.textContent = i < 3 ? String(i + 1) : `${i + 1}.`;
           const left = document.createElement('span');
           left.className = 'lb-left';
           left.append(rank, name);
