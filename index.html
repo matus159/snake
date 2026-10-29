@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.46.0">
+  <meta name="snake-version" content="1.47.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1822,6 +1822,19 @@
       font-weight: 700;
     }
 
+    /* 1. místo zlatý, 2. stříbrný, 3. měděný kroužek */
+    .leaderboard-box .lb-rank-1 {
+      border-color: #ffd700;
+    }
+
+    .leaderboard-box .lb-rank-2 {
+      border-color: #c0c0c0;
+    }
+
+    .leaderboard-box .lb-rank-3 {
+      border-color: #c8763a;
+    }
+
     .leaderboard-box .lb-name {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -3443,7 +3456,7 @@
           name.className = 'lb-name';
           name.textContent = p.name;
           const rank = document.createElement('span');
-          rank.className = 'lb-rank';
+          rank.className = i < 3 ? `lb-rank lb-rank-${i + 1}` : 'lb-rank';
           rank.textContent = String(i + 1);
           const left = document.createElement('span');
           left.className = 'lb-left';
