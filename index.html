@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.53.0">
+  <meta name="snake-version" content="1.54.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2810,10 +2810,9 @@
       let multiPlayerId = null;
       let multiInGame = false;
       let lastMultiServerScore = 0;
-      // Hra pro více hráčů: bonus +10 % bodů, aby se vyplatilo hrát s ostatními.
-      const MULTI_SCORE_BONUS = 0.1;
+      // Hra pro více hráčů: vítěz kola dostane bonus +10 % bodů z kola, aby se vyplatilo hrát s ostatními.
+      const MULTI_WIN_BONUS = 0.1;
       let multiRoundGained = 0;
-      let multiBonusGiven = 0;
       let lastMultiServerTacos = 0;
       let multiServerState = { kostky: [], players: [] };
       let multiLobbyPlayers = [];
@@ -3686,11 +3685,8 @@
         lastMultiServerScore = serverScore;
         if (gained > 0) {
           multiRoundGained += gained;
-          const bonusTotal = Math.floor(multiRoundGained * MULTI_SCORE_BONUS);
-          const extra = bonusTotal - multiBonusGiven;
-          multiBonusGiven = bonusTotal;
-          score += gained + extra;
-          addGameScore(gained + extra);
+          score += gained;
+          addGameScore(gained);
           updateScoreDisplay();
         }
       }
@@ -3720,7 +3716,6 @@
           lastMultiServerScore = 0;
           lastMultiServerTacos = 0;
           multiRoundGained = 0;
-          multiBonusGiven = 0;
           score = 0;
           gameScore = 0;
           multiOverlay.classList.remove('visible');
@@ -3758,7 +3753,16 @@
             applyMultiTacosFromServer(me.tacos);
           }
           if (winner && winner.id === multiPlayerId) {
-            multiGameOverText.textContent = 'Vyhrál jsi!';
+            const bonus = Math.floor(multiRoundGained * MULTI_WIN_BONUS);
+            multiRoundGained = 0;
+            if (bonus > 0) {
+              score += bonus;
+              addGameScore(bonus);
+              updateScoreDisplay();
+            }
+            multiGameOverText.textContent = bonus > 0
+              ? `Vyhrál jsi! Bonus za výhru: +${bonus} bodů (+10 %)`
+              : 'Vyhrál jsi!';
           } else if (me && !me.alive) {
             multiGameOverText.textContent = 'Prohrál jsi.';
           } else if (winner) {
