@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- jeden duhový přechod přes hlavu i tělo -->
+    <linearGradient id="rainbow" gradientUnits="userSpaceOnUse" x1="146" y1="170" x2="366" y2="512">
+      <stop offset="0" stop-color="hsl(0,92%,58%)"/>
+      <stop offset="0.2" stop-color="hsl(45,92%,58%)"/>
+      <stop offset="0.4" stop-color="hsl(120,92%,58%)"/>
+      <stop offset="0.6" stop-color="hsl(190,92%,58%)"/>
+      <stop offset="0.8" stop-color="hsl(250,92%,62%)"/>
+      <stop offset="1" stop-color="hsl(310,92%,60%)"/>
+    </linearGradient>
+    <clipPath id="bg">
+      <rect width="512" height="512" rx="96"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#bg)">
+    <rect width="512" height="512" fill="#0f0f1a"/>
+    <!-- hlava s okem -->
+    <rect x="146" y="170" width="220" height="220" rx="22" fill="url(#rainbow)"/>
+    <circle cx="256" cy="280" r="44" fill="#000"/>
+    <!-- tělo stejně velké, vidět jen napůl -->
+    <rect x="146" y="402" width="220" height="220" rx="22" fill="url(#rainbow)"/>
+  </g>
+</svg>
