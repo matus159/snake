@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.59.0">
+  <meta name="snake-version" content="1.60.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2751,7 +2751,7 @@
       // Dny (RRRR-MM-DD, český čas), kdy tacos event běží celý den.
       const TACOS_ALL_DAY_DATES = ['2026-10-23'];
       // Mimořádné tacos eventy navíc: [začátek, konec] (UTC).
-      const TACOS_EXTRA_WINDOWS = [['2026-10-30T09:00:00Z', '2026-10-30T09:20:00Z']];
+      const TACOS_EXTRA_WINDOWS = [];
 
       function extraTacosWindow(now) {
         return TACOS_EXTRA_WINDOWS.find(([from, to]) => now >= new Date(from) && now < new Date(to));
