@@ -8,6 +8,8 @@ const WATCHED_NAMES = ['robine'];
 interface NameStats {
   diamanty: number;
   bestScore: number;
+  // kdy hráč pod tímhle jménem naposledy poslal diamanty (starší záznamy ho nemají)
+  at?: number;
 }
 
 interface Device {
@@ -58,6 +60,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       entry.stats[name] = {
         diamanty: count(body.diamanty),
         bestScore: Math.max(prev?.bestScore ?? 0, count(body.bestScore)),
+        at: now,
       };
     }
     await storage.put(key, entry);
@@ -72,16 +75,20 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
 
   if (action === 'leaderboard' && request.method === 'GET') {
     // Žebříček podle diamantů: všichni hráči kromě ownerů a kromě těch, u kterých server diamanty nezná.
-    const best = new Map<string, number>();
+    // Stejné jméno s jinými velkými/malými písmeny je jeden hráč (jako ve hře) – v žebříčku je jen jednou,
+    // s nejvíc diamanty (třeba „naty“ 201 místo „Naty“ 53 z jiného zařízení).
+    const best = new Map<string, { name: string; diamanty: number }>();
     for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
       for (const [n, s] of Object.entries(d.stats ?? {})) {
-        if (n.toLowerCase().includes('owner')) continue;
-        best.set(n, Math.max(best.get(n) ?? 0, s.diamanty));
+        const key = n.toLowerCase();
+        if (key.includes('owner')) continue;
+        const prev = best.get(key);
+        if (!prev || s.diamanty > prev.diamanty) best.set(key, { name: n, diamanty: s.diamanty });
       }
     }
-    const players = [...best]
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, diamanty]) => ({ name, diamanty }));
+    const players = [...best.values()]
+      .sort((a, b) => b.diamanty - a.diamanty)
+      .map(({ name, diamanty }) => ({ name, diamanty }));
     return json({ players });
   }
 

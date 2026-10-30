@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.54.0">
+  <meta name="snake-version" content="1.55.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3380,6 +3380,21 @@
           weekendWheelSpinDate,
         };
         writeProfiles(profiles);
+        scheduleDiamondReport();
+      }
+
+      // Když se diamanty změní (hra, obchod, kolo, vajíčko), pošlou se na server chvíli potom,
+      // aby žebříček ukazoval stejně jako hra.
+      let diamondReportTimer = null;
+      let lastReportedDiamanty = null;
+
+      function scheduleDiamondReport() {
+        if (!playerName || diamanty === lastReportedDiamanty) return;
+        clearTimeout(diamondReportTimer);
+        diamondReportTimer = setTimeout(() => {
+          if (diamanty === lastReportedDiamanty) return;
+          reportPlayerName();
+        }, 5000);
       }
 
       function refreshCurrencyUI() {
@@ -3925,6 +3940,7 @@
         } catch {
           return;
         }
+        lastReportedDiamanty = diamanty;
         fetch('/api/stats/seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
