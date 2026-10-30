@@ -8,6 +8,7 @@ import {
   spawnOneKostka,
   tickGame,
 } from './game-logic';
+import { handleProgressRequest } from './progress';
 import { handleStatsRequest } from './stats';
 import type { Env, Kostka, Player, WsAttachment } from './types';
 
@@ -47,6 +48,9 @@ export class GameServer implements DurableObject {
   async fetch(request: Request): Promise<Response> {
     if (new URL(request.url).pathname.startsWith('/api/stats/')) {
       return handleStatsRequest(request, this.state.storage);
+    }
+    if (new URL(request.url).pathname.startsWith('/api/progress/')) {
+      return handleProgressRequest(request, this.state.storage);
     }
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('WebSocket required', { status: 426 });

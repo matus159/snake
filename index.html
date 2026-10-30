@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.56.0">
+  <meta name="snake-version" content="1.57.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3399,7 +3399,97 @@
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
+        scheduleProgressUpload();
       }
+
+      // Postup (diamanty, hadi) se ukládá i na server podle jména, aby byl stejný na každém zařízení.
+      // Na novém zařízení se poprvé spojí: víc diamantů vyhraje a hadi se sečtou. Potom platí server.
+      const PROGRESS_SYNCED_KEY = 'snake-progress-synced';
+      let progressUploadTimer = null;
+      let lastUploadedProgress = '';
+
+      function isProgressSynced(id) {
+        try {
+          return JSON.parse(localStorage.getItem(PROGRESS_SYNCED_KEY) || '[]').includes(id);
+        } catch {
+          return false;
+        }
+      }
+
+      function markProgressSynced(id) {
+        try {
+          const list = JSON.parse(localStorage.getItem(PROGRESS_SYNCED_KEY) || '[]');
+          if (!list.includes(id)) list.push(id);
+          localStorage.setItem(PROGRESS_SYNCED_KEY, JSON.stringify(list));
+        } catch {}
+      }
+
+      function currentProgress() {
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate };
+      }
+
+      function applyServerProgress(id, progress) {
+        // Uprostřed hry se nic nepřepisuje, změny z jiného zařízení se načtou v menu.
+        if (!progress || getProfileId(playerName) !== id || running || multiInGame) return;
+        const profiles = readProfiles();
+        profiles[id] = { ...defaultProfile(), ...progress };
+        writeProfiles(profiles);
+        lastUploadedProgress = JSON.stringify(progress);
+        loadPlayerProfile();
+        refreshCurrencyUI();
+        renderWardrobeSkins();
+      }
+
+      async function syncProgressFromServer() {
+        const id = getProfileId(playerName);
+        if (!id) return;
+        try {
+          if (isProgressSynced(id)) {
+            const res = await fetch(`/api/progress/get?name=${encodeURIComponent(id)}`, { cache: 'no-store' });
+            const { progress } = await res.json();
+            if (progress) {
+              applyServerProgress(id, progress);
+              return;
+            }
+          }
+          const res = await fetch('/api/progress/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: id, progress: currentProgress(), merge: true }),
+          });
+          const { progress } = await res.json();
+          if (!progress) return;
+          markProgressSynced(id);
+          applyServerProgress(id, progress);
+        } catch {}
+      }
+
+      function scheduleProgressUpload() {
+        const id = getProfileId(playerName);
+        if (!id || !isProgressSynced(id)) return;
+        clearTimeout(progressUploadTimer);
+        progressUploadTimer = setTimeout(uploadProgress, 1500);
+      }
+
+      function uploadProgress() {
+        clearTimeout(progressUploadTimer);
+        progressUploadTimer = null;
+        const id = getProfileId(playerName);
+        if (!id || !isProgressSynced(id)) return;
+        const progress = currentProgress();
+        const payload = JSON.stringify(progress);
+        if (payload === lastUploadedProgress) return;
+        lastUploadedProgress = payload;
+        try {
+          fetch('/api/progress/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: id, progress }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch {}
+      }
+      window.addEventListener('pagehide', uploadProgress);
 
       // Když se diamanty změní (hra, obchod, kolo, vajíčko), pošlou se na server chvíli potom,
       // aby žebříček ukazoval stejně jako hra.
@@ -3482,6 +3572,7 @@
         banOverlay.classList.remove('visible');
         modeSelectOverlay.classList.add('visible');
         updatePlayerNameDisplay();
+        syncProgressFromServer();
         draw();
       }
 
@@ -4020,6 +4111,8 @@
         bestGameScore = 0;
         loadPlayerProfile();
         restoreNatyDiamanty();
+        lastUploadedProgress = '';
+        syncProgressFromServer();
         reportPlayerName(true);
         watchRobine();
         updatePlayerNameDisplay();
@@ -5686,6 +5779,7 @@
 
       loadPlayerProfile();
       restoreNatyDiamanty();
+      syncProgressFromServer();
       updateOwnerPanel();
       maybeStartRobineTacos();
       loadTacosMusic();
