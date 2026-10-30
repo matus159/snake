@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.56.0">
+  <meta name="snake-version" content="1.58.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1764,8 +1764,72 @@
       z-index: 1;
     }
 
-    #leaderboardOverlay {
+    #leaderboardOverlay,
+    #transferOverlay {
       z-index: 31;
+    }
+
+    /* Přenos: tlačítko vlevo nahoře ve výběru režimu */
+    .transfer-btn {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1;
+    }
+
+    .transfer-box {
+      width: min(520px, 90%);
+      text-align: center;
+    }
+
+    .transfer-box h2 {
+      margin: 0 0 0.6rem;
+      color: #ffd700;
+    }
+
+    .transfer-box p {
+      margin: 0.3rem 0;
+    }
+
+    .transfer-box .transfer-code {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: 0.25em;
+      color: #00ff88;
+    }
+
+    .transfer-box .transfer-help {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .transfer-use {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      align-items: center;
+      margin-top: 0.8rem;
+    }
+
+    .transfer-use .name-input {
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .transfer-box .transfer-msg {
+      min-height: 1.2em;
+      color: #00d9ff;
+    }
+
+    @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+      .transfer-btn {
+        top: 6px;
+        left: 6px;
+      }
+
+      .transfer-box .transfer-code {
+        font-size: 1.6rem;
+      }
     }
 
     .leaderboard-box {
@@ -2402,6 +2466,7 @@
       <div class="tacos-countdown" id="tacosCountdown" role="status"></div>
       <div id="modeSelectOverlay" class="overlay visible">
         <button type="button" class="btn btn-small leaderboard-btn" id="leaderboardBtn">Žebříček</button>
+        <button type="button" class="btn btn-small transfer-btn" id="transferBtn">Přenos</button>
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
           <button type="button" class="btn btn-small" id="changeNameModeBtn">Změnit jméno</button>
@@ -2421,6 +2486,20 @@
           </button>
           </div>
         </div>
+      </div>
+      <div id="transferOverlay" class="overlay">
+        <div class="transfer-box">
+          <h2>Přenos na jiné zařízení</h2>
+          <p>Tvůj přenosový kód:</p>
+          <p class="transfer-code" id="transferCode">…</p>
+          <p class="transfer-help">Na jiném zařízení otevři Přenos a zadej tenhle kód – budeš tam mít stejné diamanty a hady. Kód nikomu neříkej.</p>
+          <div class="transfer-use">
+            <input type="text" id="transferInput" class="name-input" maxlength="8" placeholder="Kód z jiného zařízení" autocomplete="off">
+            <button type="button" class="btn btn-small" id="transferUseBtn">Použít</button>
+          </div>
+          <p class="transfer-msg" id="transferMsg"></p>
+        </div>
+        <button type="button" class="btn leaderboard-back" id="transferBackBtn">Zpět</button>
       </div>
       <div id="leaderboardOverlay" class="overlay">
         <div class="leaderboard-box">
@@ -3399,6 +3478,173 @@
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
+        scheduleProgressUpload();
+      }
+
+      // Postup (diamanty, hadi) se ukládá i na server pod tajným přenosovým kódem. Kód si hráč
+      // zobrazí v menu („Přenos“) a zadá na jiném zařízení – pak má na obou stejný postup.
+      const PROGRESS_CODES_KEY = 'snake-progress-codes';
+      let progressUploadTimer = null;
+      let lastUploadedProgress = '';
+
+      function readProgressCodes() {
+        try {
+          return JSON.parse(localStorage.getItem(PROGRESS_CODES_KEY) || '{}');
+        } catch {
+          return {};
+        }
+      }
+
+      function progressCode(id = getProfileId(playerName)) {
+        return id ? readProgressCodes()[id] || null : null;
+      }
+
+      function setProgressCode(id, code) {
+        const codes = readProgressCodes();
+        codes[id] = code;
+        try { localStorage.setItem(PROGRESS_CODES_KEY, JSON.stringify(codes)); } catch {}
+      }
+
+      function currentProgress() {
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate };
+      }
+
+      function applyServerProgress(id, progress) {
+        // Uprostřed hry se nic nepřepisuje, změny z jiného zařízení se načtou v menu.
+        if (!progress || getProfileId(playerName) !== id || running || multiInGame) return;
+        const profiles = readProfiles();
+        profiles[id] = { ...defaultProfile(), ...progress };
+        writeProfiles(profiles);
+        lastUploadedProgress = JSON.stringify(progress);
+        loadPlayerProfile();
+        refreshCurrencyUI();
+        renderWardrobeSkins();
+      }
+
+      async function createProgressCode(id) {
+        const res = await fetch('/api/progress/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: playerName, progress: currentProgress() }),
+        });
+        const data = await res.json();
+        if (!data.code) return null;
+        setProgressCode(id, data.code);
+        lastUploadedProgress = JSON.stringify(data.progress);
+        return data.code;
+      }
+
+      // Při otevření a v menu: načíst postup ze serveru (změny z jiného zařízení), nebo vytvořit kód.
+      async function syncProgressFromServer() {
+        const id = getProfileId(playerName);
+        if (!id) return;
+        try {
+          const code = progressCode(id);
+          if (!code) {
+            await createProgressCode(id);
+            return;
+          }
+          const res = await fetch(`/api/progress/get?code=${code}`, { cache: 'no-store' });
+          if (res.status === 404) {
+            await createProgressCode(id);
+            return;
+          }
+          const data = await res.json();
+          applyServerProgress(id, data.progress);
+        } catch {}
+      }
+
+      function scheduleProgressUpload() {
+        if (!progressCode()) return;
+        clearTimeout(progressUploadTimer);
+        progressUploadTimer = setTimeout(uploadProgress, 1500);
+      }
+
+      function uploadProgress() {
+        clearTimeout(progressUploadTimer);
+        progressUploadTimer = null;
+        const code = progressCode();
+        if (!code) return;
+        const progress = currentProgress();
+        const payload = JSON.stringify(progress);
+        if (payload === lastUploadedProgress) return;
+        lastUploadedProgress = payload;
+        try {
+          fetch('/api/progress/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, progress }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch {}
+      }
+      window.addEventListener('pagehide', uploadProgress);
+
+      // Obrazovka „Přenos“: zobrazí kód tohohle hráče a umí zadat kód z jiného zařízení.
+      const transferOverlay = document.getElementById('transferOverlay');
+      const transferCodeEl = document.getElementById('transferCode');
+      const transferInput = document.getElementById('transferInput');
+      const transferMsg = document.getElementById('transferMsg');
+
+      async function openTransfer() {
+        modeSelectOverlay.classList.remove('visible');
+        transferOverlay.classList.add('visible');
+        transferMsg.textContent = '';
+        transferInput.value = '';
+        transferCodeEl.textContent = progressCode() || '…';
+        if (!progressCode()) {
+          await syncProgressFromServer();
+          transferCodeEl.textContent = progressCode() || 'Nejde načíst, zkus to za chvíli.';
+        }
+      }
+
+      function closeTransfer() {
+        transferOverlay.classList.remove('visible');
+        showModeSelect();
+      }
+
+      async function useTransferCode() {
+        const code = transferInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (code.length !== 6) {
+          transferMsg.textContent = 'Kód má 6 znaků.';
+          return;
+        }
+        if (code === progressCode()) {
+          transferMsg.textContent = 'Tohle je tvůj kód z tohohle zařízení.';
+          return;
+        }
+        let data;
+        try {
+          const res = await fetch(`/api/progress/get?code=${code}`, { cache: 'no-store' });
+          data = await res.json();
+          if (!res.ok) {
+            transferMsg.textContent = data.error || 'Tenhle kód neexistuje.';
+            return;
+          }
+        } catch {
+          transferMsg.textContent = 'Server není dostupný, zkus to za chvíli.';
+          return;
+        }
+        // Nic se neztratí: víc diamantů vyhraje a hadi z obou zařízení se sečtou.
+        const local = currentProgress();
+        const merged = {
+          diamanty: Math.max(local.diamanty, data.progress.diamanty),
+          wardrobe: [...new Set([...data.progress.wardrobe, ...local.wardrobe])],
+          equippedSkin: data.progress.equippedSkin,
+          weekendWheelSpinDate: data.progress.weekendWheelSpinDate || local.weekendWheelSpinDate,
+        };
+        playerName = data.name;
+        localStorage.setItem(PLAYER_NAME_KEY, playerName);
+        const id = getProfileId(playerName);
+        setProgressCode(id, code);
+        lastUploadedProgress = '';
+        applyServerProgress(id, merged);
+        uploadProgress();
+        updatePlayerNameDisplay();
+        reportPlayerName(true);
+        transferCodeEl.textContent = code;
+        transferInput.value = '';
+        transferMsg.textContent = `Hotovo! Jsi hráč ${playerName} a máš ${diamanty} diamantů.`;
       }
 
       // Když se diamanty změní (hra, obchod, kolo, vajíčko), pošlou se na server chvíli potom,
@@ -3466,6 +3712,7 @@
         multiOverlay.classList.remove('visible');
         multiGameOverOverlay.classList.remove('visible');
         leaderboardOverlay.classList.remove('visible');
+        transferOverlay.classList.remove('visible');
       }
 
       function showModeSelect() {
@@ -3482,6 +3729,7 @@
         banOverlay.classList.remove('visible');
         modeSelectOverlay.classList.add('visible');
         updatePlayerNameDisplay();
+        syncProgressFromServer();
         draw();
       }
 
@@ -4020,6 +4268,8 @@
         bestGameScore = 0;
         loadPlayerProfile();
         restoreNatyDiamanty();
+        lastUploadedProgress = '';
+        syncProgressFromServer();
         reportPlayerName(true);
         watchRobine();
         updatePlayerNameDisplay();
@@ -5611,6 +5861,13 @@
       shopBackBtn.addEventListener('click', shopBack);
       document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
       document.getElementById('leaderboardBackBtn').addEventListener('click', closeLeaderboard);
+      document.getElementById('transferBtn').addEventListener('click', openTransfer);
+      document.getElementById('transferBackBtn').addEventListener('click', closeTransfer);
+      document.getElementById('transferUseBtn').addEventListener('click', useTransferCode);
+      transferInput.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') useTransferCode();
+      });
       shopSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('red'));
       shopWhiteSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('white'));
       shopBlueSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('blue'));
@@ -5686,6 +5943,7 @@
 
       loadPlayerProfile();
       restoreNatyDiamanty();
+      syncProgressFromServer();
       updateOwnerPanel();
       maybeStartRobineTacos();
       loadTacosMusic();
