@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.55.0">
+  <meta name="snake-version" content="1.56.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2695,6 +2695,24 @@
         try { localStorage.setItem(ROBINE_TACOS_KEY, String(Date.now() + ROBINE_TACOS_MS)); } catch {}
       }
 
+      // Jednorázově pro hráčku naty: na zařízení, kde měla jen 53 diamantů, dostane svých
+      // poctivě získaných 201 z druhého zařízení (53 se smaže, nastaví se 201). Ostatních se to netýká.
+      const NATY_RESTORE_KEY = 'snake-naty-restore';
+      const NATY_DIAMANTY = 201;
+
+      function restoreNatyDiamanty() {
+        if (getProfileId(playerName) !== 'naty') return;
+        try {
+          if (localStorage.getItem(NATY_RESTORE_KEY)) return;
+          localStorage.setItem(NATY_RESTORE_KEY, '1');
+        } catch {
+          return;
+        }
+        if (diamanty >= NATY_DIAMANTY) return;
+        diamanty = NATY_DIAMANTY;
+        saveProgress();
+      }
+
       function isTacosEventActive(now = new Date()) {
         if (!TACOS_EVENT) return false;
         if (extraTacosWindow(now)) return true;
@@ -4001,6 +4019,7 @@
         maybeStartRobineTacos();
         bestGameScore = 0;
         loadPlayerProfile();
+        restoreNatyDiamanty();
         reportPlayerName(true);
         watchRobine();
         updatePlayerNameDisplay();
@@ -5666,6 +5685,7 @@
       });
 
       loadPlayerProfile();
+      restoreNatyDiamanty();
       updateOwnerPanel();
       maybeStartRobineTacos();
       loadTacosMusic();
