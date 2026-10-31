@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.60.0">
+  <meta name="snake-version" content="1.61.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -123,14 +123,21 @@
       height: 100%;
     }
 
+    /* Mobil na šířku: v menu vpravo dole (nahoře je tlačítko Žebříček), během hry vpravo nahoře
+       (dole je joystick). */
     @media (pointer: coarse) and (orientation: landscape) {
       .tacos-music {
         left: auto;
         right: 12px;
-        top: 12px;
-        bottom: auto;
+        top: auto;
+        bottom: 12px;
         width: 128px;
         height: 72px;
+      }
+
+      body.in-game .tacos-music {
+        top: 12px;
+        bottom: auto;
       }
     }
 
