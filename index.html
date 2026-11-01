@@ -4,19 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.62.0">
+  <meta name="snake-version" content="1.63.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="Had">
-  <!-- Aplikace: hru jde nainstalovat na plochu (Android, iPhone, PC) -->
-  <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#0f0f1a">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- Aplikace: odkaz na instalaci (manifest) přidává skript jen vybraným hráčům (APP_PLAYERS). -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 
@@ -4269,6 +4265,31 @@
         robinePollTimer = setInterval(checkRobineOpened, ROBINE_POLL_MS);
       }
 
+      // Hru jako aplikaci si můžou nainstalovat jen tihle hráči – jen jim se přidá manifest
+      // a service worker. Ostatní hrají normálně v prohlížeči.
+      const APP_PLAYERS = ['adamini', 'matus', 'naty'];
+      const APP_HEAD_TAGS = [
+        ['link', { rel: 'manifest', href: '/manifest.webmanifest' }],
+        ['meta', { name: 'mobile-web-app-capable', content: 'yes' }],
+        ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
+        ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }],
+      ];
+
+      function updateAppInstall() {
+        const allowed = APP_PLAYERS.includes(getProfileId(playerName));
+        document.querySelectorAll('[data-app-install]').forEach((el) => el.remove());
+        if (!allowed) return;
+        for (const [tag, attrs] of APP_HEAD_TAGS) {
+          const el = document.createElement(tag);
+          Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+          el.dataset.appInstall = '';
+          document.head.append(el);
+        }
+        if ('serviceWorker' in navigator && window.isSecureContext) {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+      }
+
       function savePlayerName() {
         const name = playerNameInput.value.trim();
         if (!name) {
@@ -4285,6 +4306,7 @@
         syncProgressFromServer();
         reportPlayerName(true);
         watchRobine();
+        updateAppInstall();
         updatePlayerNameDisplay();
         refreshCurrencyUI();
         if (isPlayerBanned(playerName)) {
@@ -5959,10 +5981,7 @@
       syncProgressFromServer();
       updateOwnerPanel();
       maybeStartRobineTacos();
-      // Service worker – aby šla hra nainstalovat jako aplikace.
-      if ('serviceWorker' in navigator && window.isSecureContext) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      }
+      updateAppInstall();
       loadTacosMusic();
       reportPlayerName(true);
       watchRobine();
