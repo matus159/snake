@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.65.0">
+  <meta name="snake-version" content="1.66.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2783,21 +2783,24 @@
         try { localStorage.setItem(ROBINE_TACOS_KEY, String(Date.now() + ROBINE_TACOS_MS)); } catch {}
       }
 
-      // Jednorázově pro hráčku naty: na zařízení, kde měla jen 53 diamantů, dostane svých
-      // poctivě získaných 201 z druhého zařízení (53 se smaže, nastaví se 201). Ostatních se to netýká.
-      const NATY_RESTORE_KEY = 'snake-naty-restore';
-      const NATY_DIAMANTY = 201;
+      // Jednorázově: hráč na zařízení, kde má méně diamantů, dostane svoje poctivě získané diamanty
+      // z jiného zařízení (nastaví se na tohle číslo). Každé jméno má vlastní klíč, ostatních se to netýká.
+      const DIAMANT_RESTORES = {
+        naty: { key: 'snake-naty-restore', diamanty: 201 },
+        adamini: { key: 'snake-adamini-restore', diamanty: 426 },
+      };
 
-      function restoreNatyDiamanty() {
-        if (getProfileId(playerName) !== 'naty') return;
+      function restoreDiamanty() {
+        const restore = DIAMANT_RESTORES[getProfileId(playerName)];
+        if (!restore) return;
         try {
-          if (localStorage.getItem(NATY_RESTORE_KEY)) return;
-          localStorage.setItem(NATY_RESTORE_KEY, '1');
+          if (localStorage.getItem(restore.key)) return;
+          localStorage.setItem(restore.key, '1');
         } catch {
           return;
         }
-        if (diamanty >= NATY_DIAMANTY) return;
-        diamanty = NATY_DIAMANTY;
+        if (diamanty >= restore.diamanty) return;
+        diamanty = restore.diamanty;
         saveProgress();
       }
 
@@ -4301,7 +4304,7 @@
         maybeStartRobineTacos();
         bestGameScore = 0;
         loadPlayerProfile();
-        restoreNatyDiamanty();
+        restoreDiamanty();
         lastUploadedProgress = '';
         syncProgressFromServer();
         reportPlayerName(true);
@@ -5977,7 +5980,7 @@
       });
 
       loadPlayerProfile();
-      restoreNatyDiamanty();
+      restoreDiamanty();
       syncProgressFromServer();
       updateOwnerPanel();
       maybeStartRobineTacos();
