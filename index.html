@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.66.0">
+  <meta name="snake-version" content="1.67.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2787,7 +2787,7 @@
       // z jiného zařízení (nastaví se na tohle číslo). Každé jméno má vlastní klíč, ostatních se to netýká.
       const DIAMANT_RESTORES = {
         naty: { key: 'snake-naty-restore', diamanty: 201 },
-        adamini: { key: 'snake-adamini-restore', diamanty: 426 },
+        adamini: { key: 'snake-adamini-restore-2', diamanty: 426 },
       };
 
       function restoreDiamanty() {
@@ -2801,8 +2801,11 @@
         }
         if (diamanty >= restore.diamanty) return;
         diamanty = restore.diamanty;
+        // aby to nepřepsal starší stav ze serveru (přenosový kód), načtení ze serveru tohle číslo zachová
+        restoredDiamanty = restore.diamanty;
         saveProgress();
       }
+      let restoredDiamanty = null;
 
       function isTacosEventActive(now = new Date()) {
         if (!TACOS_EVENT) return false;
@@ -3524,13 +3527,22 @@
       function applyServerProgress(id, progress) {
         // Uprostřed hry se nic nepřepisuje, změny z jiného zařízení se načtou v menu.
         if (!progress || getProfileId(playerName) !== id || running || multiInGame) return;
+        let keepRestored = false;
+        if (restoredDiamanty !== null && progress.diamanty < restoredDiamanty) {
+          progress = { ...progress, diamanty: restoredDiamanty };
+          keepRestored = true;
+        } else {
+          // server už obnovené diamanty má
+          restoredDiamanty = null;
+        }
         const profiles = readProfiles();
         profiles[id] = { ...defaultProfile(), ...progress };
         writeProfiles(profiles);
-        lastUploadedProgress = JSON.stringify(progress);
+        lastUploadedProgress = keepRestored ? '' : JSON.stringify(progress);
         loadPlayerProfile();
         refreshCurrencyUI();
         renderWardrobeSkins();
+        if (keepRestored) uploadProgress();
       }
 
       async function createProgressCode(id) {
@@ -3547,9 +3559,12 @@
       }
 
       // Při otevření a v menu: načíst postup ze serveru (změny z jiného zařízení), nebo vytvořit kód.
+      let progressSyncRunning = false;
+
       async function syncProgressFromServer() {
         const id = getProfileId(playerName);
-        if (!id) return;
+        if (!id || progressSyncRunning) return;
+        progressSyncRunning = true;
         try {
           const code = progressCode(id);
           if (!code) {
@@ -3563,7 +3578,11 @@
           }
           const data = await res.json();
           applyServerProgress(id, data.progress);
-        } catch {}
+        } catch {
+          // bez internetu zůstane místní postup
+        } finally {
+          progressSyncRunning = false;
+        }
       }
 
       function scheduleProgressUpload() {
