@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.69.0">
+  <meta name="snake-version" content="1.70.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4293,7 +4293,7 @@
 
       // Hru jako aplikaci si můžou nainstalovat jen tihle hráči – jen jim se přidá manifest
       // a service worker. Ostatní hrají normálně v prohlížeči.
-      const APP_PLAYERS = ['adamini', 'matus', 'naty'];
+      const APP_PLAYERS = ['adamini', 'matus', 'naty', 'maja'];
       const APP_HEAD_TAGS = [
         ['link', { rel: 'manifest', href: '/manifest.webmanifest' }],
         ['meta', { name: 'mobile-web-app-capable', content: 'yes' }],
