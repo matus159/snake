@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.64.0">
+  <meta name="snake-version" content="1.65.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -889,24 +889,10 @@
     .shop-footer {
       width: 100%;
       display: flex;
-      align-items: center;
-      gap: 0.8rem;
       justify-content: flex-end;
       padding: 14px 16px;
       box-sizing: border-box;
       flex-shrink: 0;
-    }
-
-    /* Tlačítko Nainstalovat (jen pro vybrané hráče) vlevo dole v obchodě */
-    #shopInstallBtn {
-      margin-right: auto;
-    }
-
-    .shop-install-msg {
-      flex: 1;
-      font-size: 0.8rem;
-      color: #ffd700;
-      text-align: left;
     }
 
     .shop-view {
@@ -2702,8 +2688,6 @@
           </div>
         </div>
         <div class="shop-footer">
-          <button class="btn hidden" id="shopInstallBtn">Nainstalovat</button>
-          <span class="shop-install-msg" id="shopInstallMsg"></span>
           <button class="btn" id="shopBackBtn">Zpět</button>
         </div>
       </div>
@@ -4306,46 +4290,6 @@
         }
       }
 
-      // Tlačítko „Nainstalovat“ v obchodě – jen pro tyhle hráče.
-      const SHOP_INSTALL_PLAYERS = ['naty'];
-      const shopInstallBtn = document.getElementById('shopInstallBtn');
-      const shopInstallMsg = document.getElementById('shopInstallMsg');
-      let installPromptEvent = null;
-
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        installPromptEvent = e;
-      });
-      window.addEventListener('appinstalled', () => {
-        installPromptEvent = null;
-        updateShopInstallBtn();
-      });
-
-      function isInstalledApp() {
-        return window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches
-          || navigator.standalone === true;
-      }
-
-      function updateShopInstallBtn() {
-        const show = SHOP_INSTALL_PLAYERS.includes(getProfileId(playerName)) && !isInstalledApp();
-        shopInstallBtn.classList.toggle('hidden', !show);
-        shopInstallMsg.textContent = '';
-      }
-
-      async function installApp() {
-        if (installPromptEvent) {
-          installPromptEvent.prompt();
-          const { outcome } = await installPromptEvent.userChoice;
-          installPromptEvent = null;
-          shopInstallMsg.textContent = outcome === 'accepted' ? 'Hotovo! Had je na ploše.' : '';
-          return;
-        }
-        // iPhone a Safari neumí instalaci spustit tlačítkem – stačí krátká rada.
-        shopInstallMsg.textContent = /iPhone|iPad|Macintosh/.test(navigator.userAgent)
-          ? 'Klepni na Sdílet a pak „Přidat na plochu“ (na Macu „Přidat do Docku“).'
-          : 'Instalace teď nejde – v menu prohlížeče zkus „Nainstalovat aplikaci“.';
-      }
-
       function savePlayerName() {
         const name = playerNameInput.value.trim();
         if (!name) {
@@ -5557,7 +5501,6 @@
         pauseOverlay.classList.remove('visible');
         showShopMain();
         updateShopCurrencyDisplay();
-        updateShopInstallBtn();
         shopOverlay.classList.add('visible');
       }
 
@@ -5951,7 +5894,6 @@
       mainMenuBtn.addEventListener('click', quitToMainMenu);
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
-      shopInstallBtn.addEventListener('click', installApp);
       document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
       document.getElementById('leaderboardBackBtn').addEventListener('click', closeLeaderboard);
       document.getElementById('transferBtn').addEventListener('click', openTransfer);
