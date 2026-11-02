@@ -1,3 +1,5 @@
+import { isVulgarName } from './names';
+
 // Počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre a server si to pamatuje
 // natrvalo (původně jen 24 hodin, pak 48 hodin; teď bez konce).
 
@@ -84,7 +86,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
       for (const [n, s] of Object.entries(d.stats ?? {})) {
         const key = n.toLowerCase();
-        if (key.includes('owner') || LEADERBOARD_HIDDEN.includes(key)) continue;
+        if (key.includes('owner') || LEADERBOARD_HIDDEN.includes(key) || isVulgarName(n)) continue;
         const prev = best.get(key);
         if (!prev || s.diamanty > prev.diamanty) best.set(key, { name: n, diamanty: s.diamanty });
       }

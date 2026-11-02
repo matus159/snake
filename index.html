@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.73.0">
+  <meta name="snake-version" content="1.74.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4409,9 +4409,33 @@
 
       let savingName = false;
 
+      // Sprostá slova ve jménech (musí sedět s game-server/src/names.ts).
+      const VULGAR_WORDS = ['kurv', 'kurev', 'pica', 'pice', 'pico', 'picu', 'picus', 'kokot', 'zmrd', 'mrdat', 'mrdka', 'mrdk', 'hovno', 'hovna', 'prdel', 'curak', 'kunda', 'sukat', 'jebat', 'jebe', 'jebn', 'jebl', 'vyjeb', 'buzna', 'buzerant', 'teplous', 'negr', 'sracka', 'sracky', 'chcip', 'debil', 'kreten', 'retard', 'blbec', 'idiot', 'prcat', 'penis', 'vagin', 'kozy', 'fuck', 'shit', 'bitch', 'cunt', 'dick', 'cock', 'pussy', 'asshole', 'bastard', 'whore', 'slut', 'porn', 'nigga', 'nigger', 'nazi', 'hitler', 'sex',];
+
+      function isVulgarName(name) {
+        const n = name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/0/g, 'o')
+          .replace(/[1!|]/g, 'i')
+          .replace(/3/g, 'e')
+          .replace(/[4@]/g, 'a')
+          .replace(/[5$]/g, 's')
+          .replace(/7/g, 't')
+          .replace(/[^a-z]/g, '');
+        return VULGAR_WORDS.some((w) => n.includes(w));
+      }
+
       async function savePlayerName() {
         const name = playerNameInput.value.trim();
         if (!name) {
+          playerNameInput.focus();
+          return;
+        }
+        if (isVulgarName(name)) {
+          nameTakenMsg.textContent = 'Tohle jméno obsahuje sprosté slovo. Vyber si jiné.';
+          nameTakenTransferBtn.classList.add('hidden');
           playerNameInput.focus();
           return;
         }
