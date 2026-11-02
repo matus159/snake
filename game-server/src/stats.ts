@@ -5,6 +5,9 @@
 // adamini owner pak vedle hrací plochy uvidí, že si hráč zapnul hru.
 const WATCHED_NAMES = ['robine'];
 
+// Jména, která se v žebříčku nikdy neukážou (kromě ownerů).
+const LEADERBOARD_HIDDEN = ['adam'];
+
 interface NameStats {
   diamanty: number;
   bestScore: number;
@@ -81,7 +84,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
       for (const [n, s] of Object.entries(d.stats ?? {})) {
         const key = n.toLowerCase();
-        if (key.includes('owner')) continue;
+        if (key.includes('owner') || LEADERBOARD_HIDDEN.includes(key)) continue;
         const prev = best.get(key);
         if (!prev || s.diamanty > prev.diamanty) best.set(key, { name: n, diamanty: s.diamanty });
       }
