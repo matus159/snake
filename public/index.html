@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.70.0">
+  <meta name="snake-version" content="1.71.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2430,6 +2430,62 @@
         drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000)
         drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000);
     }
+
+    /* Konec hry: tlačítka vedle sebe */
+    .game-over-actions {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .wardrobe-scroll-hint {
+      display: none;
+    }
+
+    /* Počítač s nízkou obrazovkou (notebook): hrací plocha se celá vejde i s diamanty pod ní. */
+    @media (pointer: fine) {
+      .canvas-container {
+        /* ne menší než 520 px na výšku, jinak by se nevešel obchod a lobby */
+        width: min(960px, 100%, max(calc((100vh - 13rem) * 4 / 3), 694px));
+        height: auto;
+        max-height: none;
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
+    /* Telefon na šířku: v šatně upozornění, že kolo a vajíčko jsou níž; v lobby bez dlouhé nápovědy,
+       aby byla tlačítka vidět. */
+    @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+      .wardrobe-scroll-hint {
+        display: block;
+        margin: 0.4rem 0 0;
+        font-size: 0.8rem;
+        color: #ffd700;
+        text-align: center;
+      }
+
+      #multiHelpText {
+        display: none;
+      }
+
+      .multi-lobby-box h2 {
+        margin-bottom: 0.3rem;
+      }
+
+      .multi-lobby-box p {
+        margin-bottom: 0.4rem;
+      }
+    }
+
+    /* Tablet na výšku: hra nahoře, bez velké mezery nad nadpisem. */
+    @media (pointer: coarse) and (orientation: portrait) and (min-width: 701px) {
+      body {
+        justify-content: flex-start;
+        padding-top: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2503,7 +2559,7 @@
           <p class="transfer-code" id="transferCode">…</p>
           <p class="transfer-help">Na jiném zařízení otevři Přenos a zadej tenhle kód – budeš tam mít stejné diamanty a hady. Kód nikomu neříkej.</p>
           <div class="transfer-use">
-            <input type="text" id="transferInput" class="name-input" maxlength="8" placeholder="Kód z jiného zařízení" autocomplete="off">
+            <input type="text" id="transferInput" class="name-input" maxlength="8" placeholder="Např. K7P2QX" autocomplete="off">
             <button type="button" class="btn btn-small" id="transferUseBtn">Použít</button>
           </div>
           <p class="transfer-msg" id="transferMsg"></p>
@@ -2554,7 +2610,10 @@
       <div id="gameOverOverlay" class="overlay">
         <h2>Konec hry</h2>
         <p>Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="finalDiamanty">0</span></p>
-        <button class="btn" id="restartBtn">Hrát znovu</button>
+        <div class="game-over-actions">
+          <button class="btn" id="restartBtn">Hrát znovu</button>
+          <button class="btn" id="gameOverMenuBtn">Hlavní nabídka</button>
+        </div>
       </div>
       <div id="pauseOverlay" class="overlay">
         <h2>Pauza</h2>
@@ -2652,6 +2711,7 @@
               <h3 class="wardrobe-panel-title">Šatna</h3>
               <div id="wardrobeShowcase" class="wardrobe-showcase"></div>
               <div id="wardrobeSkinsList" class="wardrobe-skins"></div>
+              <p class="wardrobe-scroll-hint">↓ Kolo štěstí a vajíčko jsou níž</p>
             </div>
             <div class="wardrobe-wheel-section">
               <div class="gacha-row">
@@ -3629,7 +3689,8 @@
         transferCodeEl.textContent = progressCode() || '…';
         if (!progressCode()) {
           await syncProgressFromServer();
-          transferCodeEl.textContent = progressCode() || 'Nejde načíst, zkus to za chvíli.';
+          transferCodeEl.textContent = progressCode()
+            || (playerName ? 'Nejde načíst, zkus to za chvíli.' : 'Nejdřív si vyber jméno');
         }
       }
 
@@ -5916,6 +5977,10 @@
         if (!running && playerName) start();
       });
       restartBtn.addEventListener('click', start);
+      document.getElementById('gameOverMenuBtn').addEventListener('click', () => {
+        gameOverOverlay.classList.remove('visible');
+        quitToMainMenu();
+      });
       quitBtn.addEventListener('click', quitToMenu);
       mainMenuBtn.addEventListener('click', quitToMainMenu);
       shopBtn.addEventListener('click', openShop);
