@@ -8,6 +8,7 @@ import {
   spawnOneKostka,
   tickGame,
 } from './game-logic';
+import { isVulgarName } from './names';
 import { handleProgressRequest } from './progress';
 import { handleStatsRequest } from './stats';
 import type { Env, Kostka, Player, WsAttachment } from './types';
@@ -129,6 +130,10 @@ export class GameServer implements DurableObject {
     const name = String(msg.name || '').trim().slice(0, 20);
     if (!name) {
       send(ws, { type: 'error', message: 'Chybí jméno.' });
+      return;
+    }
+    if (isVulgarName(name)) {
+      send(ws, { type: 'error', message: 'Tohle jméno obsahuje sprosté slovo. Vyber si jiné.' });
       return;
     }
 
