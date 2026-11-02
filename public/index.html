@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.74.0">
+  <meta name="snake-version" content="1.75.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2798,6 +2798,27 @@
     (function () {
       const canvas = document.getElementById('game');
       const ctx = canvas.getContext('2d');
+      // Hra se kreslí v logických rozměrech 960×720, ale plátno má víc pixelů podle displeje
+      // (mobil, Retina), aby byly kostky a had ostré, ne rozmazané.
+      const GAME_W = 960;
+      const GAME_H = 720;
+      let renderScale = 1;
+
+      function updateRenderScale(redraw = true) {
+        const shown = canvas.getBoundingClientRect().width || GAME_W;
+        const dpr = window.devicePixelRatio || 1;
+        // nejvýš 3×, ať to na velkých displejích zbytečně nezpomaluje
+        const scale = Math.min(3, Math.max(1, (shown * dpr) / GAME_W));
+        if (Math.abs(scale - renderScale) < 0.01 && canvas.width === Math.round(GAME_W * scale)) return;
+        renderScale = scale;
+        canvas.width = Math.round(GAME_W * scale);
+        canvas.height = Math.round(GAME_H * scale);
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        if (redraw) draw();
+      }
+      updateRenderScale(false);
+      window.addEventListener('resize', () => updateRenderScale());
+      window.matchMedia('(orientation: landscape)').addEventListener('change', () => updateRenderScale());
 
       const CELL = 20;
       const COLS = Math.floor(960 / CELL);
@@ -3112,8 +3133,8 @@
       // Animace na hrací ploše (ms): černý had s disko náhrdelníkem leze k pravému okraji,
       // okraj se otevře, had projde ven a okraj se zavře. Disko začne až potom.
       function drawTacosIntroBoard(t) {
-        const w = canvas.width;
-        const h = canvas.height;
+        const w = GAME_W;
+        const h = GAME_H;
         const row = Math.floor(ROWS / 2);
         const SEGMENTS = 8;
 
@@ -4199,8 +4220,8 @@
 
       function drawDiscoFloor() {
         const t = performance.now() / 1000;
-        const w = canvas.width;
-        const h = canvas.height;
+        const w = GAME_W;
+        const h = GAME_H;
         DISCO_COLORS.forEach((rgb, i) => {
           const angle = t * 0.8 + (i * Math.PI) / 2;
           const x = w / 2 + Math.cos(angle) * w * 0.3;
@@ -4216,13 +4237,13 @@
 
       function drawMultiplayer() {
         ctx.fillStyle = '#12121a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, GAME_W, GAME_H);
         if (tacosActive) drawDiscoFloor();
 
         const border = 2;
         ctx.strokeStyle = '#2a2a3a';
         ctx.lineWidth = border;
-        ctx.strokeRect(border / 2, border / 2, canvas.width - border, canvas.height - border);
+        ctx.strokeRect(border / 2, border / 2, GAME_W - border, GAME_H - border);
 
         (multiServerState.kostky || []).forEach((k) => {
           if (k.taco) drawTaco(k.x, k.y);
@@ -4722,13 +4743,13 @@
           return;
         }
         ctx.fillStyle = '#12121a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, GAME_W, GAME_H);
         if (tacosActive) drawDiscoFloor();
 
         const border = 2;
         ctx.strokeStyle = '#2a2a3a';
         ctx.lineWidth = border;
-        ctx.strokeRect(border / 2, border / 2, canvas.width - border, canvas.height - border);
+        ctx.strokeRect(border / 2, border / 2, GAME_W - border, GAME_H - border);
 
         kostky.forEach((k) => {
           if (k.taco) drawTaco(k.x, k.y);
