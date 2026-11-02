@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.72.0">
+  <meta name="snake-version" content="1.73.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2432,6 +2432,15 @@
     }
 
     /* Konec hry: tlačítka vedle sebe */
+    #nameOverlay .name-taken-msg {
+      max-width: 320px;
+      min-height: 1em;
+      margin: 0.6rem 0 0.4rem;
+      font-size: 0.85rem;
+      color: #ffd700;
+      text-align: center;
+    }
+
     .game-over-actions {
       display: flex;
       gap: 0.6rem;
@@ -2598,6 +2607,8 @@
         <h2 id="nameOverlayTitle">Zadej jméno</h2>
         <input type="text" id="playerNameInput" class="name-input" maxlength="20" placeholder="Tvé jméno" autocomplete="off">
         <button class="btn" id="nameBtn">Pokračovat</button>
+        <p class="name-taken-msg" id="nameTakenMsg"></p>
+        <button class="btn btn-small hidden" id="nameTakenTransferBtn">Zadat přenosový kód</button>
       </div>
       <div id="startOverlay" class="overlay">
         <h2 id="startGreeting">Připraven?</h2>
@@ -3683,6 +3694,7 @@
 
       async function openTransfer() {
         modeSelectOverlay.classList.remove('visible');
+        nameOverlay.classList.remove('visible');
         transferOverlay.classList.add('visible');
         transferMsg.textContent = '';
         transferInput.value = '';
@@ -4373,12 +4385,46 @@
         }
       }
 
-      function savePlayerName() {
+      // Jméno, které už má jiný hráč (jiné zařízení s přenosovým kódem), nejde jen tak napsat –
+      // hráč si musí vybrat jiné, nebo zadat přenosový kód.
+      const nameTakenMsg = document.getElementById('nameTakenMsg');
+      const nameTakenTransferBtn = document.getElementById('nameTakenTransferBtn');
+
+      function showNameTaken(text) {
+        nameTakenMsg.textContent = text;
+        nameTakenTransferBtn.classList.toggle('hidden', !text);
+      }
+
+      async function isNameTaken(name) {
+        const id = getProfileId(name);
+        // vlastní jméno z tohohle zařízení je v pořádku
+        if (id === getProfileId(playerName) || progressCode(id)) return false;
+        try {
+          const res = await fetch(`/api/progress/name?name=${encodeURIComponent(id)}`, { cache: 'no-store' });
+          return (await res.json()).taken === true;
+        } catch {
+          return false;
+        }
+      }
+
+      let savingName = false;
+
+      async function savePlayerName() {
         const name = playerNameInput.value.trim();
         if (!name) {
           playerNameInput.focus();
           return;
         }
+        if (savingName) return;
+        savingName = true;
+        const taken = await isNameTaken(name);
+        savingName = false;
+        if (taken) {
+          showNameTaken(`Jméno ${name} už má jiný hráč. Vyber si jiné, nebo jestli jsi to ty, zadej přenosový kód.`);
+          playerNameInput.focus();
+          return;
+        }
+        showNameTaken('');
         playerName = name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
         maybeStartRobineTacos();
@@ -6008,6 +6054,12 @@
         }
       });
       nameBtn.addEventListener('click', savePlayerName);
+      nameTakenTransferBtn.addEventListener('click', () => {
+        showNameTaken('');
+        nameOverlay.classList.remove('visible');
+        openTransfer();
+      });
+      playerNameInput.addEventListener('input', () => showNameTaken(''));
       changeNameModeBtn.addEventListener('click', openChangeName);
       changeNameStartBtn.addEventListener('click', openChangeName);
       singlePlayerBtn.addEventListener('click', () => selectGameMode('single'));

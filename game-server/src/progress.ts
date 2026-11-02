@@ -57,6 +57,16 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
   const url = new URL(request.url);
   const action = url.pathname.replace('/api/progress/', '');
 
+  if (action === 'name' && request.method === 'GET') {
+    // Má už tohle jméno někdo jiný (nějaký přenosový kód)?
+    const name = (url.searchParams.get('name') ?? '').trim().toLowerCase().slice(0, 20);
+    if (!name) return json({ taken: false });
+    for (const stored of (await storage.list<Stored>({ prefix: 'pcode:' })).values()) {
+      if (stored.name.toLowerCase() === name) return json({ taken: true });
+    }
+    return json({ taken: false });
+  }
+
   if (action === 'get' && request.method === 'GET') {
     const code = cleanCode(url.searchParams.get('code'));
     const stored = code.length === CODE_LENGTH ? await storage.get<Stored>(`pcode:${code}`) : undefined;
