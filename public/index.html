@@ -2808,7 +2808,9 @@
         const shown = canvas.getBoundingClientRect().width || GAME_W;
         const dpr = window.devicePixelRatio || 1;
         // nejvýš 3×, ať to na velkých displejích zbytečně nezpomaluje
-        const scale = Math.min(3, Math.max(1, (shown * dpr) / GAME_W));
+        // celé pixely na jedno políčko (20 px) – hrany kostek pak nejsou rozmazané
+        const cellPx = Math.floor((20 * shown * dpr) / GAME_W);
+        const scale = Math.min(3, Math.max(1, cellPx / 20));
         if (Math.abs(scale - renderScale) < 0.01 && canvas.width === Math.round(GAME_W * scale)) return;
         renderScale = scale;
         canvas.width = Math.round(GAME_W * scale);
