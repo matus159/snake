@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.81.0">
+  <meta name="snake-version" content="1.82.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1799,6 +1799,37 @@
       display: flex;
     }
 
+    .tut-hint.bottom {
+      top: auto;
+      bottom: 12px;
+    }
+
+    /* základní had u textu návodu */
+    .tut-hint-snake {
+      flex: none;
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .tut-hint-snake i {
+      position: relative;
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    .tut-hint-snake i.head::after {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #0a0a12;
+    }
+
     .tut-hint b {
       color: #ffd700;
     }
@@ -2586,6 +2617,7 @@
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
       <div class="tut-hint" id="tutHint" role="status">
+        <span class="tut-hint-snake" aria-hidden="true"><i style="background:rgb(180,255,88)"></i><i style="background:rgb(90,236,172)"></i><i class="head" style="background:rgb(0,217,255)"></i></span>
         <span id="tutHintText"></span>
         <button type="button" class="tut-hint-skip" id="tutHintSkip" aria-label="Přeskočit návod">✕</button>
       </div>
@@ -3881,6 +3913,7 @@
 
       function afterNameSaved() {
         nameOverlay.classList.remove('visible');
+        tutorialOnNameSaved();
         if (gameMode === 'single') showStartScreen();
         else if (gameMode === 'multi') showMultiLobby();
         else showModeSelect();
@@ -3985,9 +4018,11 @@
           nameOverlay.classList.add('visible');
           playerNameInput.value = '';
           playerNameInput.focus();
+          tutorialOnModeSelected(mode);
           return;
         }
         enterSelectedMode();
+        tutorialOnModeSelected(mode);
       }
 
       function isLocalDev() {
@@ -4500,8 +4535,8 @@
         return VULGAR_WORDS.some((w) => n.includes(w));
       }
 
-      // Návod přímo ve hře (jako u většiny her): nový hráč při první hře dostává malé rady
-      // a rovnou je zkouší. Jen jednou, znovu se zapnout nedá.
+      // Návod (jako u většiny her): začne v menu a pak hráče provede hrou – malá bublina s radou,
+      // hráč to rovnou dělá. Jen jednou, znovu se zapnout nedá.
       // nový klíč: návod ve hře uvidí i hráči, kteří viděli starý návod s obrazovkami
       const TUTORIAL_KEY = 'snake-tutorial-v2-done';
       // Tihle hráči návod uvidí taky, i když už hrají.
@@ -4510,66 +4545,113 @@
       const tutHintText = document.getElementById('tutHintText');
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
       let tutorialPending = false;
-      const tutorialNewPlayer = !playerName;
       try {
-        tutorialPending = !localStorage.getItem(TUTORIAL_KEY);
+        tutorialPending = !localStorage.getItem(TUTORIAL_KEY)
+          && (!playerName || TUTORIAL_EXTRA_PLAYERS.includes(getProfileId(playerName)));
       } catch {}
       let tutorialStep = -1; // -1 = návod neběží
       let tutorialWaitTurn = false; // had stojí, dokud hráč nezatočí
-      let tutorialEaten = 0;
       let tutorialTimer = null;
-      const TUTORIAL_TEXTS = [
-        isTouch
-          ? 'Zatoč hada <b>joystickem vpravo dole</b> (nebo přejeď prstem).'
-          : 'Zatoč hada <b>šipkami</b> nebo <b>W A S D</b>.',
-        'Sněz <b>kostku</b> – had vyroste a dostaneš <b>body</b>.',
-        'Za <b>5 bodů</b> dostaneš <b>1 💎</b>. Sbírej dál!',
-        'Pozor – nenaraž do <b>zdi</b> ani do <b>sebe</b>!',
-        isTouch ? 'Klepni na <b>Esc</b> vlevo nahoře – pauza.' : 'Zmáčkni <b>Esc</b> – pauza.',
-        'Otevři <b>Obchod</b>.',
-        'Tady kupuješ hady. Lepší had = víc bodů za kostku: bílý <b>2</b> (10 💎), červený <b>3</b> (50 💎), černý, zlatý a duhový z <b>kola</b> a <b>vajíčka</b>. Dej <b>Zpět</b>.',
-        'Hotovo! 🎉 V menu najdeš <b>Žebříček</b>, <b>Přenos</b> a <b>hru pro více hráčů</b>. Hodně štěstí!',
+      let tutorialCrashText = '';
+      const escText = isTouch ? '<b>Esc</b> vlevo nahoře' : '<b>Esc</b>';
+      // where: kdy se bublina ukazuje; auto: po kolika ms jde dál sama
+      const TUTORIAL_STEPS = [
+        { where: 'menu', text: 'Vítej ve hře Had! Tady vybíráš, jak chceš hrát. <b>Hra pro jednoho hráče</b> – hraješ sám, sbíráš kostky a diamanty. <b>Hra pro více hráčů</b> – hraješ s kamarády, kdo vydrží nejdéle, vyhraje. Začni: klikni na <b>Hra pro jednoho hráče</b>.' },
+        { where: 'name', text: 'Napiš svoje <b>jméno</b> a klikni na <b>Pokračovat</b>. Uvidí ho ostatní hráči i v žebříčku.' },
+        { where: 'start', text: isTouch ? 'Klepni na <b>Začít hru</b>.' : 'Klikni na <b>Začít hru</b> (nebo zmáčkni <b>mezerník</b>).' },
+        { where: 'game', text: isTouch ? 'Tohle je tvůj had. Zatoč ho <b>joystickem vpravo dole</b> (nebo přejeď prstem po ploše).' : 'Tohle je tvůj had. Zatoč ho <b>šipkami</b> nebo <b>W A S D</b>.' },
+        { where: 'game', text: 'Sněz <b>kostku</b> – had vyroste o kousek a dostaneš <b>body</b>.' },
+        { where: 'game', text: 'Za <b>5 bodů</b> dostaneš <b>1 💎</b> – počet vidíš u diamantu. Sněz ještě pár kostek!' },
+        { where: 'game', auto: 5000, text: 'Pozor! Když narazíš do <b>zdi</b> nebo do <b>sebe</b>, hra končí. Teď v návodu se ti nic nestane.' },
+        { where: 'game', auto: 6000, text: 'Někdy běží <b>tacos event</b> (všední dny 16:00–16:15, o víkendu celý den) – objeví se <b>zlaté kostky s tacem</b> a dají 💎 navíc.' },
+        { where: 'game', text: `Zmáčkni ${escText} – hra se pozastaví.` },
+        { where: 'pause', text: 'Tohle je <b>pauza</b>. Můžeš hru <b>ukončit</b>, vrátit se do <b>hlavní nabídky</b> nebo otevřít <b>Obchod</b>. Klikni na <b>Obchod</b>.' },
+        { where: 'shop', text: 'V obchodě kupuješ <b>hady</b> za 💎. Lepší had = víc bodů za kostku: bílý, modrý, růžový a žlutý <b>2</b> (10 💎), červený <b>3</b> (50 💎). Klikni na <b>Šatna</b>.' },
+        { where: 'shop', text: 'V <b>šatně</b> si nasazuješ koupené hady. Je tu <b>kolo štěstí</b> (100 💎) a <b>vajíčko</b> (250 💎) – vyhraješ diamanty nebo černého (<b>4</b>), zlatého (<b>5</b>) a duhového (<b>10</b> bodů) hada. Dej <b>Zpět</b> a ještě jednou <b>Zpět</b>.' },
+        { where: 'pause', text: `Zmáčkni ${escText} a hraj dál.` },
+        { where: 'game', auto: 9000, text: 'Super, umíš to! 🎉 V menu najdeš ještě <b>Žebříček</b> (kdo má nejvíc 💎) a <b>Přenos</b> (kód, abys měl stejné 💎 a hady na jiném zařízení). Hodně štěstí!' },
       ];
+      const STEP_TURN = 3;
+      const STEP_EAT = 4;
+      const STEP_POINTS = 5;
+      const STEP_PAUSE = 8;
 
       function setTutorialStep(step) {
         tutorialStep = step;
+        tutorialCrashText = '';
         clearTimeout(tutorialTimer);
-        if (step < 0 || step >= TUTORIAL_TEXTS.length) {
-          tutHint.classList.remove('visible');
+        if (step < 0) {
+          updateTutorialHint();
           return;
         }
-        tutHintText.innerHTML = TUTORIAL_TEXTS[step];
-        tutHint.classList.add('visible');
-        if (step === 3) tutorialTimer = setTimeout(() => setTutorialStep(4), 4000);
-        if (step === TUTORIAL_TEXTS.length - 1) tutorialTimer = setTimeout(finishTutorial, 6000);
+        if (step >= TUTORIAL_STEPS.length) {
+          finishTutorial();
+          return;
+        }
+        if (step === STEP_TURN) tutorialWaitTurn = true;
+        const { auto } = TUTORIAL_STEPS[step];
+        if (auto) tutorialTimer = setTimeout(() => setTutorialStep(step + 1), auto);
+        updateTutorialHint();
+      }
+
+      // Bublina je vidět jen tam, kam krok patří (třeba v lobby pro více hráčů ne).
+      function updateTutorialHint() {
+        const step = TUTORIAL_STEPS[tutorialStep];
+        let show = false;
+        if (step) {
+          if (step.where === 'menu') show = modeSelectOverlay.classList.contains('visible');
+          else if (step.where === 'name') show = nameOverlay.classList.contains('visible');
+          else if (step.where === 'start') show = startOverlay.classList.contains('visible');
+          else if (step.where === 'pause') show = pauseOverlay.classList.contains('visible');
+          else if (step.where === 'shop') show = shopOverlay.classList.contains('visible');
+          else show = running && gameMode === 'single';
+        }
+        if (show) {
+          const html = tutorialCrashText || step.text;
+          if (tutHintText.innerHTML !== html) tutHintText.innerHTML = html;
+        }
+        tutHint.classList.toggle('visible', show);
+        tutHint.classList.toggle('bottom', !!step && ['menu', 'name', 'start', 'pause'].includes(step.where));
       }
 
       function finishTutorial() {
         tutorialPending = false;
-        try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch {}
-        setTutorialStep(-1);
-      }
-
-      // Konec hry nebo odchod do menu během návodu: od pauzy dál už to hráč umí, jinak se návod
-      // pustí znovu při další hře.
-      function tutorialOnLeaveGame() {
-        if (tutorialStep < 0) return;
-        if (tutorialStep >= 4) finishTutorial();
-        else setTutorialStep(-1);
+        tutorialStep = -1;
         tutorialWaitTurn = false;
+        clearTimeout(tutorialTimer);
+        try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch {}
+        updateTutorialHint();
       }
 
-      function startTutorialIfNew() {
-        if (!tutorialPending || tutorialStep >= 0) return;
-        if (!tutorialNewPlayer && !TUTORIAL_EXTRA_PLAYERS.includes(getProfileId(playerName))) return;
-        tutorialEaten = 0;
-        tutorialWaitTurn = true;
-        setTutorialStep(0);
+      function startTutorialAtMenu() {
+        if (tutorialPending && tutorialStep < 0) setTutorialStep(0);
       }
 
-      // Během návodu (až do pauzy) se po nárazu nekončí – had se vrátí doprostřed.
+      function tutorialOnModeSelected(mode) {
+        if (tutorialStep !== 0 || mode !== 'single') return;
+        setTutorialStep(nameOverlay.classList.contains('visible') ? 1 : 2);
+      }
+
+      function tutorialOnNameSaved() {
+        if (tutorialStep === 1) setTutorialStep(2);
+      }
+
+      function tutorialOnGameStart() {
+        if (tutorialStep >= 0 && tutorialStep <= 2) setTutorialStep(STEP_TURN);
+      }
+
+      // Konec hry nebo odchod do menu během návodu: od pauzy dál už to hráč umí, jinak se
+      // návod vrátí do menu.
+      function tutorialOnLeaveGame() {
+        if (tutorialStep < STEP_TURN) return;
+        tutorialWaitTurn = false;
+        if (tutorialStep >= STEP_PAUSE) finishTutorial();
+        else setTutorialStep(0);
+      }
+
+      // Během návodu se po nárazu nekončí – had se vrátí doprostřed.
       function tutorialSavesCrash() {
-        if (tutorialStep < 0 || tutorialStep > 4) return false;
+        if (tutorialStep < STEP_TURN) return false;
         const startX = Math.floor(COLS / 2);
         const startY = Math.floor(ROWS / 2);
         snake = [
@@ -4580,8 +4662,8 @@
         direction = { x: 1, y: 0 };
         nextDirection = { x: 1, y: 0 };
         tutorialWaitTurn = true;
-        tutHintText.innerHTML = 'Au! Nenaraž do zdi ani do sebe. Zatoč a hraj dál.';
-        tutHint.classList.add('visible');
+        tutorialCrashText = 'Au! Nenaraž do zdi ani do sebe. Zatoč a hraj dál.';
+        updateTutorialHint();
         draw();
         return true;
       }
@@ -4589,15 +4671,34 @@
       function tutorialOnTurn() {
         if (!tutorialWaitTurn) return;
         tutorialWaitTurn = false;
-        if (tutorialStep === 0) setTutorialStep(1);
-        else if (tutorialStep >= 0) setTutorialStep(tutorialStep);
+        tutorialCrashText = '';
+        if (tutorialStep === STEP_TURN) setTutorialStep(STEP_EAT);
+        else updateTutorialHint();
       }
 
       function tutorialOnEat() {
-        if (tutorialStep < 0) return;
-        tutorialEaten += 1;
-        if (tutorialStep === 1) setTutorialStep(2);
-        else if (tutorialStep === 2 && gameScore >= 5) setTutorialStep(3);
+        if (tutorialStep === STEP_EAT) setTutorialStep(STEP_POINTS);
+        else if (tutorialStep === STEP_POINTS && gameScore >= 5) setTutorialStep(STEP_POINTS + 1);
+      }
+
+      function tutorialOnPause() {
+        if (tutorialStep === STEP_PAUSE) setTutorialStep(STEP_PAUSE + 1);
+      }
+
+      function tutorialOnShopOpen() {
+        if (tutorialStep === STEP_PAUSE + 1) setTutorialStep(STEP_PAUSE + 2);
+      }
+
+      function tutorialOnWardrobe() {
+        if (tutorialStep === STEP_PAUSE + 2) setTutorialStep(STEP_PAUSE + 3);
+      }
+
+      function tutorialOnShopClose() {
+        if (tutorialStep === STEP_PAUSE + 2 || tutorialStep === STEP_PAUSE + 3) setTutorialStep(STEP_PAUSE + 4);
+      }
+
+      function tutorialOnResume() {
+        if (tutorialStep === STEP_PAUSE + 4) setTutorialStep(STEP_PAUSE + 5);
       }
 
       document.getElementById('tutHintSkip').addEventListener('click', finishTutorial);
@@ -5026,7 +5127,7 @@
         paused = true;
         mainMenuBtn.classList.toggle('hidden', gameMode !== 'single');
         pauseOverlay.classList.add('visible');
-        if (tutorialStep === 4) setTutorialStep(5);
+        tutorialOnPause();
       }
 
       function resumeGame() {
@@ -5036,6 +5137,7 @@
         }
         paused = false;
         pauseOverlay.classList.remove('visible');
+        tutorialOnResume();
         showShopMain();
         shopOverlay.classList.remove('visible');
       }
@@ -5815,6 +5917,7 @@
       }
 
       function openWardrobe() {
+        tutorialOnWardrobe();
         shopView = 'wardrobe';
         wheelSpinning = false;
         eggCracking = false;
@@ -5834,14 +5937,14 @@
         showShopMain();
         updateShopCurrencyDisplay();
         shopOverlay.classList.add('visible');
-        if (tutorialStep === 5) setTutorialStep(6);
+        tutorialOnShopOpen();
       }
 
       function closeShop() {
         showShopMain();
         shopOverlay.classList.remove('visible');
         pauseOverlay.classList.add('visible');
-        if (tutorialStep === 6) setTutorialStep(7);
+        tutorialOnShopClose();
       }
 
       function shopBack() {
@@ -5949,6 +6052,7 @@
 
       function loop(now) {
         maybeShowUpdateScreen();
+        if (tutorialStep >= 0) updateTutorialHint();
         if (updateShowing) {
           drawUpdateSnake(now);
           return requestAnimationFrame(loop);
@@ -6069,7 +6173,7 @@
         const now = performance.now();
         lastTick = now;
         lastKostkaSpawn = now;
-        startTutorialIfNew();
+        tutorialOnGameStart();
         draw();
       }
 
@@ -6336,6 +6440,7 @@
         showBanOverlay();
       } else {
         showModeSelect();
+        startTutorialAtMenu();
       }
       refreshCurrencyUI();
       draw();
