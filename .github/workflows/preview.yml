@@ -1,0 +1,41 @@
+name: Deploy test preview
+
+# Každý push do testovací větve nahraje hru jen na testovací adresu
+# https://test.snake-adamini.pages.dev – hráči na hlavním webu nic neuvidí.
+# Server (žebříček, přenos, více hráčů) je společný s hlavním webem.
+on:
+  push:
+    branches: ['claude/**']
+  workflow_dispatch:
+
+concurrency:
+  group: cloudflare-preview
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync game into public/
+        run: npm run sync
+
+      - name: Deploy Pages preview (test)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy --branch=test
