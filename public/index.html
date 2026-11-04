@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.79.0">
+  <meta name="snake-version" content="1.83.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1773,121 +1773,82 @@
       z-index: 1;
     }
 
-    #tutorialOverlay {
-      z-index: 33;
-    }
-
-    .tut-box {
-      width: min(560px, 92%);
-      text-align: center;
-    }
-
-    .tut-box h2 {
-      margin: 0.4rem 0;
-      color: #ffd700;
-    }
-
-    .tut-box .tut-text {
-      font-size: 0.95rem;
-      line-height: 1.45;
-      color: #e0e0e0;
-    }
-
-    .tut-box .tut-text p {
-      margin: 0.25rem 0;
-      color: #e0e0e0;
-    }
-
-    .tut-image {
-      display: flex;
-      justify-content: center;
+    /* Návod přímo ve hře: malá bublina nahoře nad plochou */
+    .tut-hint {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      z-index: 45;
+      display: none;
       align-items: center;
-      gap: 0.5rem;
-      min-height: 46px;
+      gap: 0.6rem;
+      max-width: min(520px, 90%);
+      padding: 0.5rem 0.6rem 0.5rem 0.9rem;
+      transform: translateX(-50%);
+      border: 2px solid #ffd700;
+      border-radius: 10px;
+      background: rgba(10, 10, 18, 0.92);
+      color: #fff;
+      font-size: 0.9rem;
+      line-height: 1.35;
+      text-align: center;
+      pointer-events: none;
     }
 
-    .tut-cells {
+    .tut-hint.visible {
+      display: flex;
+    }
+
+    .tut-hint.bottom {
+      top: auto;
+      bottom: 12px;
+    }
+
+    /* základní had u textu návodu */
+    .tut-hint-snake {
+      flex: none;
       display: inline-flex;
-      gap: 3px;
+      gap: 2px;
     }
 
-    .tut-cells i {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border-radius: 3px;
-    }
-
-    .tut-cells i.head {
+    .tut-hint-snake i {
       position: relative;
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
     }
 
-    .tut-cells i.head::after {
+    .tut-hint-snake i.head::after {
       content: '';
       position: absolute;
-      left: 6px;
-      top: 6px;
-      width: 8px;
-      height: 8px;
+      left: 3px;
+      top: 3px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: #000;
+      background: #0a0a12;
     }
 
-    .tut-key {
-      display: inline-block;
-      min-width: 30px;
-      padding: 3px 6px;
-      border: 2px solid #00d9ff;
-      border-radius: 6px;
-      font-weight: 700;
-      color: #00d9ff;
-    }
-
-    .tut-table {
-      margin: 0.3rem auto 0;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    .tut-table td {
-      padding: 2px 8px;
-      text-align: left;
-      color: #e0e0e0;
-    }
-
-    .tut-dots {
-      margin: 0.6rem 0 0.4rem;
-      letter-spacing: 0.3em;
-      color: #555;
-    }
-
-    .tut-dots .on {
+    .tut-hint b {
       color: #ffd700;
     }
 
-    .tut-actions {
-      display: flex;
-      justify-content: center;
-      gap: 0.6rem;
+    .tut-hint-skip {
+      flex: none;
+      pointer-events: auto;
+      border: none;
+      background: none;
+      color: #aaa;
+      font-size: 1rem;
+      cursor: pointer;
     }
 
     @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
-      .tut-box h2 {
-        margin: 0.2rem 0;
-        font-size: 1.1rem;
-      }
-
-      .tut-box .tut-text,
-      .tut-table {
-        font-size: 0.78rem;
-      }
-
-      .tut-image {
-        min-height: 30px;
-      }
-
-      .tut-dots {
-        margin: 0.3rem 0 0.2rem;
+      .tut-hint {
+        top: 4px;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.4rem 0.3rem 0.6rem;
       }
     }
 
@@ -2655,6 +2616,11 @@
     <div class="player-notice" id="playerNotice" role="status"></div>
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
+      <div class="tut-hint" id="tutHint" role="status">
+        <span class="tut-hint-snake" aria-hidden="true"><i style="background:rgb(180,255,88)"></i><i style="background:rgb(90,236,172)"></i><i class="head" style="background:rgb(0,217,255)"></i></span>
+        <span id="tutHintText"></span>
+        <button type="button" class="tut-hint-skip" id="tutHintSkip" aria-label="Přeskočit návod">✕</button>
+      </div>
       <div class="tacos-countdown" id="tacosCountdown" role="status"></div>
       <div id="modeSelectOverlay" class="overlay visible">
         <button type="button" class="btn btn-small leaderboard-btn" id="leaderboardBtn">Žebříček</button>
@@ -2692,18 +2658,6 @@
           <p class="transfer-msg" id="transferMsg"></p>
         </div>
         <button type="button" class="btn leaderboard-back" id="transferBackBtn">Zpět</button>
-      </div>
-      <div id="tutorialOverlay" class="overlay">
-        <div class="tut-box">
-          <div class="tut-image" id="tutImage"></div>
-          <h2 id="tutTitle"></h2>
-          <div class="tut-text" id="tutText"></div>
-          <div class="tut-dots" id="tutDots"></div>
-          <div class="tut-actions">
-            <button type="button" class="btn btn-small" id="tutSkipBtn">Přeskočit</button>
-            <button type="button" class="btn" id="tutNextBtn">Další</button>
-          </div>
-        </div>
       </div>
       <div id="leaderboardOverlay" class="overlay">
         <div class="leaderboard-box">
@@ -3959,6 +3913,7 @@
 
       function afterNameSaved() {
         nameOverlay.classList.remove('visible');
+        tutorialOnNameSaved();
         if (gameMode === 'single') showStartScreen();
         else if (gameMode === 'multi') showMultiLobby();
         else showModeSelect();
@@ -3972,7 +3927,6 @@
         multiGameOverOverlay.classList.remove('visible');
         leaderboardOverlay.classList.remove('visible');
         transferOverlay.classList.remove('visible');
-        tutorialOverlay.classList.remove('visible');
       }
 
       function showModeSelect() {
@@ -4064,9 +4018,11 @@
           nameOverlay.classList.add('visible');
           playerNameInput.value = '';
           playerNameInput.focus();
+          tutorialOnModeSelected(mode);
           return;
         }
         enterSelectedMode();
+        tutorialOnModeSelected(mode);
       }
 
       function isLocalDev() {
@@ -4579,88 +4535,179 @@
         return VULGAR_WORDS.some((w) => n.includes(w));
       }
 
-      // Tutoriál: pár obrazovek s obrázkem a textem, jen jednou pro nového hráče.
-      const TUTORIAL_KEY = 'snake-tutorial-done';
-      const tutorialOverlay = document.getElementById('tutorialOverlay');
+      // Návod (jako u většiny her): začne v menu a pak hráče provede hrou – malá bublina s radou,
+      // hráč to rovnou dělá. Jen jednou, znovu se zapnout nedá.
+      // nový klíč: návod ve hře uvidí i hráči, kteří viděli starý návod s obrazovkami
+      const TUTORIAL_KEY = 'snake-tutorial-v2-done';
+      // Tihle hráči návod uvidí taky, i když už hrají.
+      const TUTORIAL_EXTRA_PLAYERS = ['adamini', 'naty', 'matus', 'fero', 'maja'];
+      // Hráči, kteří návod uvidí ještě jednou (vlastní klíč – změnou čísla se dá pustit znovu).
+      const TUTORIAL_REPLAY = { adamini: 2 };
+      function tutorialKey() {
+        const round = TUTORIAL_REPLAY[getProfileId(playerName)];
+        return round ? `${TUTORIAL_KEY}-r${round}` : TUTORIAL_KEY;
+      }
+      const tutHint = document.getElementById('tutHint');
+      const tutHintText = document.getElementById('tutHintText');
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
-      const cells = (colors, headLast = true) => '<span class="tut-cells">'
-        + colors.map((c, i) => `<i class="${headLast && i === colors.length - 1 ? 'head' : ''}" style="background:${c}"></i>`).join('')
-        + '</span>';
-      const rainbow = ['hsl(0,90%,58%)', 'hsl(45,90%,58%)', 'hsl(120,90%,55%)', 'hsl(190,90%,55%)', 'hsl(260,90%,62%)'];
-      const TUTORIAL_SLIDES = [
-        {
-          image: cells(rainbow),
-          title: 'Vítej ve hře Had!',
-          text: '<p>Sbírej kostky, rosti a získávej diamanty.</p><p>Tady je rychlý návod.</p>',
-        },
-        {
-          image: isTouch
-            ? '<span class="tut-key">◎</span>'
-            : '<span class="tut-key">↑</span><span class="tut-key">↓</span><span class="tut-key">←</span><span class="tut-key">→</span>',
-          title: 'Ovládání',
-          text: isTouch
-            ? '<p>Hýbej <b>joystickem vpravo dole</b> nebo přejeď prstem po ploše.</p><p><b>Esc</b> vlevo nahoře = pauza a obchod.</p>'
-            : '<p>Hraj <b>šipkami</b> nebo <b>W A S D</b>.</p><p><b>Esc</b> = pauza a obchod, <b>mezerník</b> = začít hru.</p>',
-        },
-        {
-          image: cells(['#00b4d8', '#00c8e0', '#00d9ff']) + '<span style="width:20px"></span>' + cells(['#ff4d4d'], false),
-          title: 'Kostky',
-          text: '<p>Sněz kostku – had <b>vyroste</b> a dostaneš <b>body</b>.</p><p>Za <b>5 bodů</b> dostaneš <b>1 💎</b>.</p><p>Nenarážej do <b>zdi</b> ani do <b>sebe</b>!</p>',
-        },
-        {
-          image: cells(['#e63946', '#e63946', '#e63946']) + cells(['#ffd700', '#ffd700', '#ffd700']) + cells(rainbow.slice(0, 3)),
-          title: 'Hadi v obchodě',
-          text: '<p>V pauze (<b>Esc</b>) otevři <b>Obchod</b>. Lepší had dá víc bodů za kostku:</p>'
-            + '<table class="tut-table">'
-            + '<tr><td>Základní had</td><td>1 bod</td><td>zdarma</td></tr>'
-            + '<tr><td>Bílý, modrý, růžový, žlutý</td><td>2 body</td><td>10 💎</td></tr>'
-            + '<tr><td>Červený</td><td>3 body</td><td>50 💎</td></tr>'
-            + '<tr><td>Černý</td><td>4 body</td><td>kolo štěstí</td></tr>'
-            + '<tr><td>Zlatý / duhový</td><td>5 / 10 bodů</td><td>vajíčko</td></tr>'
-            + '</table>',
-        },
-        {
-          image: '<span class="tut-key">🏆</span><span class="tut-key">⇄</span><span class="tut-key">👥</span>',
-          title: 'Menu',
-          text: '<p><b>Žebříček</b> (vpravo nahoře) – kdo má nejvíc 💎.</p>'
-            + '<p><b>Přenos</b> (vlevo nahoře) – kód, abys měl stejné 💎 a hady na jiném zařízení.</p>'
-            + '<p><b>Hra pro více hráčů</b> – hraj s kamarády na stejné adrese.</p>',
-        },
+      let tutorialPending = false;
+      try {
+        tutorialPending = !localStorage.getItem(tutorialKey())
+          && (!playerName || TUTORIAL_EXTRA_PLAYERS.includes(getProfileId(playerName)));
+      } catch {}
+      let tutorialStep = -1; // -1 = návod neběží
+      let tutorialWaitTurn = false; // had stojí, dokud hráč nezatočí
+      let tutorialTimer = null;
+      let tutorialCrashText = '';
+      const escText = isTouch ? '<b>Esc</b> vlevo nahoře' : '<b>Esc</b>';
+      // where: kdy se bublina ukazuje; auto: po kolika ms jde dál sama
+      const TUTORIAL_STEPS = [
+        { where: 'menu', text: 'Vítej ve hře Had! Tady vybíráš, jak chceš hrát. <b>Hra pro jednoho hráče</b> – hraješ sám, sbíráš kostky a diamanty. <b>Hra pro více hráčů</b> – hraješ s kamarády, kdo vydrží nejdéle, vyhraje. Začni: klikni na <b>Hra pro jednoho hráče</b>.' },
+        { where: 'name', text: 'Napiš svoje <b>jméno</b> a klikni na <b>Pokračovat</b>. Uvidí ho ostatní hráči i v žebříčku.' },
+        { where: 'start', text: isTouch ? 'Klepni na <b>Začít hru</b>.' : 'Klikni na <b>Začít hru</b> (nebo zmáčkni <b>mezerník</b>).' },
+        { where: 'game', text: isTouch ? 'Tohle je tvůj had. Zatoč ho <b>joystickem vpravo dole</b> (nebo přejeď prstem po ploše).' : 'Tohle je tvůj had. Zatoč ho <b>šipkami</b> nebo <b>W A S D</b>.' },
+        { where: 'game', text: 'Sněz <b>kostku</b> – had vyroste o kousek a dostaneš <b>body</b>.' },
+        { where: 'game', text: 'Za <b>5 bodů</b> dostaneš <b>1 💎</b> – počet vidíš u diamantu. Sněz ještě pár kostek!' },
+        { where: 'game', auto: 5000, text: 'Pozor! Když narazíš do <b>zdi</b> nebo do <b>sebe</b>, hra končí. Teď v návodu se ti nic nestane.' },
+        { where: 'game', auto: 6000, text: 'Někdy běží <b>tacos event</b> (všední dny 16:00–16:15, o víkendu celý den) – objeví se <b>zlaté kostky s tacem</b> a dají 💎 navíc.' },
+        { where: 'game', text: `Zmáčkni ${escText} – hra se pozastaví.` },
+        { where: 'pause', text: 'Tohle je <b>pauza</b>. Můžeš hru <b>ukončit</b>, vrátit se do <b>hlavní nabídky</b> nebo otevřít <b>Obchod</b>. Klikni na <b>Obchod</b>.' },
+        { where: 'shop', text: 'V obchodě kupuješ <b>hady</b> za 💎. Lepší had = víc bodů za kostku: bílý, modrý, růžový a žlutý <b>2</b> (10 💎), červený <b>3</b> (50 💎). Klikni na <b>Šatna</b>.' },
+        { where: 'shop', text: 'V <b>šatně</b> si nasazuješ koupené hady. Je tu <b>kolo štěstí</b> (100 💎) a <b>vajíčko</b> (250 💎) – vyhraješ diamanty nebo černého (<b>4</b>), zlatého (<b>5</b>) a duhového (<b>10</b> bodů) hada. Dej <b>Zpět</b> a ještě jednou <b>Zpět</b>.' },
+        { where: 'pause', text: `Zmáčkni ${escText} a hraj dál.` },
+        { where: 'game', auto: 9000, text: 'Super, umíš to! 🎉 V menu najdeš ještě <b>Žebříček</b> (kdo má nejvíc 💎) a <b>Přenos</b> (kód, abys měl stejné 💎 a hady na jiném zařízení). Hodně štěstí!' },
       ];
-      let tutorialIndex = 0;
+      const STEP_TURN = 3;
+      const STEP_EAT = 4;
+      const STEP_POINTS = 5;
+      const STEP_PAUSE = 8;
 
-      function renderTutorial() {
-        const slide = TUTORIAL_SLIDES[tutorialIndex];
-        document.getElementById('tutImage').innerHTML = slide.image;
-        document.getElementById('tutTitle').textContent = slide.title;
-        document.getElementById('tutText').innerHTML = slide.text;
-        document.getElementById('tutDots').innerHTML = TUTORIAL_SLIDES
-          .map((_, i) => `<span class="${i === tutorialIndex ? 'on' : ''}">●</span>`).join('');
-        const last = tutorialIndex === TUTORIAL_SLIDES.length - 1;
-        document.getElementById('tutNextBtn').textContent = last ? 'Hrát!' : 'Další';
-        document.getElementById('tutSkipBtn').classList.toggle('hidden', last);
+      function setTutorialStep(step) {
+        tutorialStep = step;
+        tutorialCrashText = '';
+        clearTimeout(tutorialTimer);
+        if (step < 0) {
+          updateTutorialHint();
+          return;
+        }
+        if (step >= TUTORIAL_STEPS.length) {
+          finishTutorial();
+          return;
+        }
+        if (step === STEP_TURN) tutorialWaitTurn = true;
+        const { auto } = TUTORIAL_STEPS[step];
+        if (auto) tutorialTimer = setTimeout(() => setTutorialStep(step + 1), auto);
+        updateTutorialHint();
+      }
+
+      // Bublina je vidět jen tam, kam krok patří (třeba v lobby pro více hráčů ne).
+      function updateTutorialHint() {
+        const step = TUTORIAL_STEPS[tutorialStep];
+        let show = false;
+        if (step) {
+          if (step.where === 'menu') show = modeSelectOverlay.classList.contains('visible');
+          else if (step.where === 'name') show = nameOverlay.classList.contains('visible');
+          else if (step.where === 'start') show = startOverlay.classList.contains('visible');
+          else if (step.where === 'pause') show = pauseOverlay.classList.contains('visible');
+          else if (step.where === 'shop') show = shopOverlay.classList.contains('visible');
+          else show = running && gameMode === 'single';
+        }
+        if (show) {
+          const html = tutorialCrashText || step.text;
+          if (tutHintText.innerHTML !== html) tutHintText.innerHTML = html;
+        }
+        tutHint.classList.toggle('visible', show);
+        tutHint.classList.toggle('bottom', !!step && ['menu', 'name', 'start', 'pause'].includes(step.where));
       }
 
       function finishTutorial() {
-        try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch {}
-        tutorialOverlay.classList.remove('visible');
-        showModeSelect();
+        tutorialPending = false;
+        tutorialStep = -1;
+        tutorialWaitTurn = false;
+        clearTimeout(tutorialTimer);
+        try { localStorage.setItem(tutorialKey(), '1'); } catch {}
+        updateTutorialHint();
       }
 
-      // Nový hráč (bez jména) ho uvidí jednou; kdo už hraje, ho nedostane.
-      function maybeShowTutorial() {
-        let done = false;
-        try { done = !!localStorage.getItem(TUTORIAL_KEY); } catch { done = true; }
-        if (done) return;
-        if (playerName) {
-          try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch {}
-          return;
-        }
-        tutorialIndex = 0;
-        renderTutorial();
-        modeSelectOverlay.classList.remove('visible');
-        tutorialOverlay.classList.add('visible');
+      function startTutorialAtMenu() {
+        if (tutorialPending && tutorialStep < 0) setTutorialStep(0);
       }
+
+      function tutorialOnModeSelected(mode) {
+        if (tutorialStep !== 0 || mode !== 'single') return;
+        setTutorialStep(nameOverlay.classList.contains('visible') ? 1 : 2);
+      }
+
+      function tutorialOnNameSaved() {
+        if (tutorialStep === 1) setTutorialStep(2);
+      }
+
+      function tutorialOnGameStart() {
+        if (tutorialStep >= 0 && tutorialStep <= 2) setTutorialStep(STEP_TURN);
+      }
+
+      // Konec hry nebo odchod do menu během návodu: od pauzy dál už to hráč umí, jinak se
+      // návod vrátí do menu.
+      function tutorialOnLeaveGame() {
+        if (tutorialStep < STEP_TURN) return;
+        tutorialWaitTurn = false;
+        if (tutorialStep >= STEP_PAUSE) finishTutorial();
+        else setTutorialStep(0);
+      }
+
+      // Během návodu se po nárazu nekončí – had se vrátí doprostřed.
+      function tutorialSavesCrash() {
+        if (tutorialStep < STEP_TURN) return false;
+        const startX = Math.floor(COLS / 2);
+        const startY = Math.floor(ROWS / 2);
+        snake = [
+          { x: startX, y: startY },
+          { x: startX - 1, y: startY },
+          { x: startX - 2, y: startY },
+        ];
+        direction = { x: 1, y: 0 };
+        nextDirection = { x: 1, y: 0 };
+        tutorialWaitTurn = true;
+        tutorialCrashText = 'Au! Nenaraž do zdi ani do sebe. Zatoč a hraj dál.';
+        updateTutorialHint();
+        draw();
+        return true;
+      }
+
+      function tutorialOnTurn() {
+        if (!tutorialWaitTurn) return;
+        tutorialWaitTurn = false;
+        tutorialCrashText = '';
+        if (tutorialStep === STEP_TURN) setTutorialStep(STEP_EAT);
+        else updateTutorialHint();
+      }
+
+      function tutorialOnEat() {
+        if (tutorialStep === STEP_EAT) setTutorialStep(STEP_POINTS);
+        else if (tutorialStep === STEP_POINTS && gameScore >= 5) setTutorialStep(STEP_POINTS + 1);
+      }
+
+      function tutorialOnPause() {
+        if (tutorialStep === STEP_PAUSE) setTutorialStep(STEP_PAUSE + 1);
+      }
+
+      function tutorialOnShopOpen() {
+        if (tutorialStep === STEP_PAUSE + 1) setTutorialStep(STEP_PAUSE + 2);
+      }
+
+      function tutorialOnWardrobe() {
+        if (tutorialStep === STEP_PAUSE + 2) setTutorialStep(STEP_PAUSE + 3);
+      }
+
+      function tutorialOnShopClose() {
+        if (tutorialStep === STEP_PAUSE + 2 || tutorialStep === STEP_PAUSE + 3) setTutorialStep(STEP_PAUSE + 4);
+      }
+
+      function tutorialOnResume() {
+        if (tutorialStep === STEP_PAUSE + 4) setTutorialStep(STEP_PAUSE + 5);
+      }
+
+      document.getElementById('tutHintSkip').addEventListener('click', finishTutorial);
 
       async function savePlayerName() {
         const name = playerNameInput.value.trim();
@@ -5031,12 +5078,12 @@
         };
 
         if (newHead.x < 0 || newHead.x >= COLS || newHead.y < 0 || newHead.y >= ROWS) {
-          gameOver();
+          if (!tutorialSavesCrash()) gameOver();
           return;
         }
 
         if (snake.some(s => s.x === newHead.x && s.y === newHead.y)) {
-          gameOver();
+          if (!tutorialSavesCrash()) gameOver();
           return;
         }
 
@@ -5058,6 +5105,7 @@
           }
           updateScoreDisplay();
           spawnOneKostka();
+          tutorialOnEat();
         } else {
           snake.pop();
         }
@@ -5066,6 +5114,7 @@
       const finalDiamantyEl = document.getElementById('finalDiamanty');
 
       function gameOver() {
+        tutorialOnLeaveGame();
         running = false;
         paused = false;
         pauseOverlay.classList.remove('visible');
@@ -5084,6 +5133,7 @@
         paused = true;
         mainMenuBtn.classList.toggle('hidden', gameMode !== 'single');
         pauseOverlay.classList.add('visible');
+        tutorialOnPause();
       }
 
       function resumeGame() {
@@ -5093,11 +5143,13 @@
         }
         paused = false;
         pauseOverlay.classList.remove('visible');
+        tutorialOnResume();
         showShopMain();
         shopOverlay.classList.remove('visible');
       }
 
       function quitToMenu() {
+        tutorialOnLeaveGame();
         running = false;
         paused = false;
         bankScoreToDiamanty();
@@ -5871,6 +5923,7 @@
       }
 
       function openWardrobe() {
+        tutorialOnWardrobe();
         shopView = 'wardrobe';
         wheelSpinning = false;
         eggCracking = false;
@@ -5890,12 +5943,14 @@
         showShopMain();
         updateShopCurrencyDisplay();
         shopOverlay.classList.add('visible');
+        tutorialOnShopOpen();
       }
 
       function closeShop() {
         showShopMain();
         shopOverlay.classList.remove('visible');
         pauseOverlay.classList.add('visible');
+        tutorialOnShopClose();
       }
 
       function shopBack() {
@@ -6003,6 +6058,7 @@
 
       function loop(now) {
         maybeShowUpdateScreen();
+        if (tutorialStep >= 0) updateTutorialHint();
         if (updateShowing) {
           drawUpdateSnake(now);
           return requestAnimationFrame(loop);
@@ -6028,7 +6084,7 @@
           lastKostkaSpawn = now;
           spawnOneKostka();
         }
-        if (now - lastTick >= SPEED_MS) {
+        if (now - lastTick >= SPEED_MS && !tutorialWaitTurn) {
           lastTick = now;
           move();
           if (running) draw();
@@ -6123,6 +6179,7 @@
         const now = performance.now();
         lastTick = now;
         lastKostkaSpawn = now;
+        tutorialOnGameStart();
         draw();
       }
 
@@ -6189,6 +6246,7 @@
         // Had se nesmí otočit přímo do sebe.
         if (dir.x !== -direction.x || dir.y !== -direction.y) {
           nextDirection = dir;
+          tutorialOnTurn();
         }
       }
 
@@ -6313,15 +6371,6 @@
         }
       });
       nameBtn.addEventListener('click', savePlayerName);
-      document.getElementById('tutNextBtn').addEventListener('click', () => {
-        if (tutorialIndex >= TUTORIAL_SLIDES.length - 1) {
-          finishTutorial();
-          return;
-        }
-        tutorialIndex += 1;
-        renderTutorial();
-      });
-      document.getElementById('tutSkipBtn').addEventListener('click', finishTutorial);
       nameTakenTransferBtn.addEventListener('click', () => {
         showNameTaken('');
         nameOverlay.classList.remove('visible');
@@ -6397,7 +6446,7 @@
         showBanOverlay();
       } else {
         showModeSelect();
-        maybeShowTutorial();
+        startTutorialAtMenu();
       }
       refreshCurrencyUI();
       draw();
