@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.80.0">
+  <meta name="snake-version" content="1.81.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4502,14 +4502,17 @@
 
       // Návod přímo ve hře (jako u většiny her): nový hráč při první hře dostává malé rady
       // a rovnou je zkouší. Jen jednou, znovu se zapnout nedá.
-      const TUTORIAL_KEY = 'snake-tutorial-done';
+      // nový klíč: návod ve hře uvidí i hráči, kteří viděli starý návod s obrazovkami
+      const TUTORIAL_KEY = 'snake-tutorial-v2-done';
+      // Tihle hráči návod uvidí taky, i když už hrají.
+      const TUTORIAL_EXTRA_PLAYERS = ['adamini', 'naty', 'matus', 'fero', 'maja'];
       const tutHint = document.getElementById('tutHint');
       const tutHintText = document.getElementById('tutHintText');
       const isTouch = window.matchMedia('(pointer: coarse)').matches;
       let tutorialPending = false;
+      const tutorialNewPlayer = !playerName;
       try {
-        tutorialPending = !localStorage.getItem(TUTORIAL_KEY) && !playerName;
-        if (!tutorialPending) localStorage.setItem(TUTORIAL_KEY, '1');
+        tutorialPending = !localStorage.getItem(TUTORIAL_KEY);
       } catch {}
       let tutorialStep = -1; // -1 = návod neběží
       let tutorialWaitTurn = false; // had stojí, dokud hráč nezatočí
@@ -4558,6 +4561,7 @@
 
       function startTutorialIfNew() {
         if (!tutorialPending || tutorialStep >= 0) return;
+        if (!tutorialNewPlayer && !TUTORIAL_EXTRA_PLAYERS.includes(getProfileId(playerName))) return;
         tutorialEaten = 0;
         tutorialWaitTurn = true;
         setTutorialStep(0);
