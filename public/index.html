@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.75.0">
+  <meta name="snake-version" content="1.76.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2845,7 +2845,7 @@
       // Tacos event: část kostek je zlatá s tacos, dávají diamant navíc.
       // Event se úplně vypne nastavením TACOS_EVENT na false.
       const TACOS_EVENT = true;
-      const TACO_CHANCE = 0.25;
+      const TACO_CHANCE = 0.45;
       // Tacos event běží jen v určitý čas (český čas, Europe/Prague):
       // po–pá 16:00–16:15, so–ne celý den. Musí sedět s game-server/src/game-logic.ts.
       const TACOS_TIME_ZONE = 'Europe/Prague';
