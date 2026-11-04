@@ -7,7 +7,7 @@ export const MAX_KOSTKY = 23;
 export const KOSTKA_SPAWN_MS = 2000;
 // Tacos event (musí sedět s TACOS_EVENT v index.html): část kostek je zlatá s tacos.
 export const TACOS_EVENT = true;
-export const TACO_CHANCE = 0.25;
+export const TACO_CHANCE = 0.45;
 export const TACO_SCORE = 2;
 // Tacos event běží jen v určitý čas (český čas, Europe/Prague):
 // po–pá 16:00–16:15, so–ne celý den. Musí sedět s index.html.
