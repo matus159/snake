@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.89.0">
+  <meta name="snake-version" content="1.89.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3067,12 +3067,14 @@
       let renderScale = 1;
 
       function updateRenderScale(redraw = true) {
-        const shown = canvas.getBoundingClientRect().width || GAME_W;
+        // obraz je v plátně „contain“ – skutečná šířka obrazu je menší z obou rozměrů
+        const rect = canvas.getBoundingClientRect();
+        const shown = Math.min(rect.width, (rect.height * GAME_W) / GAME_H) || GAME_W;
         const dpr = window.devicePixelRatio || 1;
-        // nejvýš 3×, ať to na velkých displejích zbytečně nezpomaluje
-        // celé pixely na jedno políčko (20 px) – hrany kostek pak nejsou rozmazané
-        const cellPx = Math.floor((20 * shown * dpr) / GAME_W);
-        const scale = Math.min(3, Math.max(1, cellPx / 20));
+        // plné rozlišení displeje (nejvýš 4×), celé pixely na jedno políčko (20 px) –
+        // hrany kostek a hadů jsou pak ostré a nic se nerozmazává
+        const cellPx = Math.round((20 * shown * dpr) / GAME_W);
+        const scale = Math.min(4, Math.max(1, cellPx / 20));
         if (Math.abs(scale - renderScale) < 0.01 && canvas.width === Math.round(GAME_W * scale)) return;
         renderScale = scale;
         canvas.width = Math.round(GAME_W * scale);
@@ -3082,6 +3084,8 @@
       }
       updateRenderScale(false);
       window.addEventListener('resize', () => updateRenderScale());
+      // i když se plocha zvětší jinak než změnou okna (celá obrazovka, otočení, rozložení stránky)
+      if (window.ResizeObserver) new ResizeObserver(() => updateRenderScale()).observe(canvas);
       window.matchMedia('(orientation: landscape)').addEventListener('change', () => updateRenderScale());
 
       const CELL = 20;
