@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.3">
+  <meta name="snake-version" content="1.88.4">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -6385,6 +6385,7 @@
       const giftNoticeQueue = [];
       let giftNoticeShowing = false;
       let giftClaimRunning = false;
+      const giftQueuedIds = new Set();
 
       // Zpráva počká, dokud ji hráč opravdu může vidět (ne přes „Upravování“, otočení telefonu
       // nebo když je hra schovaná na pozadí).
@@ -6399,17 +6400,24 @@
           setTimeout(showNextGiftNotice, 500);
           return;
         }
-        const text = giftNoticeQueue.shift();
-        if (!text) {
+        const notice = giftNoticeQueue.shift();
+        if (!notice) {
           giftNoticeShowing = false;
           giftNotice.classList.remove('visible');
           return;
         }
         giftNoticeShowing = true;
-        giftNotice.textContent = text;
+        giftNotice.textContent = notice.text;
         giftNotice.classList.add('visible');
         setTimeout(() => {
           giftNotice.classList.remove('visible');
+          // zprávu hráč viděl → dárek se na serveru smaže
+          fetch('/api/progress/seen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: notice.name, ids: [notice.id] }),
+            keepalive: true,
+          }).catch(() => {});
           setTimeout(showNextGiftNotice, 350);
         }, GIFT_NOTICE_MS);
       }
@@ -6423,18 +6431,28 @@
           const res = await fetch('/api/progress/claim', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: playerName }),
+            body: JSON.stringify({ name: playerName, v: 2 }),
           });
           const gifts = (await res.json()).gifts || [];
           if (!gifts.length || getProfileId(playerName) !== id) return;
+          let added = false;
           for (const g of gifts) {
-            diamanty += g.amount;
-            giftNoticeQueue.push(`🎁 Hráč ${g.from} ti poslal ${g.amount} 💎`);
+            // už přičtené dárky (zprávu hráč minule neviděl) jen ukázat, diamanty znovu nepřičítat
+            if (!g.alreadyAdded) {
+              diamanty += g.amount;
+              added = true;
+            }
+            const key = `${id}:${g.id}`;
+            if (giftQueuedIds.has(key)) continue;
+            giftQueuedIds.add(key);
+            giftNoticeQueue.push({ text: `🎁 Hráč ${g.from} ti poslal ${g.amount} 💎`, name: playerName, id: g.id });
           }
-          lastUploadedProgress = '';
-          saveProgress();
-          refreshCurrencyUI();
-          updateShopCurrencyDisplay();
+          if (added) {
+            lastUploadedProgress = '';
+            saveProgress();
+            refreshCurrencyUI();
+            updateShopCurrencyDisplay();
+          }
           if (!giftNoticeShowing) showNextGiftNotice();
         } catch {
           // bez internetu to zkusí příště

@@ -131,21 +131,49 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
   }
 
   if (action === 'claim') {
-    // Příjemce si vyzvedne všechny čekající dárky (pak se smažou).
+    // Příjemce si vyzvedne čekající dárky. Nová hra (v: 2) dárek nesmaže hned – jen ho označí jako
+    // přičtený a smaže ho až po „seen“, když hráč zprávu opravdu viděl. Když zprávu nestihne vidět,
+    // ukáže se mu znovu (diamanty už se ale znovu nepřičtou). Stará hra (bez v) dárky rovnou maže.
     const name = String(body.name ?? '').trim().slice(0, 20);
     if (!name) return json({ gifts: [] });
+    const twoStep = body.v === 2;
     const pending = await storage.list<Gift>({ prefix: giftPrefix(name), limit: 100 });
     if (pending.size === 0) return json({ gifts: [] });
-    const gifts = [...pending.values()].map((g) => ({ from: g.from, amount: g.amount }));
-    await storage.delete([...pending.keys()]);
-    // Diamanty rovnou přičíst i do postupu na serveru (přenosový kód), ať se neztratí.
-    const total = gifts.reduce((sum, g) => sum + g.amount, 0);
-    for (const [key, stored] of await storage.list<Stored>({ prefix: 'pcode:' })) {
-      if (stored.name.toLowerCase() !== name.toLowerCase()) continue;
-      stored.progress.diamanty = count(stored.progress.diamanty + total);
-      await storage.put(key, stored);
+    const gifts: { id: string; from: string; amount: number; alreadyAdded: boolean }[] = [];
+    let total = 0;
+    for (const [key, g] of pending) {
+      gifts.push({ id: key.slice(giftPrefix(name).length), from: g.from, amount: g.amount, alreadyAdded: !!g.claimed });
+      if (!g.claimed) total += g.amount;
     }
+    if (twoStep) {
+      const fresh: Record<string, Gift> = {};
+      for (const [key, g] of pending) if (!g.claimed) fresh[key] = { ...g, claimed: true };
+      if (Object.keys(fresh).length) await storage.put(fresh);
+    } else {
+      await storage.delete([...pending.keys()]);
+    }
+    // Diamanty rovnou přičíst i do postupu na serveru (přenosový kód), ať se neztratí.
+    if (total > 0) {
+      for (const [key, stored] of await storage.list<Stored>({ prefix: 'pcode:' })) {
+        if (stored.name.toLowerCase() !== name.toLowerCase()) continue;
+        stored.progress.diamanty = count(stored.progress.diamanty + total);
+        await storage.put(key, stored);
+      }
+    }
+    if (!twoStep) return json({ gifts: gifts.filter((g) => !g.alreadyAdded).map(({ from, amount }) => ({ from, amount })) });
     return json({ gifts });
+  }
+
+  if (action === 'seen') {
+    // Hráč zprávu o dárku viděl – teď se dárek smaže.
+    const name = String(body.name ?? '').trim().slice(0, 20);
+    const ids = Array.isArray(body.ids) ? body.ids.filter((i): i is string => typeof i === 'string' && i.length <= 40).slice(0, 100) : [];
+    if (!name || !ids.length) return json({ ok: true });
+    const keys = ids.map((i) => `${giftPrefix(name)}${i}`);
+    const found = await storage.get<Gift>(keys);
+    const done = [...found].filter(([, g]) => g.claimed).map(([k]) => k);
+    if (done.length) await storage.delete(done);
+    return json({ ok: true });
   }
 
   return json({ error: 'Neznámá akce.' }, 404);
@@ -155,6 +183,8 @@ interface Gift {
   from: string;
   amount: number;
   at: number;
+  // už přičtený příjemci, čeká se jen, až uvidí zprávu
+  claimed?: boolean;
 }
 
 function giftPrefix(name: string): string {
