@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.0">
+  <meta name="snake-version" content="1.88.2">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1179,6 +1179,61 @@
       font-size: 0.9rem;
       font-weight: 700;
       text-align: center;
+    }
+
+    .gift-name-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Našeptávač jména – jako ve vyhledávání, pod políčkem jedno nejbližší jméno. */
+    .gift-autocomplete {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      right: 0;
+      z-index: 5;
+      border: 2px solid rgba(255, 105, 180, 0.6);
+      border-radius: 8px;
+      background: #1b1424;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .gift-autocomplete button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      font: inherit;
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .gift-autocomplete button:hover,
+    .gift-autocomplete button:focus-visible {
+      background: rgba(255, 105, 180, 0.25);
+      outline: none;
+    }
+
+    .gift-autocomplete .gift-ac-icon {
+      color: #9a9a9a;
+    }
+
+    .gift-suggestion {
+      padding: 0.1rem 0.5rem;
+      border: 2px solid #ff69b4;
+      border-radius: 6px;
+      background: rgba(255, 105, 180, 0.2);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
     }
 
     /* Oznámení o přijatém dárku – 5 sekund nahoře přes hrací plochu. */
@@ -2951,7 +3006,10 @@
             <h3 class="wardrobe-panel-title">🎁 Dárek</h3>
             <p class="gift-form-hint">Pošli kamarádovi diamanty. Dostane je, až si zapne hru.</p>
             <label class="gift-form-label" for="giftNameInput">Jméno hráče</label>
-            <input class="gift-form-input" id="giftNameInput" type="text" maxlength="20" placeholder="např. naty">
+            <div class="gift-name-wrap">
+              <input class="gift-form-input" id="giftNameInput" type="text" maxlength="20" placeholder="např. naty" aria-autocomplete="list" aria-controls="giftAutocomplete">
+              <div class="gift-autocomplete hidden" id="giftAutocomplete" role="listbox"></div>
+            </div>
             <label class="gift-form-label" for="giftAmountInput">Počet diamantů</label>
             <input class="gift-form-input" id="giftAmountInput" type="number" min="1" step="1" inputmode="numeric" placeholder="např. 10">
             <button class="btn" id="giftSendBtn" type="submit">Poslat</button>
@@ -6206,13 +6264,71 @@
         giftMsg.textContent = '';
         giftNameInput.value = '';
         giftAmountInput.value = '';
+        hideGiftAutocomplete();
         giftNameInput.focus();
       }
 
       let giftSending = false;
 
+      // Našeptávač: při psaní jména se pod políčkem ukáže nejbližší jméno hráče, klik ho doplní.
+      const giftAutocomplete = document.getElementById('giftAutocomplete');
+      let giftSuggestTimer = null;
+      let giftSuggestSeq = 0;
+
+      function hideGiftAutocomplete() {
+        giftSuggestSeq++;
+        clearTimeout(giftSuggestTimer);
+        giftAutocomplete.classList.add('hidden');
+        giftAutocomplete.textContent = '';
+      }
+
+      function pickGiftSuggestion(name) {
+        giftNameInput.value = name;
+        hideGiftAutocomplete();
+        giftMsg.textContent = '';
+        giftAmountInput.focus();
+      }
+
+      function showGiftAutocomplete(name) {
+        giftAutocomplete.textContent = '';
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.setAttribute('role', 'option');
+        const icon = document.createElement('span');
+        icon.className = 'gift-ac-icon';
+        icon.textContent = '🔍';
+        item.append(icon, name);
+        // mousedown, ať se to stihne dřív, než políčko ztratí focus
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          pickGiftSuggestion(name);
+        });
+        item.addEventListener('click', () => pickGiftSuggestion(name));
+        giftAutocomplete.append(item);
+        giftAutocomplete.classList.remove('hidden');
+      }
+
+      function onGiftNameInput() {
+        const q = giftNameInput.value.trim();
+        hideGiftAutocomplete();
+        if (!q) return;
+        const seq = giftSuggestSeq;
+        giftSuggestTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(`/api/progress/suggest?q=${encodeURIComponent(q)}&from=${encodeURIComponent(playerName || '')}`, { cache: 'no-store' });
+            const { suggestion } = await res.json();
+            if (seq !== giftSuggestSeq || !suggestion) return;
+            if (suggestion === giftNameInput.value.trim()) return; // už je napsané celé
+            showGiftAutocomplete(suggestion);
+          } catch {
+            // bez internetu se nic nenabídne
+          }
+        }, 200);
+      }
+
       async function sendGift() {
         if (giftSending) return;
+        hideGiftAutocomplete();
         const to = giftNameInput.value.trim();
         const amount = Math.floor(Number(giftAmountInput.value));
         if (!playerName) { giftMsg.textContent = 'Nejdřív si vyber jméno.'; return; }
@@ -6232,6 +6348,19 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) {
             giftMsg.textContent = data.error || 'Nepovedlo se poslat, zkus to znovu.';
+            if (data.suggestion) {
+              // Překlep ve jméně: nabídnout nejpodobnějšího hráče, klik ho doplní.
+              const tip = document.createElement('button');
+              tip.type = 'button';
+              tip.className = 'gift-suggestion';
+              tip.textContent = data.suggestion;
+              tip.addEventListener('click', () => {
+                giftNameInput.value = data.suggestion;
+                giftMsg.textContent = '';
+                giftAmountInput.focus();
+              });
+              giftMsg.append(document.createElement('br'), 'Nemyslel jsi ', tip, '?');
+            }
             return;
           }
           diamanty = Math.max(0, diamanty - amount);
@@ -6731,6 +6860,16 @@
       updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
       shopGiftBtn.addEventListener('click', openGiftView);
+      giftNameInput.addEventListener('input', onGiftNameInput);
+      giftNameInput.addEventListener('blur', () => setTimeout(hideGiftAutocomplete, 150));
+      giftNameInput.addEventListener('keydown', (e) => {
+        // Tab nebo šipka dolů vezme nabízené jméno
+        const item = giftAutocomplete.querySelector('button');
+        if (item && !giftAutocomplete.classList.contains('hidden') && (e.key === 'Tab' || e.key === 'ArrowDown')) {
+          e.preventDefault();
+          item.click();
+        }
+      });
       giftForm.addEventListener('submit', (e) => {
         e.preventDefault();
         sendGift();
