@@ -110,7 +110,12 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
     if (!from || !to) return json({ error: 'Chybí jméno.' }, 400);
     if (amount < 1) return json({ error: 'Zadej počet diamantů.' }, 400);
     if (from.toLowerCase() === to.toLowerCase()) return json({ error: 'Sám sobě dárek poslat nemůžeš.' }, 400);
-    if (!(await playerExists(storage, to))) return json({ error: 'Hráč s tímhle jménem neexistuje.' }, 404);
+    const names = await allPlayerNames(storage);
+    if (!names.some((n) => n.toLowerCase() === to.toLowerCase())) {
+      // Překlep? Doporučit nejbližší existující jméno.
+      const suggestion = closestName(to, names.filter((n) => n.toLowerCase() !== from.toLowerCase()));
+      return json({ error: 'Hráč s tímhle jménem neexistuje.', suggestion }, 404);
+    }
     const id = `${Date.now()}-${newCode()}`;
     await storage.put(`${giftPrefix(to)}${id}`, { from, amount, at: Date.now() } satisfies Gift);
     return json({ ok: true });
@@ -147,14 +152,46 @@ function giftPrefix(name: string): string {
   return `gift:${encodeURIComponent(name.toLowerCase())}:`;
 }
 
-// Hráč existuje, když má přenosový kód nebo už někdy zapnul hru (počítání hráčů).
-async function playerExists(storage: DurableObjectStorage, name: string): Promise<boolean> {
-  const lower = name.toLowerCase();
+// Všichni hráči: mají přenosový kód nebo už někdy zapnuli hru (počítání hráčů).
+async function allPlayerNames(storage: DurableObjectStorage): Promise<string[]> {
+  const names = new Map<string, string>();
   for (const stored of (await storage.list<Stored>({ prefix: 'pcode:' })).values()) {
-    if (stored.name.toLowerCase() === lower) return true;
+    names.set(stored.name.toLowerCase(), stored.name);
   }
   for (const device of (await storage.list<{ names?: string[] }>({ prefix: 'seen:' })).values()) {
-    if (device.names?.some((n) => n.toLowerCase() === lower)) return true;
+    for (const n of device.names ?? []) if (!names.has(n.toLowerCase())) names.set(n.toLowerCase(), n);
   }
-  return false;
+  return [...names.values()];
+}
+
+function editDistance(a: string, b: string): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+// Nejpodobnější jméno (bez ohledu na velká písmena a háčky); moc odlišná jména se nedoporučí.
+function closestName(typed: string, names: string[]): string | null {
+  const norm = (n: string) => n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const t = norm(typed);
+  let best: string | null = null;
+  let bestScore = Infinity;
+  for (const name of names) {
+    const n = norm(name);
+    let d = editDistance(t, n);
+    // začátek jména sedí (napsal jen kus) – taky dobrý tip
+    if (t.length >= 3 && n.startsWith(t)) d = Math.min(d, 1);
+    if (d < bestScore) {
+      bestScore = d;
+      best = name;
+    }
+  }
+  const limit = Math.max(2, Math.ceil(t.length / 2));
+  return best !== null && bestScore <= limit ? best : null;
 }

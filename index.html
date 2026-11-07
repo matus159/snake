@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.0">
+  <meta name="snake-version" content="1.88.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1179,6 +1179,16 @@
       font-size: 0.9rem;
       font-weight: 700;
       text-align: center;
+    }
+
+    .gift-suggestion {
+      padding: 0.1rem 0.5rem;
+      border: 2px solid #ff69b4;
+      border-radius: 6px;
+      background: rgba(255, 105, 180, 0.2);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
     }
 
     /* Oznámení o přijatém dárku – 5 sekund nahoře přes hrací plochu. */
@@ -6232,6 +6242,19 @@
           const data = await res.json().catch(() => ({}));
           if (!res.ok || !data.ok) {
             giftMsg.textContent = data.error || 'Nepovedlo se poslat, zkus to znovu.';
+            if (data.suggestion) {
+              // Překlep ve jméně: nabídnout nejpodobnějšího hráče, klik ho doplní.
+              const tip = document.createElement('button');
+              tip.type = 'button';
+              tip.className = 'gift-suggestion';
+              tip.textContent = data.suggestion;
+              tip.addEventListener('click', () => {
+                giftNameInput.value = data.suggestion;
+                giftMsg.textContent = '';
+                giftAmountInput.focus();
+              });
+              giftMsg.append(document.createElement('br'), 'Nemyslel jsi ', tip, '?');
+            }
             return;
           }
           diamanty = Math.max(0, diamanty - amount);
