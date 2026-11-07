@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.91.0">
+  <meta name="snake-version" content="1.91.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1306,6 +1306,12 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       background: rgba(0, 0, 0, 0.35);
+    }
+
+    .stats-card .shop-skin-img {
+      flex: 0 0 72px;
+      width: 72px;
+      margin: 0;
     }
 
     .stats-card .shop-skin-preview {
@@ -6469,8 +6475,8 @@
         renderWardrobeSkins();
       }
 
-      // Statistiky hadů: obrázek, jak hada získat a kolik dává. Noví hadi (Mikulášští, Melounový)
-      // a hadi z testovací adresy tu nejsou.
+      // Statistiky hadů: obrázek, jak hada získat a kolik dává. Všichni hadi, které hráč může vidět
+      // (Mikulášští jen kolem Mikuláše, Král jen na testovací adrese).
       const STATS_SKINS = [
         { id: 'default', how: 'Máš ho od začátku' },
         { id: 'white', how: 'Obchod za 10 💎' },
@@ -6481,11 +6487,22 @@
         { id: 'black', how: 'Kolo štěstí nebo vajíčko' },
         { id: 'gold', how: 'Vajíčko štěstí' },
         { id: 'rainbow', how: 'Vajíčko štěstí (vzácný, ~10 %)' },
+        { id: 'melon', how: 'Obchod za 100 💎' },
+        { id: 'angel', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
+        { id: 'devil', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
+        { id: 'king', how: 'Zdarma (jen na testovací adrese)' },
       ];
 
       function renderSkinStats() {
-        statsList.innerHTML = STATS_SKINS.map(({ id, how }) => {
+        statsList.innerHTML = STATS_SKINS.filter(({ id }) => skinAvailable(id)).map(({ id, how, mikulas }) => {
           const points = SKIN_SCORE_PER_KOSTKA[id] || 1;
+          if (mikulas) {
+            return `<div class="stats-card">${getSkinPreviewHtml(id)}<div class="stats-card-info">`
+              + `<span class="stats-card-name">${SKIN_NAMES[id]}${wardrobe.includes(id) ? ' ✓' : ''}</span>`
+              + `<span class="stats-card-line">Jak získat: ${how}</span>`
+              + `<span class="stats-card-line">Za kostku: <b>${MIKULAS_DIAMANTY_PER_KOSTKA} 💎</b></span>`
+              + '</div></div>';
+          }
           return `<div class="stats-card">${getSkinPreviewHtml(id)}<div class="stats-card-info">`
             + `<span class="stats-card-name">${SKIN_NAMES[id]}${wardrobe.includes(id) || id === 'default' ? ' ✓' : ''}</span>`
             + `<span class="stats-card-line">Jak získat: ${how}</span>`
