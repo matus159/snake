@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.87.0">
+  <meta name="snake-version" content="1.87.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3094,8 +3094,7 @@
         devil: 'Čert',
       };
       // Duhový anděl a Čert: jen kolem Mikuláše (5.–7. prosince, český čas) – zdarma, každá snězená
-      // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít. Na testovací adrese jsou pořád.
-      const TEST_SITE = location.hostname.startsWith('test.') || location.hostname === 'localhost';
+      // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít.
       const MIKULAS_SKINS = ['angel', 'devil'];
       const MIKULAS_DIAMANTY_PER_KOSTKA = 3;
       function isMikulas(now = new Date()) {
@@ -3103,7 +3102,7 @@
           .format(now).split('-').map(Number);
         return month === 12 && day >= 5 && day <= 7;
       }
-      const skinAvailable = (id) => !MIKULAS_SKINS.includes(id) || TEST_SITE || isMikulas();
+      const skinAvailable = (id) => !MIKULAS_SKINS.includes(id) || isMikulas();
       const EGG_PRIZE_POOL = [
         { weight: 34, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
         { weight: 34, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
