@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.90.1">
+  <meta name="snake-version" content="1.91.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1260,6 +1260,80 @@
 
     .gift-notice.visible {
       opacity: 1;
+    }
+
+    .shop-left-column {
+      position: absolute;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .shop-stats-box {
+      border-color: rgba(0, 217, 255, 0.5);
+      background: rgba(0, 217, 255, 0.1);
+      color: #7fe9ff;
+    }
+
+    .shop-stats-box:hover {
+      box-shadow: 0 0 12px rgba(0, 217, 255, 0.4);
+    }
+
+    .stats-scroll {
+      width: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+      padding: 0.25rem 0.5rem 1rem;
+      box-sizing: border-box;
+    }
+
+    .stats-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 0.6rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .stats-card {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.35);
+    }
+
+    .stats-card .shop-skin-preview {
+      flex: 0 0 auto;
+      margin: 0;
+    }
+
+    .stats-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .stats-card-name {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .stats-card-line {
+      color: #e8e8e8;
+      font-size: 0.75rem;
+    }
+
+    .stats-card-line b {
+      color: #00d9ff;
     }
 
     .shop-right-column {
@@ -2961,6 +3035,9 @@
                 </div>
               </div>
             </div>
+            <div class="shop-left-column">
+              <div class="shop-wardrobe-box shop-stats-box" id="shopStatsBtn">📊<br>Statistiky</div>
+            </div>
             <div class="shop-right-column">
               <div class="shop-wardrobe-box" id="shopWardrobeBtn">Šatna</div>
               <div class="shop-wardrobe-box shop-gift-box" id="shopGiftBtn">🎁<br>Dárek</div>
@@ -3007,6 +3084,12 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <div id="shopStatsView" class="shop-view hidden">
+          <div class="stats-scroll">
+            <h3 class="wardrobe-panel-title">📊 Statistiky hadů</h3>
+            <div class="stats-list" id="statsList"></div>
           </div>
         </div>
         <div id="shopGiftView" class="shop-view hidden">
@@ -3501,6 +3584,8 @@
       const shopMainView = document.getElementById('shopMainView');
       const shopWardrobeView = document.getElementById('shopWardrobeView');
       const shopGiftView = document.getElementById('shopGiftView');
+      const shopStatsView = document.getElementById('shopStatsView');
+      const statsList = document.getElementById('statsList');
       const shopGiftBtn = document.getElementById('shopGiftBtn');
       const giftForm = document.getElementById('giftForm');
       const giftNameInput = document.getElementById('giftNameInput');
@@ -5672,6 +5757,7 @@
         shopMainView.classList.remove('hidden');
         shopWardrobeView.classList.add('hidden');
         shopGiftView.classList.add('hidden');
+        shopStatsView.classList.add('hidden');
       }
 
       function getSkinPreviewHtml(skinId) {
@@ -6383,6 +6469,38 @@
         renderWardrobeSkins();
       }
 
+      // Statistiky hadů: obrázek, jak hada získat a kolik dává. Noví hadi (Mikulášští, Melounový)
+      // a hadi z testovací adresy tu nejsou.
+      const STATS_SKINS = [
+        { id: 'default', how: 'Máš ho od začátku' },
+        { id: 'white', how: 'Obchod za 10 💎' },
+        { id: 'blue', how: 'Obchod za 10 💎' },
+        { id: 'pink', how: 'Obchod za 10 💎' },
+        { id: 'yellow', how: 'Obchod za 10 💎' },
+        { id: 'red', how: 'Obchod za 50 💎' },
+        { id: 'black', how: 'Kolo štěstí nebo vajíčko' },
+        { id: 'gold', how: 'Vajíčko štěstí' },
+        { id: 'rainbow', how: 'Vajíčko štěstí (vzácný, ~10 %)' },
+      ];
+
+      function renderSkinStats() {
+        statsList.innerHTML = STATS_SKINS.map(({ id, how }) => {
+          const points = SKIN_SCORE_PER_KOSTKA[id] || 1;
+          return `<div class="stats-card">${getSkinPreviewHtml(id)}<div class="stats-card-info">`
+            + `<span class="stats-card-name">${SKIN_NAMES[id]}${wardrobe.includes(id) || id === 'default' ? ' ✓' : ''}</span>`
+            + `<span class="stats-card-line">Jak získat: ${how}</span>`
+            + `<span class="stats-card-line">Za kostku: <b>${points} ${points === 1 ? 'bod' : points < 5 ? 'body' : 'bodů'}</b>${points >= 5 ? ` (${points / 5} 💎)` : ''}</span>`
+            + '</div></div>';
+        }).join('') + '<p class="stats-card-line" style="grid-column:1/-1;text-align:center">Za každých 5 bodů dostaneš 1 💎.</p>';
+      }
+
+      function openStatsView() {
+        shopView = 'stats';
+        shopMainView.classList.add('hidden');
+        shopStatsView.classList.remove('hidden');
+        renderSkinStats();
+      }
+
       // Dárek: poslat jinému hráči diamanty. Uloží se na server a příjemce je dostane, až se připojí.
       function openGiftView() {
         shopView = 'gift';
@@ -6609,7 +6727,7 @@
       }
 
       function shopBack() {
-        if (shopView === 'wardrobe' || shopView === 'gift') {
+        if (shopView === 'wardrobe' || shopView === 'gift' || shopView === 'stats') {
           showShopMain();
         } else {
           closeShop();
@@ -7024,6 +7142,7 @@
       updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
       shopGiftBtn.addEventListener('click', openGiftView);
+      document.getElementById('shopStatsBtn').addEventListener('click', openStatsView);
       giftNameInput.addEventListener('input', onGiftNameInput);
       giftNameInput.addEventListener('blur', () => setTimeout(hideGiftAutocomplete, 150));
       giftNameInput.addEventListener('keydown', (e) => {
