@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.89.1">
+  <meta name="snake-version" content="1.90.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2951,9 +2951,13 @@
                   <img class="shop-skin-img" src="/skin-devil.png" alt="Čert">
                   <div class="shop-skin-label">zdarma</div>
                 </div>
-                <div class="shop-skin-box test-king-skin hidden" id="shopKingSkinBtn">
+                <div class="shop-skin-box test-site-skin hidden" id="shopKingSkinBtn">
                   <img class="shop-skin-img" src="/skin-king.png" alt="Král">
                   <div class="shop-skin-label">zdarma</div>
+                </div>
+                <div class="shop-skin-box" id="shopMelonSkinBtn">
+                  <img class="shop-skin-img" src="/skin-melon.png" alt="Melounový">
+                  <div class="shop-skin-label">100 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamantů</span></div>
                 </div>
               </div>
             </div>
@@ -3212,6 +3216,7 @@
         gold: 5,
         rainbow: 10,
         king: 15,
+        melon: 4,
       };
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
@@ -3235,7 +3240,7 @@
         } catch {}
       }
       resetAllProgressOnce();
-      const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10 };
+      const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10, melon: 100 };
       const SCORE_PER_DIAMANT = 5;
       // Gems už ve hře nejsou: staré gems se převedou na diamanty (1 gem = 10 diamantů).
       const DIAMANTS_PER_GEM = 10;
@@ -3255,6 +3260,7 @@
         angel: 'Duhový anděl',
         devil: 'Čert',
         king: 'Král',
+        melon: 'Melounový',
       };
       // Duhový anděl a Čert: jen kolem Mikuláše (5.–7. prosince, český čas) – zdarma, každá snězená
       // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít.
@@ -5239,6 +5245,9 @@
             drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
           } else if (skin === 'king') {
             drawKingCell(seg.x, seg.y);
+          } else if (skin === 'melon') {
+            if (i === 0) drawMelonHead(seg.x, seg.y);
+            else drawMelonCell(seg.x, seg.y);
           } else if (skin === 'devil') {
             const v = Math.round(207 - t * 45);
             drawRect(seg.x, seg.y, `rgb(${v}, ${v}, ${v + 7})`, 1);
@@ -5350,6 +5359,48 @@
         ctx.fillRect(x + 6, y + 13, 9, 3);
       }
 
+      // Melounový: tělo jako zelená slupka s tmavými vlnitými pruhy, hlava jako rozkrojený meloun.
+      function drawMelonCell(x, y) {
+        const px = x * CELL + 1;
+        const py = y * CELL + 1;
+        const size = CELL - 2;
+        ctx.fillStyle = '#3fae3a';
+        ctx.fillRect(px, py, size, size);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(px, py, size, size);
+        ctx.clip();
+        ctx.strokeStyle = '#1d6b22';
+        ctx.lineWidth = CELL * 0.12;
+        [0.22, 0.55, 0.88].forEach((f) => {
+          ctx.beginPath();
+          for (let k = 0; k <= 8; k++) {
+            const yy = y * CELL + (k * CELL) / 8;
+            const xx = x * CELL + f * CELL + Math.sin(k * 1.4) * CELL * 0.05;
+            if (k) ctx.lineTo(xx, yy);
+            else ctx.moveTo(xx, yy);
+          }
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+      function drawMelonHead(x, y) {
+        const s = CELL;
+        const px = x * CELL;
+        const py = y * CELL;
+        ctx.fillStyle = '#2f8f2c';
+        ctx.fillRect(px + 1, py + 1, s - 2, s - 2);
+        ctx.fillStyle = '#d9f2c4';
+        ctx.fillRect(px + 1 + s * 0.08, py + 1 + s * 0.08, s - 2 - s * 0.16, s - 2 - s * 0.16);
+        ctx.fillStyle = '#ff4d5e';
+        ctx.fillRect(px + 1 + s * 0.14, py + 1 + s * 0.14, s - 2 - s * 0.28, s - 2 - s * 0.28);
+        ctx.fillStyle = '#1a1a1a';
+        [[0.3, 0.32], [0.7, 0.3], [0.28, 0.72], [0.72, 0.74], [0.5, 0.8]].forEach(([fx, fy]) => {
+          ctx.beginPath();
+          ctx.ellipse(px + fx * s, py + fy * s, s * 0.035, s * 0.06, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
       // Král: zlaté kostky s leskem, koruna na hlavě a červený plášť za ocasem.
       function drawKingCell(x, y) {
         const px = x * CELL + 1;
@@ -5648,7 +5699,7 @@
         if (skinId === 'rainbow') {
           return '<div class="shop-skin-preview rainbow-skin"><span></span><span></span><span></span><span></span></div>';
         }
-        if (skinId === 'angel' || skinId === 'devil' || skinId === 'king') {
+        if (skinId === 'angel' || skinId === 'devil' || skinId === 'king' || skinId === 'melon') {
           return `<img class="shop-skin-img" src="/skin-${skinId}.png" alt="${SKIN_NAMES[skinId]}">`;
         }
         return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
@@ -6965,9 +7016,10 @@
       document.getElementById('shopAngelSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('angel'));
       document.getElementById('shopDevilSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('devil'));
       document.getElementById('shopKingSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('king'));
+      document.getElementById('shopMelonSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('melon'));
       function updateMikulasShop() {
         document.querySelectorAll('.test-only-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('angel')));
-        document.querySelectorAll('.test-king-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('king')));
+        document.querySelectorAll('.test-site-skin').forEach((el) => el.classList.toggle('hidden', !TEST_SITE));
       }
       updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
