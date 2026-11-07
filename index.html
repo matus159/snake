@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.2">
+  <meta name="snake-version" content="1.88.3">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -6386,7 +6386,19 @@
       let giftNoticeShowing = false;
       let giftClaimRunning = false;
 
+      // Zpráva počká, dokud ji hráč opravdu může vidět (ne přes „Upravování“, otočení telefonu
+      // nebo když je hra schovaná na pozadí).
+      function giftNoticeBlocked() {
+        return document.hidden || updateShowing || phonePortraitQuery.matches;
+      }
+
       function showNextGiftNotice() {
+        if (giftNoticeQueue.length && giftNoticeBlocked()) {
+          giftNoticeShowing = true;
+          giftNotice.classList.remove('visible');
+          setTimeout(showNextGiftNotice, 500);
+          return;
+        }
         const text = giftNoticeQueue.shift();
         if (!text) {
           giftNoticeShowing = false;
@@ -6404,7 +6416,8 @@
 
       async function claimGifts() {
         const id = getProfileId(playerName);
-        if (!id || giftClaimRunning || progressSyncRunning || running || multiInGame) return;
+        // Na pozadí se dárky nevyzvedávají – jinak by se diamanty přičetly a zprávu by nikdo neviděl.
+        if (!id || giftClaimRunning || progressSyncRunning || running || multiInGame || document.hidden) return;
         giftClaimRunning = true;
         try {
           const res = await fetch('/api/progress/claim', {
@@ -6430,6 +6443,9 @@
         }
       }
       setInterval(claimGifts, GIFT_POLL_MS);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) claimGifts();
+      });
 
       function openShop() {
         pauseOverlay.classList.remove('visible');
