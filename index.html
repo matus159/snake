@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.6">
+  <meta name="snake-version" content="1.89.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2951,6 +2951,10 @@
                   <img class="shop-skin-img" src="/skin-devil.png" alt="Čert">
                   <div class="shop-skin-label">zdarma</div>
                 </div>
+                <div class="shop-skin-box test-king-skin hidden" id="shopKingSkinBtn">
+                  <img class="shop-skin-img" src="/skin-king.png" alt="Král">
+                  <div class="shop-skin-label">zdarma</div>
+                </div>
               </div>
             </div>
             <div class="shop-right-column">
@@ -3203,6 +3207,7 @@
         black: 4,
         gold: 5,
         rainbow: 10,
+        king: 15,
       };
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
@@ -3245,6 +3250,7 @@
         rainbow: 'Duhový',
         angel: 'Duhový anděl',
         devil: 'Čert',
+        king: 'Král',
       };
       // Duhový anděl a Čert: jen kolem Mikuláše (5.–7. prosince, český čas) – zdarma, každá snězená
       // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít.
@@ -3255,7 +3261,13 @@
           .format(now).split('-').map(Number);
         return month === 12 && day >= 5 && day <= 7;
       }
-      const skinAvailable = (id) => !MIKULAS_SKINS.includes(id) || isMikulas();
+      // Král: zatím jen na testovací adrese (zdarma), na hlavním webu ho nikdo nevidí.
+      const TEST_SITE = location.hostname.startsWith('test.') || location.hostname === 'localhost';
+      const TEST_ONLY_SKINS = ['king'];
+      const skinAvailable = (id) => {
+        if (TEST_ONLY_SKINS.includes(id)) return TEST_SITE;
+        return !MIKULAS_SKINS.includes(id) || isMikulas();
+      };
       // Z vajíčka padá vždy jen jeden had (výhra „Všechny hady“ tu není).
       const EGG_PRIZE_POOL = [
         { weight: 45, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
@@ -5214,12 +5226,15 @@
         const skin = skinAvailable(equippedSkin) ? equippedSkin : 'default';
         if (skin === 'angel') drawAngelWings();
         if (skin === 'devil') drawDevilTail();
+        if (skin === 'king') drawKingCape();
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
           if (skin === 'angel' || equippedSkin === 'rainbow') {
             // Duhový anděl má tělo stejně jako Duhový had (barvy se přelévají)
             const hue = ((performance.now() / 18 + i * 16) % 360 + 360) % 360;
             drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
+          } else if (skin === 'king') {
+            drawKingCell(seg.x, seg.y);
           } else if (skin === 'devil') {
             const v = Math.round(207 - t * 45);
             drawRect(seg.x, seg.y, `rgb(${v}, ${v}, ${v + 7})`, 1);
@@ -5264,9 +5279,10 @@
         ctx.fill();
         if (skin === 'angel') drawAngelHalo(head);
         if (skin === 'devil') drawDevilHead(head);
+        if (skin === 'king') drawKingCrown(head);
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
-        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' ? 15 : 0);
+        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'king' ? 15 : 0);
       }
 
       // Duhový anděl: svatozář nad hlavou a dvě duhová křídla nad 2. a 3. článkem.
@@ -5330,6 +5346,93 @@
         ctx.fillRect(x + 6, y + 13, 9, 3);
       }
 
+      // Král: zlaté kostky s leskem, koruna na hlavě a červený plášť za ocasem.
+      function drawKingCell(x, y) {
+        const px = x * CELL + 1;
+        const py = y * CELL + 1;
+        const size = CELL - 2;
+        const gr = ctx.createLinearGradient(px, py, px + size, py + size);
+        gr.addColorStop(0, '#fff3a0');
+        gr.addColorStop(0.45, '#ffd700');
+        gr.addColorStop(1, '#c99700');
+        ctx.fillStyle = gr;
+        ctx.fillRect(px, py, size, size);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillRect(px + 2, py + 2, size - 7, 2);
+      }
+      function drawKingCrown(head) {
+        const x = head.x * CELL + 2;
+        const y = head.y * CELL - 1;
+        const w = CELL - 4;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y - 7);
+        ctx.lineTo(x + w * 0.22, y - 3);
+        ctx.lineTo(x + w * 0.5, y - 11);
+        ctx.lineTo(x + w * 0.78, y - 3);
+        ctx.lineTo(x + w, y - 7);
+        ctx.lineTo(x + w, y);
+        ctx.closePath();
+        const kg = ctx.createLinearGradient(x, y - 11, x, y);
+        kg.addColorStop(0, '#fff6b0');
+        kg.addColorStop(1, '#e0a800');
+        ctx.fillStyle = kg;
+        ctx.fill();
+        ctx.strokeStyle = '#8a6400';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#fff6b0';
+        [[0, -7], [0.5, -11], [1, -7]].forEach(([f, dy]) => {
+          ctx.beginPath();
+          ctx.arc(x + w * f, y + dy, 1.6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.fillStyle = '#e0115f';
+        ctx.beginPath();
+        ctx.arc(x + w * 0.5, y - 3, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function drawKingCape() {
+        if (snake.length < 2) return;
+        const last = snake[snake.length - 1];
+        const prev = snake[snake.length - 2];
+        const dx = last.x - prev.x;
+        const dy = last.y - prev.y;
+        const cx = last.x * CELL + CELL / 2;
+        const cy = last.y * CELL + CELL / 2;
+        // px, py = kolmý směr (šířka pláště); plášť vlaje ven od ocasu
+        const pxv = -dy;
+        const pyv = dx;
+        const wave = Math.sin(performance.now() / 260) * 2.5;
+        const at = (along, side) => [cx + dx * along + pxv * side, cy + dy * along + pyv * side];
+        ctx.beginPath();
+        ctx.moveTo(...at(4, -9));
+        ctx.quadraticCurveTo(...at(18, -10 + wave), ...at(30, -12 + wave));
+        ctx.quadraticCurveTo(...at(33, 0), ...at(30, 12 + wave));
+        ctx.quadraticCurveTo(...at(18, 10 + wave), ...at(4, 9));
+        ctx.closePath();
+        const [gx0, gy0] = at(4, 0);
+        const [gx1, gy1] = at(30, 0);
+        const cg = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
+        cg.addColorStop(0, '#d4143a');
+        cg.addColorStop(1, '#8b0016');
+        ctx.fillStyle = cg;
+        ctx.fill();
+        // hermelínový lem na konci pláště
+        ctx.strokeStyle = '#f4f1ea';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(...at(30, -12 + wave));
+        ctx.quadraticCurveTo(...at(33, 0), ...at(30, 12 + wave));
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+        ctx.fillStyle = '#111';
+        [-6, 0, 6].forEach((side) => {
+          const [tx, ty] = at(31.5, side);
+          ctx.fillRect(tx - 0.8, ty - 0.8, 1.6, 1.6);
+        });
+      }
       function drawDevilTail() {
         if (snake.length < 2) return;
         const last = snake[snake.length - 1];
@@ -5541,7 +5644,7 @@
         if (skinId === 'rainbow') {
           return '<div class="shop-skin-preview rainbow-skin"><span></span><span></span><span></span><span></span></div>';
         }
-        if (skinId === 'angel' || skinId === 'devil') {
+        if (skinId === 'angel' || skinId === 'devil' || skinId === 'king') {
           return `<img class="shop-skin-img" src="/skin-${skinId}.png" alt="${SKIN_NAMES[skinId]}">`;
         }
         return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
@@ -6857,8 +6960,10 @@
       shopYellowSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('yellow'));
       document.getElementById('shopAngelSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('angel'));
       document.getElementById('shopDevilSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('devil'));
+      document.getElementById('shopKingSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('king'));
       function updateMikulasShop() {
         document.querySelectorAll('.test-only-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('angel')));
+        document.querySelectorAll('.test-king-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('king')));
       }
       updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
