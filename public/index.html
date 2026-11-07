@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.84.0">
+  <meta name="snake-version" content="1.85.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5051,7 +5051,7 @@
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
           if (skin === 'angel') {
-            drawRect(seg.x, seg.y, i === 0 ? '#ef233c' : i % 2 ? '#48cae4' : '#7b2cbf', 1);
+            drawRect(seg.x, seg.y, i === 0 ? '#ffc300' : i % 2 ? '#ffe45c' : '#ffd60a', 1);
           } else if (skin === 'devil') {
             const v = Math.round(207 - t * 45);
             drawRect(seg.x, seg.y, `rgb(${v}, ${v}, ${v + 7})`, 1);
