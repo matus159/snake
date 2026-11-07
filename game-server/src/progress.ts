@@ -67,6 +67,15 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
     return json({ taken: false });
   }
 
+  if (action === 'suggest' && request.method === 'GET') {
+    // Dárek: při psaní jména nabídnout nejbližší jméno hráče (jako našeptávač ve vyhledávání).
+    const q = (url.searchParams.get('q') ?? '').trim().slice(0, 20);
+    const from = (url.searchParams.get('from') ?? '').trim().toLowerCase();
+    if (!q) return json({ suggestion: null });
+    const names = (await allPlayerNames(storage)).filter((n) => n.toLowerCase() !== from);
+    return json({ suggestion: suggestName(q, names) });
+  }
+
   if (action === 'get' && request.method === 'GET') {
     const code = cleanCode(url.searchParams.get('code'));
     const stored = code.length === CODE_LENGTH ? await storage.get<Stored>(`pcode:${code}`) : undefined;
@@ -176,9 +185,20 @@ function editDistance(a: string, b: string): number {
   return prev[b.length];
 }
 
+// Při psaní: nejdřív jméno, které tak začíná (nejkratší), jinak nejpodobnější.
+function suggestName(typed: string, names: string[]): string | null {
+  const t = normName(typed);
+  const starts = names.filter((n) => normName(n).startsWith(t)).sort((a, b) => a.length - b.length || a.localeCompare(b));
+  return starts[0] ?? closestName(typed, names);
+}
+
+function normName(n: string): string {
+  return n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 // Nejpodobnější jméno (bez ohledu na velká písmena a háčky); moc odlišná jména se nedoporučí.
 function closestName(typed: string, names: string[]): string | null {
-  const norm = (n: string) => n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const norm = normName;
   const t = norm(typed);
   let best: string | null = null;
   let bestScore = Infinity;
