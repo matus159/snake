@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.4">
+  <meta name="snake-version" content="1.88.5">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5217,16 +5217,15 @@
         if (skin === 'devil') drawDevilTail();
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
-          if (skin === 'angel') {
-            drawRainbowCell(seg.x, seg.y);
+          if (skin === 'angel' || equippedSkin === 'rainbow') {
+            // Duhový anděl má tělo stejně jako Duhový had (barvy se přelévají)
+            const hue = ((performance.now() / 18 + i * 16) % 360 + 360) % 360;
+            drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
           } else if (skin === 'devil') {
             const v = Math.round(207 - t * 45);
             drawRect(seg.x, seg.y, `rgb(${v}, ${v}, ${v + 7})`, 1);
           } else if (equippedSkin === 'gold') {
             drawGlowRect(seg.x, seg.y, t);
-          } else if (equippedSkin === 'rainbow') {
-            const hue = ((performance.now() / 18 + i * 16) % 360 + 360) % 360;
-            drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
           } else if (equippedSkin === 'red') {
             const r = Math.round(255 - t * 60);
             drawRect(seg.x, seg.y, `rgb(${r}, 68, 68)`, 1);
@@ -5269,17 +5268,6 @@
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
         drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' ? 15 : 0);
-      }
-
-      // Duhová kostka: vodorovné duhové pruhy uvnitř políčka.
-      function drawRainbowCell(x, y) {
-        const px = x * CELL + 1;
-        const py = y * CELL + 1;
-        const size = CELL - 2;
-        RAINBOW_STRIPES.forEach((col, k) => {
-          ctx.fillStyle = col;
-          ctx.fillRect(px, py + (k * size) / 6, size, size / 6 + 0.5);
-        });
       }
 
       // Duhový anděl: svatozář nad hlavou a dvě duhová křídla nad 2. a 3. článkem.
