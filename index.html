@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.88.5">
+  <meta name="snake-version" content="1.88.6">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3233,7 +3233,6 @@
       const WHEEL_SPIN_COST = 100;
       const EGG_CRACK_COST = 250;
       const WHEEL_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'yellow', 'black'];
-      const EGG_ALL_SKINS = ['red', 'white', 'blue', 'pink', 'yellow', 'black', 'gold', 'rainbow'];
       const SKIN_NAMES = {
         default: 'Výchozí',
         red: 'Červený',
@@ -3257,11 +3256,11 @@
         return month === 12 && day >= 5 && day <= 7;
       }
       const skinAvailable = (id) => !MIKULAS_SKINS.includes(id) || isMikulas();
+      // Z vajíčka padá vždy jen jeden had (výhra „Všechny hady“ tu není).
       const EGG_PRIZE_POOL = [
-        { weight: 34, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
-        { weight: 34, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
+        { weight: 45, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
+        { weight: 45, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
         { weight: 10, prize: { id: 'rainbow', label: 'Duhový had', short: 'Duhový', type: 'skin', skinId: 'rainbow' } },
-        { weight: 8, prize: { id: 'allSkins', label: 'Všechny hady', short: 'Vše', type: 'allSkins' } },
       ];
       const WHEEL_PRIZES = [
         { id: 'd50', label: '50 diamantů', short: '50', type: 'diamonds', amount: 50, color: '#0088aa' },
@@ -6087,25 +6086,7 @@
       }
 
       function applyEggPrize(prize) {
-        if (prize.type === 'allSkins') {
-          const alreadyHadAll = EGG_ALL_SKINS.every((skinId) => wardrobe.includes(skinId));
-          let added = 0;
-          EGG_ALL_SKINS.forEach((skinId) => {
-            if (!wardrobe.includes(skinId)) {
-              wardrobe.push(skinId);
-              added += 1;
-            }
-          });
-          if (added > 0) {
-            equippedSkin = wardrobe.includes('rainbow') ? 'rainbow' : wardrobe.includes('gold') ? 'gold' : wardrobe.includes('black') ? 'black' : wardrobe[wardrobe.length - 1];
-            eggResultEl.textContent = `Vyhráváš všechny hady včetně duhového! (+${added} skinů)`;
-            showShopMessage('Všechny hady jsou ve šatně!');
-          } else {
-            diamanty += 150;
-            eggResultEl.textContent = 'Už máš všechny hady – dostáváš 150 diamantů!';
-          }
-          showAllSkinsCelebration(alreadyHadAll, true);
-        } else if (prize.type === 'skin') {
+        if (prize.type === 'skin') {
           const alreadyHad = wardrobe.includes(prize.skinId);
           if (!alreadyHad) {
             wardrobe.push(prize.skinId);
