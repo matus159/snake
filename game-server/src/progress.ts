@@ -102,5 +102,59 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
     return json(stored);
   }
 
+  if (action === 'gift') {
+    // Dárek: hráč pošle jinému hráči diamanty. Uloží se tu a příjemce si je vyzvedne, až se připojí.
+    const from = String(body.from ?? '').trim().slice(0, 20);
+    const to = String(body.to ?? '').trim().slice(0, 20);
+    const amount = count(body.amount);
+    if (!from || !to) return json({ error: 'Chybí jméno.' }, 400);
+    if (amount < 1) return json({ error: 'Zadej počet diamantů.' }, 400);
+    if (from.toLowerCase() === to.toLowerCase()) return json({ error: 'Sám sobě dárek poslat nemůžeš.' }, 400);
+    if (!(await playerExists(storage, to))) return json({ error: 'Hráč s tímhle jménem neexistuje.' }, 404);
+    const id = `${Date.now()}-${newCode()}`;
+    await storage.put(`${giftPrefix(to)}${id}`, { from, amount, at: Date.now() } satisfies Gift);
+    return json({ ok: true });
+  }
+
+  if (action === 'claim') {
+    // Příjemce si vyzvedne všechny čekající dárky (pak se smažou).
+    const name = String(body.name ?? '').trim().slice(0, 20);
+    if (!name) return json({ gifts: [] });
+    const pending = await storage.list<Gift>({ prefix: giftPrefix(name), limit: 100 });
+    if (pending.size === 0) return json({ gifts: [] });
+    const gifts = [...pending.values()].map((g) => ({ from: g.from, amount: g.amount }));
+    await storage.delete([...pending.keys()]);
+    // Diamanty rovnou přičíst i do postupu na serveru (přenosový kód), ať se neztratí.
+    const total = gifts.reduce((sum, g) => sum + g.amount, 0);
+    for (const [key, stored] of await storage.list<Stored>({ prefix: 'pcode:' })) {
+      if (stored.name.toLowerCase() !== name.toLowerCase()) continue;
+      stored.progress.diamanty = count(stored.progress.diamanty + total);
+      await storage.put(key, stored);
+    }
+    return json({ gifts });
+  }
+
   return json({ error: 'Neznámá akce.' }, 404);
+}
+
+interface Gift {
+  from: string;
+  amount: number;
+  at: number;
+}
+
+function giftPrefix(name: string): string {
+  return `gift:${encodeURIComponent(name.toLowerCase())}:`;
+}
+
+// Hráč existuje, když má přenosový kód nebo už někdy zapnul hru (počítání hráčů).
+async function playerExists(storage: DurableObjectStorage, name: string): Promise<boolean> {
+  const lower = name.toLowerCase();
+  for (const stored of (await storage.list<Stored>({ prefix: 'pcode:' })).values()) {
+    if (stored.name.toLowerCase() === lower) return true;
+  }
+  for (const device of (await storage.list<{ names?: string[] }>({ prefix: 'seen:' })).values()) {
+    if (device.names?.some((n) => n.toLowerCase() === lower)) return true;
+  }
+  return false;
 }
