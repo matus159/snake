@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.87.1">
+  <meta name="snake-version" content="1.88.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1123,6 +1123,88 @@
     .shop-wardrobe-box:hover {
       transform: scale(1.05);
       box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+    }
+
+    .shop-gift-box {
+      border-color: rgba(255, 105, 180, 0.55);
+      background: rgba(255, 105, 180, 0.12);
+      color: #ff8cc6;
+    }
+
+    .shop-gift-box:hover {
+      box-shadow: 0 0 12px rgba(255, 105, 180, 0.4);
+    }
+
+    .gift-form {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.45rem;
+      width: min(300px, 100%);
+      margin: 0 auto;
+      padding: 0.5rem 0;
+    }
+
+    .gift-form-hint {
+      margin: 0 0 0.3rem;
+      color: #cfcfcf;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .gift-form-label {
+      color: #e8e8e8;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .gift-form-input {
+      padding: 0.55rem 0.7rem;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 105, 180, 0.5);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    .gift-form .btn {
+      margin-top: 0.4rem;
+    }
+
+    .gift-form-msg {
+      min-height: 1.2em;
+      margin: 0;
+      color: #ff8cc6;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* Oznámení o přijatém dárku – 5 sekund nahoře přes hrací plochu. */
+    .gift-notice {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+      max-width: calc(100% - 24px);
+      padding: 0.7rem 1rem;
+      border-radius: 12px;
+      background: rgba(10, 10, 18, 0.94);
+      border: 2px solid #ff69b4;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.45);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .gift-notice.visible {
+      opacity: 1;
     }
 
     .shop-right-column {
@@ -2626,6 +2708,7 @@
 
   <div class="game-wrapper">
     <div class="player-notice" id="playerNotice" role="status"></div>
+    <div class="gift-notice" id="giftNotice" role="status"></div>
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
       <div class="tut-hint" id="tutHint" role="status">
@@ -2817,6 +2900,7 @@
             </div>
             <div class="shop-right-column">
               <div class="shop-wardrobe-box" id="shopWardrobeBtn">Šatna</div>
+              <div class="shop-wardrobe-box shop-gift-box" id="shopGiftBtn">🎁<br>Dárek</div>
             </div>
           </div>
         </div>
@@ -2861,6 +2945,18 @@
               </div>
             </div>
           </div>
+        </div>
+        <div id="shopGiftView" class="shop-view hidden">
+          <form class="gift-form" id="giftForm" autocomplete="off">
+            <h3 class="wardrobe-panel-title">🎁 Dárek</h3>
+            <p class="gift-form-hint">Pošli kamarádovi diamanty. Dostane je, až si zapne hru.</p>
+            <label class="gift-form-label" for="giftNameInput">Jméno hráče</label>
+            <input class="gift-form-input" id="giftNameInput" type="text" maxlength="20" placeholder="např. naty">
+            <label class="gift-form-label" for="giftAmountInput">Počet diamantů</label>
+            <input class="gift-form-input" id="giftAmountInput" type="number" min="1" step="1" inputmode="numeric" placeholder="např. 10">
+            <button class="btn" id="giftSendBtn" type="submit">Poslat</button>
+            <p class="gift-form-msg" id="giftMsg" role="status"></p>
+          </form>
         </div>
         <div class="shop-footer">
           <button class="btn" id="shopBackBtn">Zpět</button>
@@ -3325,6 +3421,13 @@
       const shopDiamantyTopEl = document.getElementById('shopDiamantyTop');
       const shopMainView = document.getElementById('shopMainView');
       const shopWardrobeView = document.getElementById('shopWardrobeView');
+      const shopGiftView = document.getElementById('shopGiftView');
+      const shopGiftBtn = document.getElementById('shopGiftBtn');
+      const giftForm = document.getElementById('giftForm');
+      const giftNameInput = document.getElementById('giftNameInput');
+      const giftAmountInput = document.getElementById('giftAmountInput');
+      const giftSendBtn = document.getElementById('giftSendBtn');
+      const giftMsg = document.getElementById('giftMsg');
       const shopWardrobeBtn = document.getElementById('shopWardrobeBtn');
       const wardrobeSkinsList = document.getElementById('wardrobeSkinsList');
       const wardrobeShowcase = document.getElementById('wardrobeShowcase');
@@ -3795,6 +3898,7 @@
           // bez internetu zůstane místní postup
         } finally {
           progressSyncRunning = false;
+          claimGifts();
         }
       }
 
@@ -5364,6 +5468,7 @@
         shopView = 'main';
         shopMainView.classList.remove('hidden');
         shopWardrobeView.classList.add('hidden');
+        shopGiftView.classList.add('hidden');
       }
 
       function getSkinPreviewHtml(skinId) {
@@ -6093,12 +6198,116 @@
         renderWardrobeSkins();
       }
 
+      // Dárek: poslat jinému hráči diamanty. Uloží se na server a příjemce je dostane, až se připojí.
+      function openGiftView() {
+        shopView = 'gift';
+        shopMainView.classList.add('hidden');
+        shopGiftView.classList.remove('hidden');
+        giftMsg.textContent = '';
+        giftNameInput.value = '';
+        giftAmountInput.value = '';
+        giftNameInput.focus();
+      }
+
+      let giftSending = false;
+
+      async function sendGift() {
+        if (giftSending) return;
+        const to = giftNameInput.value.trim();
+        const amount = Math.floor(Number(giftAmountInput.value));
+        if (!playerName) { giftMsg.textContent = 'Nejdřív si vyber jméno.'; return; }
+        if (!to) { giftMsg.textContent = 'Napiš jméno hráče.'; return; }
+        if (getProfileId(to) === getProfileId(playerName)) { giftMsg.textContent = 'Sám sobě dárek poslat nemůžeš.'; return; }
+        if (!Number.isFinite(amount) || amount < 1) { giftMsg.textContent = 'Napiš, kolik diamantů pošleš.'; return; }
+        if (amount > diamanty) { giftMsg.textContent = `Máš jen ${diamanty} 💎.`; return; }
+        giftSending = true;
+        giftSendBtn.disabled = true;
+        giftMsg.textContent = 'Posílám…';
+        try {
+          const res = await fetch('/api/progress/gift', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: playerName, to, amount }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) {
+            giftMsg.textContent = data.error || 'Nepovedlo se poslat, zkus to znovu.';
+            return;
+          }
+          diamanty = Math.max(0, diamanty - amount);
+          saveProgress();
+          refreshCurrencyUI();
+          updateShopCurrencyDisplay();
+          giftMsg.textContent = `Poslal jsi ${amount} 💎 hráči ${to}.`;
+          giftNameInput.value = '';
+          giftAmountInput.value = '';
+        } catch {
+          giftMsg.textContent = 'Nejde internet, zkus to znovu.';
+        } finally {
+          giftSending = false;
+          giftSendBtn.disabled = false;
+        }
+      }
+
+      // Přijaté dárky: vyzvednou se při připojení (a pak každých 30 s mimo hru).
+      const GIFT_NOTICE_MS = 5000;
+      const GIFT_POLL_MS = 30000;
+      const giftNotice = document.getElementById('giftNotice');
+      const giftNoticeQueue = [];
+      let giftNoticeShowing = false;
+      let giftClaimRunning = false;
+
+      function showNextGiftNotice() {
+        const text = giftNoticeQueue.shift();
+        if (!text) {
+          giftNoticeShowing = false;
+          giftNotice.classList.remove('visible');
+          return;
+        }
+        giftNoticeShowing = true;
+        giftNotice.textContent = text;
+        giftNotice.classList.add('visible');
+        setTimeout(() => {
+          giftNotice.classList.remove('visible');
+          setTimeout(showNextGiftNotice, 350);
+        }, GIFT_NOTICE_MS);
+      }
+
+      async function claimGifts() {
+        const id = getProfileId(playerName);
+        if (!id || giftClaimRunning || progressSyncRunning || running || multiInGame) return;
+        giftClaimRunning = true;
+        try {
+          const res = await fetch('/api/progress/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: playerName }),
+          });
+          const gifts = (await res.json()).gifts || [];
+          if (!gifts.length || getProfileId(playerName) !== id) return;
+          for (const g of gifts) {
+            diamanty += g.amount;
+            giftNoticeQueue.push(`🎁 Hráč ${g.from} ti poslal ${g.amount} 💎`);
+          }
+          lastUploadedProgress = '';
+          saveProgress();
+          refreshCurrencyUI();
+          updateShopCurrencyDisplay();
+          if (!giftNoticeShowing) showNextGiftNotice();
+        } catch {
+          // bez internetu to zkusí příště
+        } finally {
+          giftClaimRunning = false;
+        }
+      }
+      setInterval(claimGifts, GIFT_POLL_MS);
+
       function openShop() {
         pauseOverlay.classList.remove('visible');
         showShopMain();
-        updateShopCurrencyDisplay();
         updateMikulasShop();
         shopOverlay.classList.add('visible');
+        updateShopCurrencyDisplay();
         tutorialOnShopOpen();
       }
 
@@ -6110,7 +6319,7 @@
       }
 
       function shopBack() {
-        if (shopView === 'wardrobe') {
+        if (shopView === 'wardrobe' || shopView === 'gift') {
           showShopMain();
         } else {
           closeShop();
@@ -6521,6 +6730,11 @@
       }
       updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
+      shopGiftBtn.addEventListener('click', openGiftView);
+      giftForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendGift();
+      });
       wheelSpinBtn.addEventListener('click', spinWheel);
       eggCrackBtn.addEventListener('click', crackEgg);
       wardrobeSkinsList.addEventListener('click', (e) => {
