@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.90.0">
+  <meta name="snake-version" content="1.90.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2955,9 +2955,9 @@
                   <img class="shop-skin-img" src="/skin-king.png" alt="Král">
                   <div class="shop-skin-label">zdarma</div>
                 </div>
-                <div class="shop-skin-box test-site-skin hidden" id="shopMelonSkinBtn">
+                <div class="shop-skin-box" id="shopMelonSkinBtn">
                   <img class="shop-skin-img" src="/skin-melon.png" alt="Melounový">
-                  <div class="shop-skin-label">zdarma</div>
+                  <div class="shop-skin-label">100 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamantů</span></div>
                 </div>
               </div>
             </div>
@@ -3240,7 +3240,7 @@
         } catch {}
       }
       resetAllProgressOnce();
-      const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10 };
+      const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10, melon: 100 };
       const SCORE_PER_DIAMANT = 5;
       // Gems už ve hře nejsou: staré gems se převedou na diamanty (1 gem = 10 diamantů).
       const DIAMANTS_PER_GEM = 10;
@@ -3271,9 +3271,9 @@
           .format(now).split('-').map(Number);
         return month === 12 && day >= 5 && day <= 7;
       }
-      // Král a Melounový: zatím jen na testovací adrese (zdarma), na hlavním webu je nikdo nevidí.
+      // Král: zatím jen na testovací adrese (zdarma), na hlavním webu ho nikdo nevidí.
       const TEST_SITE = location.hostname.startsWith('test.') || location.hostname === 'localhost';
-      const TEST_ONLY_SKINS = ['king', 'melon'];
+      const TEST_ONLY_SKINS = ['king'];
       const skinAvailable = (id) => {
         if (TEST_ONLY_SKINS.includes(id)) return TEST_SITE;
         return !MIKULAS_SKINS.includes(id) || isMikulas();
