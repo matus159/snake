@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.86.0">
+  <meta name="snake-version" content="1.87.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3093,11 +3093,17 @@
         angel: 'Duhový anděl',
         devil: 'Čert',
       };
-      // Duhový anděl a Čert jsou zatím jen na testovací adrese (test.snake-adamini.pages.dev),
-      // zdarma. Na hlavním webu nejsou vidět ani nejdou nasadit.
+      // Duhový anděl a Čert: jen kolem Mikuláše (5.–7. prosince, český čas) – zdarma, každá snězená
+      // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít. Na testovací adrese jsou pořád.
       const TEST_SITE = location.hostname.startsWith('test.') || location.hostname === 'localhost';
-      const TEST_ONLY_SKINS = ['angel', 'devil'];
-      const skinAvailable = (id) => TEST_SITE || !TEST_ONLY_SKINS.includes(id);
+      const MIKULAS_SKINS = ['angel', 'devil'];
+      const MIKULAS_DIAMANTY_PER_KOSTKA = 3;
+      function isMikulas(now = new Date()) {
+        const [month, day] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', month: '2-digit', day: '2-digit' })
+          .format(now).split('-').map(Number);
+        return month === 12 && day >= 5 && day <= 7;
+      }
+      const skinAvailable = (id) => !MIKULAS_SKINS.includes(id) || TEST_SITE || isMikulas();
       const EGG_PRIZE_POOL = [
         { weight: 34, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
         { weight: 34, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
@@ -5235,7 +5241,11 @@
           // Had vždy naroste jen o 1, bonus z taca a hada jde jen do skóre a diamantů.
           const [eaten] = kostky.splice(eatenIndex, 1);
           const skinScore = SKIN_SCORE_PER_KOSTKA[equippedSkin] || 1;
-          if (eaten.taco) {
+          if (MIKULAS_SKINS.includes(equippedSkin) && skinAvailable(equippedSkin)) {
+            // Mikulášští hadi: každá kostka rovnou 3 💎 (taco ještě svůj 💎 navíc)
+            diamanty += MIKULAS_DIAMANTY_PER_KOSTKA + (eaten.taco ? TACO_DIAMANTY : 0);
+            addGameScore(1);
+          } else if (eaten.taco) {
             // taco: +1 diamant a 2 skóre, k tomu bonus hada navíc oproti základnímu hadovi
             score += TACO_SCORE + (skinScore - 1);
             addGameScore(TACO_SCORE + (skinScore - 1));
@@ -6088,6 +6098,7 @@
         pauseOverlay.classList.remove('visible');
         showShopMain();
         updateShopCurrencyDisplay();
+        updateMikulasShop();
         shopOverlay.classList.add('visible');
         tutorialOnShopOpen();
       }
@@ -6506,7 +6517,10 @@
       shopYellowSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('yellow'));
       document.getElementById('shopAngelSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('angel'));
       document.getElementById('shopDevilSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('devil'));
-      document.querySelectorAll('.test-only-skin').forEach((el) => el.classList.toggle('hidden', !TEST_SITE));
+      function updateMikulasShop() {
+        document.querySelectorAll('.test-only-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('angel')));
+      }
+      updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
       wheelSpinBtn.addEventListener('click', spinWheel);
       eggCrackBtn.addEventListener('click', crackEgg);
