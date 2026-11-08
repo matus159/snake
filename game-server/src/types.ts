@@ -34,4 +34,7 @@ export interface Player {
 
 export interface WsAttachment {
   playerId?: string;
+  // Jméno a barva hráče – aby se lobby dalo obnovit, když Cloudflare server uspí (hibernace).
+  name?: string;
+  colorIndex?: number;
 }
