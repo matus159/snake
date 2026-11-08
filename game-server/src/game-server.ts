@@ -29,6 +29,21 @@ function setAttachment(ws: WebSocket, attachment: WsAttachment) {
   ws.serializeAttachment(attachment);
 }
 
+function newPlayer(id: string, ws: WebSocket, name: string, colorIndex: number): Player {
+  return {
+    id,
+    ws,
+    name,
+    snake: [],
+    direction: { x: 1, y: 0 },
+    nextDirection: { x: 1, y: 0 },
+    score: 0,
+    tacos: 0,
+    alive: true,
+    colorIndex,
+  };
+}
+
 export class GameServer implements DurableObject {
   private state: DurableObjectState;
   private players = new Map<string, Player>();
@@ -40,6 +55,14 @@ export class GameServer implements DurableObject {
 
   constructor(state: DurableObjectState, _env: Env) {
     this.state = state;
+    // Cloudflare server po chvíli bez zpráv uspí a zapomene, co měl v paměti. Připojení hráčů
+    // (websockety) ale zůstanou – z nich se lobby obnoví. Bez toho se při delším čekání v lobby
+    // (třeba než se sejdou tři a více hráčů) hráči „ztratili“ a hra nešla spustit.
+    for (const ws of this.state.getWebSockets()) {
+      const att = getAttachment(ws);
+      if (!att.playerId || !att.name || this.players.has(att.playerId)) continue;
+      this.players.set(att.playerId, newPlayer(att.playerId, ws, att.name, att.colorIndex ?? this.players.size % 8));
+    }
     this.state.blockConcurrencyWhile(async () => {
       // Dárky už ve hře nejsou: smaže starou frontu nedoručených dárků.
       await this.state.storage.delete('giftQueue');
@@ -145,30 +168,19 @@ export class GameServer implements DurableObject {
       return;
     }
 
-    const attachment = getAttachment(ws);
     const existing = [...this.players.entries()].find(([, p]) => p.ws === ws);
     if (existing) {
       existing[1].name = name;
-      setAttachment(ws, { ...attachment, playerId: existing[0] });
+      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex });
       this.sendWelcome(ws, existing[0]);
       this.broadcastLobby();
       return;
     }
 
     const id = `p_${Date.now()}_${randInt(1000, 9999)}`;
-    this.players.set(id, {
-      id,
-      ws,
-      name,
-      snake: [],
-      direction: { x: 1, y: 0 },
-      nextDirection: { x: 1, y: 0 },
-      score: 0,
-      tacos: 0,
-      alive: true,
-      colorIndex: this.players.size % 8,
-    });
-    setAttachment(ws, { ...attachment, playerId: id });
+    const colorIndex = this.players.size % 8;
+    this.players.set(id, newPlayer(id, ws, name, colorIndex));
+    setAttachment(ws, { playerId: id, name, colorIndex });
     this.sendWelcome(ws, id);
     this.broadcastLobby();
   }
