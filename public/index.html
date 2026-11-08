@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.91.2">
+  <meta name="snake-version" content="1.91.3">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3718,6 +3718,15 @@
         const profile = profiles[id] || defaultProfile();
         diamanty = (parseInt(profile.diamanty, 10) || 0) + (parseInt(profile.gems, 10) || 0) * DIAMANTS_PER_GEM;
         wardrobe = Array.isArray(profile.wardrobe) ? [...profile.wardrobe] : [];
+        // Hadi z testovací adresy (Král) se na hlavní web nepřenesou – kdo je dostal na testu,
+        // tady je nemá (smažou se ze šatny).
+        if (!TEST_SITE && wardrobe.some((id) => TEST_ONLY_SKINS.includes(id))) {
+          wardrobe = wardrobe.filter((id) => !TEST_ONLY_SKINS.includes(id));
+          profiles[id] = { ...profile, wardrobe: [...wardrobe] };
+          if (TEST_ONLY_SKINS.includes(profiles[id].equippedSkin)) profiles[id].equippedSkin = 'default';
+          writeProfiles(profiles);
+          lastUploadedProgress = '';
+        }
         equippedSkin = profile.equippedSkin || 'default';
         if (!skinAvailable(equippedSkin)) equippedSkin = 'default';
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
