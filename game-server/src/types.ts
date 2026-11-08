@@ -21,7 +21,9 @@ export interface Kostka {
 
 export interface Player {
   id: string;
-  ws: WebSocket;
+  // boti (jen v testovací místnosti) nemají připojení
+  ws: WebSocket | null;
+  bot?: boolean;
   name: string;
   snake: Point[];
   direction: Direction;
@@ -37,4 +39,6 @@ export interface WsAttachment {
   // Jméno a barva hráče – aby se lobby dalo obnovit, když Cloudflare server uspí (hibernace).
   name?: string;
   colorIndex?: number;
+  // hráč chce boty (adamini v testovací místnosti)
+  bots?: boolean;
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.93.2">
+  <meta name="snake-version" content="1.94.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4441,6 +4441,11 @@
         multiLobbyPlayers = [];
       }
 
+      // Na testovací adrese čekají ve hře pro více hráčů na adamini dva boti.
+      function wantsBots() {
+        return TEST_SITE && getProfileId(playerName) === 'adamini';
+      }
+
       function connectMultiplayer() {
         if (location.protocol === 'file:') {
           setMultiStatus('Neotevírej soubor přímo! Spusť npm run dev nebo hru na Cloudflare.');
@@ -4457,7 +4462,7 @@
 
         multiWs.onopen = () => {
           opened = true;
-          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName, bots: wantsBots() }));
         };
 
         multiWs.onmessage = (event) => {
@@ -4688,7 +4693,7 @@
         multiGameOverOverlay.classList.remove('visible');
         multiOverlay.classList.add('visible');
         if (multiWs && multiWs.readyState === WebSocket.OPEN) {
-          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName, bots: wantsBots() }));
         } else {
           connectMultiplayer();
         }

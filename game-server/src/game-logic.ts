@@ -187,3 +187,55 @@ export function tickGame(players: Map<string, Player>, kostky: Kostka[]): TickRe
 
   return { ended: false, winnerId: null };
 }
+
+// Bot: vybere směr ke kostce, vyhne se zdem a hadům a nevleze do slepé uličky.
+export function botDirection(bot: Player, players: Map<string, Player>, kostky: Kostka[]): Direction {
+  const head = bot.snake[0];
+  const blocked = new Set<string>();
+  for (const p of players.values()) {
+    if (!p.alive) continue;
+    p.snake.forEach((s) => blocked.add(`${s.x},${s.y}`));
+  }
+  const dirs: Direction[] = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ].filter((d) => !(d.x === -bot.direction.x && d.y === -bot.direction.y));
+  const inside = (x: number, y: number) => x >= 0 && x < COLS && y >= 0 && y < ROWS;
+  const space = (sx: number, sy: number, limit: number) => {
+    const seen = new Set<string>([`${sx},${sy}`]);
+    const queue = [[sx, sy]];
+    while (queue.length && seen.size < limit) {
+      const [x, y] = queue.shift()!;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx;
+        const ny = y + dy;
+        const key = `${nx},${ny}`;
+        if (!inside(nx, ny) || blocked.has(key) || seen.has(key)) continue;
+        seen.add(key);
+        queue.push([nx, ny]);
+      }
+    }
+    return seen.size;
+  };
+  let best: Direction | null = null;
+  let bestScore = -Infinity;
+  for (const d of dirs) {
+    const nx = head.x + d.x;
+    const ny = head.y + d.y;
+    if (!inside(nx, ny) || blocked.has(`${nx},${ny}`)) continue;
+    const room = space(nx, ny, 80);
+    let nearest = COLS + ROWS;
+    for (const k of kostky) nearest = Math.min(nearest, Math.abs(k.x - nx) + Math.abs(k.y - ny));
+    let score = -nearest * 2;
+    if (room < bot.snake.length + 6) score -= 1000 - room;
+    // kousek náhody, ať se boti dají porazit
+    score += Math.random() * 3;
+    if (score > bestScore) {
+      bestScore = score;
+      best = d;
+    }
+  }
+  return best ?? bot.direction;
+}
