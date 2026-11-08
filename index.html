@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.91.3">
+  <meta name="snake-version" content="1.92.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3031,6 +3031,10 @@
                   <img class="shop-skin-img" src="/skin-devil.png" alt="Čert">
                   <div class="shop-skin-label">zdarma</div>
                 </div>
+                <div class="shop-skin-box test-site-skin hidden" id="shopFireSkinBtn">
+                  <img class="shop-skin-img" src="/skin-fire.png" alt="Ohnivý">
+                  <div class="shop-skin-label">zdarma</div>
+                </div>
                 <div class="shop-skin-box test-site-skin hidden" id="shopKingSkinBtn">
                   <img class="shop-skin-img" src="/skin-king.png" alt="Král">
                   <div class="shop-skin-label">zdarma</div>
@@ -3306,6 +3310,7 @@
         rainbow: 10,
         king: 15,
         melon: 4,
+        fire: 4,
       };
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
@@ -3350,6 +3355,7 @@
         devil: 'Čert',
         king: 'Král',
         melon: 'Melounový',
+        fire: 'Ohnivý',
       };
       // Duhový anděl a Čert: jen kolem Mikuláše (5.–7. prosince, český čas) – zdarma, každá snězená
       // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít.
@@ -3360,9 +3366,9 @@
           .format(now).split('-').map(Number);
         return month === 12 && day >= 5 && day <= 7;
       }
-      // Král: zatím jen na testovací adrese (zdarma), na hlavním webu ho nikdo nevidí.
+      // Král a Ohnivý: zatím jen na testovací adrese (zdarma), na hlavním webu je nikdo nevidí.
       const TEST_SITE = location.hostname.startsWith('test.') || location.hostname === 'localhost';
-      const TEST_ONLY_SKINS = ['king'];
+      const TEST_ONLY_SKINS = ['king', 'fire'];
       const skinAvailable = (id) => {
         if (TEST_ONLY_SKINS.includes(id)) return TEST_SITE;
         return !MIKULAS_SKINS.includes(id) || isMikulas();
@@ -5336,6 +5342,7 @@
         const skin = skinAvailable(equippedSkin) ? equippedSkin : 'default';
         if (skin === 'angel') drawAngelWings();
         if (skin === 'devil') drawDevilTail();
+        if (skin === 'fire') drawFireSparks();
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
           if (skin === 'angel' || equippedSkin === 'rainbow') {
@@ -5344,6 +5351,8 @@
             drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
           } else if (skin === 'king') {
             drawKingCell(seg.x, seg.y);
+          } else if (skin === 'fire') {
+            drawFireCell(seg.x, seg.y, i, t);
           } else if (skin === 'melon') {
             if (i === 0) drawMelonHead(seg.x, seg.y);
             else drawMelonCell(seg.x, seg.y);
@@ -5392,9 +5401,10 @@
         if (skin === 'angel') drawAngelHalo(head);
         if (skin === 'devil') drawDevilHead(head);
         if (skin === 'king') drawKingCrown(head);
+        if (skin === 'fire') drawFireFlame(head);
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
-        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'king' ? 15 : 0);
+        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'king' || skin === 'fire' ? 15 : 0);
       }
 
       // Duhový anděl: svatozář nad hlavou a dvě duhová křídla nad 2. a 3. článkem.
@@ -5458,6 +5468,62 @@
         ctx.fillRect(x + 6, y + 13, 9, 3);
       }
 
+      // Ohnivý: kostky se mění od žluté (hlava) přes oranžovou do červené (ocas) a mihotají se,
+      // na hlavě plamínek a za ocasem odlétají jiskry.
+      function drawFireCell(x, y, i, t) {
+        const now = performance.now();
+        const flicker = Math.sin(now / 110 + i * 1.7) * 6;
+        const hue = Math.max(0, 50 - t * 50 + flicker);
+        const light = 55 + Math.sin(now / 90 + i * 2.3) * 5;
+        const px = x * CELL + 1;
+        const py = y * CELL + 1;
+        const size = CELL - 2;
+        ctx.save();
+        ctx.shadowColor = `hsla(${hue}, 100%, 55%, 0.8)`;
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
+        ctx.fillRect(px, py, size, size);
+        ctx.restore();
+        // světlejší „žhavé“ jádro
+        ctx.fillStyle = `hsla(${hue + 15}, 100%, 75%, 0.55)`;
+        ctx.fillRect(px + 4, py + 4, size - 8, size - 8);
+      }
+      function drawFireFlame(head) {
+        const now = performance.now();
+        const cx = head.x * CELL + CELL / 2;
+        const top = head.y * CELL;
+        [[-5, 7, '#ff3d00'], [0, 11, '#ff9100'], [5, 7, '#ff3d00'], [0, 7, '#ffe066']].forEach(([dx, h, col], k) => {
+          const hh = h + Math.sin(now / 100 + k * 2) * 2;
+          const w = col === '#ffe066' ? 3 : 4;
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.moveTo(cx + dx - w, top + 1);
+          ctx.quadraticCurveTo(cx + dx - w, top - hh * 0.5, cx + dx + Math.sin(now / 130 + k) * 1.5, top - hh);
+          ctx.quadraticCurveTo(cx + dx + w, top - hh * 0.5, cx + dx + w, top + 1);
+          ctx.closePath();
+          ctx.fill();
+        });
+      }
+      function drawFireSparks() {
+        if (snake.length < 2) return;
+        const now = performance.now();
+        const last = snake[snake.length - 1];
+        const prev = snake[snake.length - 2];
+        const dx = last.x - prev.x;
+        const dy = last.y - prev.y;
+        const cx = last.x * CELL + CELL / 2;
+        const cy = last.y * CELL + CELL / 2;
+        for (let k = 0; k < 6; k++) {
+          const life = (now / 700 + k / 6) % 1;
+          const side = Math.sin(k * 2.4) * 7 + Math.sin(now / 200 + k) * 2;
+          const along = 10 + life * 22;
+          const sx = cx + dx * along - dy * side;
+          const sy = cy + dy * along + dx * side - life * 6;
+          ctx.fillStyle = `hsla(${40 - life * 30}, 100%, ${65 - life * 15}%, ${1 - life})`;
+          const r = 2.2 * (1 - life) + 0.6;
+          ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+        }
+      }
       // Melounový: tělo jako zelená slupka s tmavými vlnitými pruhy, hlava jako rozkrojený meloun.
       function drawMelonCell(x, y) {
         const px = x * CELL + 1;
@@ -5758,7 +5824,7 @@
         if (skinId === 'rainbow') {
           return '<div class="shop-skin-preview rainbow-skin"><span></span><span></span><span></span><span></span></div>';
         }
-        if (skinId === 'angel' || skinId === 'devil' || skinId === 'king' || skinId === 'melon') {
+        if (skinId === 'angel' || skinId === 'devil' || skinId === 'king' || skinId === 'melon' || skinId === 'fire') {
           return `<img class="shop-skin-img" src="/skin-${skinId}.png" alt="${SKIN_NAMES[skinId]}">`;
         }
         return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
@@ -6458,6 +6524,7 @@
         { id: 'angel', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
         { id: 'devil', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
         { id: 'king', how: 'Zdarma (jen na testovací adrese)' },
+        { id: 'fire', how: 'Zdarma (jen na testovací adrese)' },
       ];
 
       function renderSkinStats() {
@@ -7118,6 +7185,7 @@
       document.getElementById('shopAngelSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('angel'));
       document.getElementById('shopDevilSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('devil'));
       document.getElementById('shopKingSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('king'));
+      document.getElementById('shopFireSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('fire'));
       document.getElementById('shopMelonSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('melon'));
       function updateMikulasShop() {
         document.querySelectorAll('.test-only-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('angel')));
