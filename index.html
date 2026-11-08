@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.94.0">
+  <meta name="snake-version" content="1.95.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1234,6 +1234,31 @@
       color: #fff;
       font: inherit;
       cursor: pointer;
+    }
+
+    /* Hra pro více hráčů: po smrti se hráč dívá dál – nápis nahoře přes plochu. */
+    .spectate-notice {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 55;
+      max-width: calc(100% - 24px);
+      padding: 0.5rem 0.9rem;
+      border-radius: 10px;
+      background: rgba(10, 10, 18, 0.88);
+      border: 1px solid #ff6b6b;
+      color: #ffb3b3;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .spectate-notice.visible {
+      opacity: 1;
     }
 
     /* Oznámení o přijatém dárku – 5 sekund nahoře přes hrací plochu. */
@@ -2844,6 +2869,7 @@
   <div class="game-wrapper">
     <div class="player-notice" id="playerNotice" role="status"></div>
     <div class="gift-notice" id="giftNotice" role="status"></div>
+    <div class="spectate-notice" id="spectateNotice" role="status">Prohrál jsi – díváš se, jak hrají ostatní</div>
     <div class="canvas-container">
       <canvas id="game" width="960" height="720"></canvas>
       <div class="tut-hint" id="tutHint" role="status">
@@ -3404,6 +3430,9 @@
       let multiWs = null;
       let multiPlayerId = null;
       let multiInGame = false;
+      // Hráč, který v kole umřel, se dívá, jak ostatní hrají dál (až do konce kola).
+      let multiSpectating = false;
+      let multiLobbyStatus = 'lobby';
       let lastMultiServerScore = 0;
       // Hra pro více hráčů: vítěz kola dostane bonus +10 % bodů z kola, aby se vyplatilo hrát s ostatními.
       const MULTI_WIN_BONUS = 0.1;
@@ -4405,8 +4434,12 @@
 
       function updateMultiLobbyUi() {
         const count = multiLobbyPlayers.length;
-        if (multiInGame) return;
-        if (count >= 2) {
+        if (multiInGame || multiSpectating) return;
+        if (multiLobbyStatus === 'playing') {
+          // ostatní zrovna hrají kolo – nové jde spustit až po jeho konci
+          setMultiStatus(`Hra právě běží (${count} hráči) – počkej, až skončí kolo.`);
+          multiStartBtn.disabled = true;
+        } else if (count >= 2) {
           setMultiStatus(`Připojeno – ${count} hráči online. Kdokoli může spustit hru.`);
           multiStartBtn.disabled = false;
         } else if (count === 1) {
@@ -4419,6 +4452,11 @@
           multiStartBtn.disabled = true;
         }
         renderMultiPlayerList(multiLobbyPlayers);
+      }
+
+      function setSpectating(on) {
+        multiSpectating = on;
+        document.getElementById('spectateNotice').classList.toggle('visible', on);
       }
 
       function disconnectMultiplayer() {
@@ -4435,15 +4473,11 @@
         }
         multiPlayerId = null;
         multiInGame = false;
+        setSpectating(false);
         lastMultiServerScore = 0;
         lastMultiServerTacos = 0;
         multiServerState = { kostky: [], players: [] };
         multiLobbyPlayers = [];
-      }
-
-      // Na testovací adrese čekají ve hře pro více hráčů na adamini dva boti.
-      function wantsBots() {
-        return TEST_SITE && getProfileId(playerName) === 'adamini';
       }
 
       function connectMultiplayer() {
@@ -4462,7 +4496,7 @@
 
         multiWs.onopen = () => {
           opened = true;
-          multiWs.send(JSON.stringify({ type: 'join', name: playerName, bots: wantsBots() }));
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
         };
 
         multiWs.onmessage = (event) => {
@@ -4525,19 +4559,24 @@
         }
         if (msg.type === 'welcome') {
           multiPlayerId = msg.id;
+          multiLobbyStatus = msg.status || 'lobby';
           multiLobbyPlayers = msg.players || [];
           updateMultiShareUrl(msg.shareUrl);
           updateMultiLobbyUi();
           return;
         }
         if (msg.type === 'lobby') {
+          multiLobbyStatus = msg.status || 'lobby';
           multiLobbyPlayers = msg.players || [];
           if (msg.shareUrl) updateMultiShareUrl(msg.shareUrl);
           updateMultiLobbyUi();
           return;
         }
         if (msg.type === 'gameStart') {
+          multiLobbyStatus = 'playing';
+          // kdo čekal v lobby (přišel pozdě), do tohohle kola nepatří – zjistí se z prvního stavu
           multiInGame = true;
+          setSpectating(false);
           running = true;
           paused = false;
           lastMultiServerScore = 0;
@@ -4561,18 +4600,26 @@
             applyMultiTacosFromServer(me.tacos);
           }
           if (me && !me.alive && multiInGame) {
+            // Prohrál jsem, ale ostatní hrají dál – dívám se až do konce kola.
             multiInGame = false;
             running = false;
-            multiGameOverText.textContent = 'Prohrál jsi. Ostatní ještě hrají – nebo počkej na konec kola.';
-            multiGameOverOverlay.classList.add('visible');
+            setSpectating(true);
             reportPlayerName();
           }
-          if (multiInGame) drawMultiplayer();
+          if (multiInGame || multiSpectating) drawMultiplayer();
           return;
         }
         if (msg.type === 'gameOver') {
+          const wasInRound = multiInGame || multiSpectating;
           multiInGame = false;
           running = false;
+          setSpectating(false);
+          multiLobbyStatus = 'lobby';
+          // kdo v tomhle kole nehrál (čekal v lobby), dostane jen obnovené lobby
+          if (!wasInRound) {
+            updateMultiLobbyUi();
+            return;
+          }
           const me = (msg.players || []).find((p) => p.id === multiPlayerId);
           const winner = (msg.players || []).find((p) => p.id === msg.winnerId);
           if (me) {
@@ -4591,7 +4638,7 @@
               ? `Vyhrál jsi! Bonus za výhru: +${bonus} bodů (+10 %)`
               : 'Vyhrál jsi!';
           } else if (me && !me.alive) {
-            multiGameOverText.textContent = 'Prohrál jsi.';
+            multiGameOverText.textContent = winner ? `Prohrál jsi. Vyhrál ${winner.name}.` : 'Prohrál jsi.';
           } else if (winner) {
             multiGameOverText.textContent = `Vyhrál ${winner.name}.`;
           } else {
@@ -4689,11 +4736,12 @@
 
       function returnToMultiLobby() {
         multiInGame = false;
+        setSpectating(false);
         running = false;
         multiGameOverOverlay.classList.remove('visible');
         multiOverlay.classList.add('visible');
         if (multiWs && multiWs.readyState === WebSocket.OPEN) {
-          multiWs.send(JSON.stringify({ type: 'join', name: playerName, bots: wantsBots() }));
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
         } else {
           connectMultiplayer();
         }
@@ -4707,6 +4755,7 @@
         }
         gameMode = 'multi';
         multiInGame = false;
+        setSpectating(false);
         running = false;
         hideAllMenuOverlays();
         banOverlay.classList.remove('visible');
@@ -5329,7 +5378,7 @@
       }
 
       function draw() {
-        if (multiInGame) {
+        if (multiInGame || multiSpectating) {
           drawMultiplayer();
           return;
         }
@@ -6901,7 +6950,7 @@
         updateTacosEvent(now);
         syncTacosMusic();
         document.body.classList.toggle('steering', (running && !paused) || multiInGame);
-        if (multiInGame) {
+        if (multiInGame || multiSpectating) {
           drawMultiplayer();
           return requestAnimationFrame(loop);
         }

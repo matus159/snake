@@ -1,7 +1,6 @@
 import {
   KOSTKA_SPAWN_MS,
   SPAWN_SLOTS,
-  botDirection,
   SPEED_MS,
   makeSnake,
   randInt,
@@ -30,11 +29,7 @@ function setAttachment(ws: WebSocket, attachment: WsAttachment) {
   ws.serializeAttachment(attachment);
 }
 
-// Boti: jen v testovací místnosti a jen pro adamini (do žebříčku se nedostanou – nic neposílají).
-const BOT_NAMES = ['Bot 1', 'Bot 2'];
-const BOT_OWNER = 'adamini';
-
-function newPlayer(id: string, ws: WebSocket | null, name: string, colorIndex: number): Player {
+function newPlayer(id: string, ws: WebSocket, name: string, colorIndex: number): Player {
   return {
     id,
     ws,
@@ -57,23 +52,16 @@ export class GameServer implements DurableObject {
   private hueCounter = 0;
   private lastKostkaSpawn = 0;
   private shareUrl = '';
-  private testRoom = false;
 
   constructor(state: DurableObjectState, _env: Env) {
     this.state = state;
     // Cloudflare server po chvíli bez zpráv uspí a zapomene, co měl v paměti. Připojení hráčů
     // (websockety) ale zůstanou – z nich se lobby obnoví. Bez toho se při delším čekání v lobby
     // (třeba než se sejdou tři a více hráčů) hráči „ztratili“ a hra nešla spustit.
-    let wantsBots = false;
     for (const ws of this.state.getWebSockets()) {
       const att = getAttachment(ws);
       if (!att.playerId || !att.name || this.players.has(att.playerId)) continue;
       this.players.set(att.playerId, newPlayer(att.playerId, ws, att.name, att.colorIndex ?? this.players.size % 8));
-      if (att.bots) wantsBots = true;
-    }
-    if (wantsBots) {
-      this.testRoom = true;
-      this.ensureBots();
     }
     this.state.blockConcurrencyWhile(async () => {
       // Dárky už ve hře nejsou: smaže starou frontu nedoručených dárků.
@@ -93,10 +81,6 @@ export class GameServer implements DurableObject {
     }
 
     this.shareUrl = new URL('/', request.url).origin;
-    // testovací místnost (nastaví ji middleware testovací adresy) nebo místní ladění
-    if (request.headers.get('X-Snake-Room') === 'test' || new URL(request.url).hostname === 'localhost') {
-      this.testRoom = true;
-    }
 
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
@@ -131,7 +115,10 @@ export class GameServer implements DurableObject {
     }
 
     if (type === 'start') {
-      if (this.gameStatus === 'playing') return;
+      if (this.gameStatus === 'playing') {
+        send(ws, { type: 'error', message: 'Hra už běží – počkej, až skončí kolo.' });
+        return;
+      }
       if (this.players.size < 1) {
         send(ws, { type: 'error', message: 'Na serveru není žádný hráč.' });
         return;
@@ -187,7 +174,7 @@ export class GameServer implements DurableObject {
     const existing = [...this.players.entries()].find(([, p]) => p.ws === ws);
     if (existing) {
       existing[1].name = name;
-      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex, bots: getAttachment(ws).bots });
+      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex });
       this.sendWelcome(ws, existing[0]);
       this.broadcastLobby();
       return;
@@ -195,29 +182,13 @@ export class GameServer implements DurableObject {
 
     const id = `p_${Date.now()}_${randInt(1000, 9999)}`;
     const colorIndex = this.players.size % 8;
-    this.players.set(id, newPlayer(id, ws, name, colorIndex));
-    const bots = this.testRoom && msg.bots === true && name.toLowerCase() === BOT_OWNER;
-    setAttachment(ws, { playerId: id, name, colorIndex, bots });
-    if (bots) this.ensureBots();
+    const player = newPlayer(id, ws, name, colorIndex);
+    // Kdo přijde, když kolo běží, počká na další kolo (dřív to shodilo celou hru).
+    if (this.gameStatus === 'playing') player.alive = false;
+    this.players.set(id, player);
+    setAttachment(ws, { playerId: id, name, colorIndex });
     this.sendWelcome(ws, id);
     this.broadcastLobby();
-  }
-
-  private ensureBots() {
-    if (this.gameStatus === 'playing') return;
-    for (const botName of BOT_NAMES) {
-      if ([...this.players.values()].some((p) => p.bot && p.name === botName)) continue;
-      const id = `bot_${botName.replace(/\W/g, '')}`;
-      this.players.set(id, { ...newPlayer(id, null, botName, this.players.size % 8), bot: true });
-    }
-  }
-
-  private removeBotsIfAlone() {
-    // bez lidí (nebo bez adamini) boti odejdou
-    const humans = [...this.players.values()].filter((p) => !p.bot);
-    const owner = humans.some((p) => p.ws && getAttachment(p.ws).bots);
-    if (owner) return;
-    for (const [id, p] of this.players) if (p.bot) this.players.delete(id);
   }
 
   private lobbySnapshot() {
@@ -272,7 +243,6 @@ export class GameServer implements DurableObject {
   private broadcast(msg: unknown) {
     const data = JSON.stringify(msg);
     for (const p of this.players.values()) {
-      if (!p.ws) continue;
       try {
         p.ws.send(data);
       } catch {
@@ -316,19 +286,9 @@ export class GameServer implements DurableObject {
       this.hueCounter = spawnOneKostka(this.players, this.kostky, this.hueCounter);
     }
 
-    for (const p of this.players.values()) {
-      if (p.bot && p.alive) p.nextDirection = botDirection(p, this.players, this.kostky);
-    }
     const result = tickGame(this.players, this.kostky);
     if (result.ended) {
       await this.endMultiplayerGame(result.winnerId);
-      return;
-    }
-    // Když jsou všichni lidé venku, kolo skončí (boti by jinak hráli donekonečna).
-    const alive = [...this.players.values()].filter((p) => p.alive);
-    if (alive.length && alive.every((p) => p.bot)) {
-      const best = alive.reduce((a, b) => (b.score > a.score ? b : a));
-      await this.endMultiplayerGame(best.id);
       return;
     }
 
@@ -379,13 +339,12 @@ export class GameServer implements DurableObject {
   private async removePlayer(id: string) {
     if (!id || !this.players.has(id)) return;
     this.players.delete(id);
-    this.removeBotsIfAlone();
     if (this.gameStatus === 'playing' && this.players.size === 0) {
       await this.resetToLobby();
       return;
     }
-    if (this.gameStatus === 'playing' && [...this.players.values()].filter((p) => p.alive).length <= 1) {
-      const winner = [...this.players.values()].find((p) => p.alive);
+    if (this.gameStatus === 'playing' && [...this.players.values()].filter((p) => p.alive && p.snake.length > 0).length <= 1) {
+      const winner = [...this.players.values()].find((p) => p.alive && p.snake.length > 0);
       await this.endMultiplayerGame(winner ? winner.id : null);
     }
     this.broadcastLobby();
