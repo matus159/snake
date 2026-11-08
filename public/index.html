@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.93.0">
+  <meta name="snake-version" content="1.93.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3035,10 +3035,6 @@
                   <img class="shop-skin-img" src="/skin-fire.png" alt="Ohnivý">
                   <div class="shop-skin-label">100 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamantů</span></div>
                 </div>
-                <div class="shop-skin-box" id="shopKingSkinBtn">
-                  <img class="shop-skin-img" src="/skin-kral.png" alt="Král">
-                  <div class="shop-skin-label">2000 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamantů</span></div>
-                </div>
                 <div class="shop-skin-box" id="shopMelonSkinBtn">
                   <img class="shop-skin-img" src="/skin-melon.png" alt="Melounový">
                   <div class="shop-skin-label">100 <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span class="diamanty-word">diamantů</span></div>
@@ -3090,7 +3086,7 @@
                     <span class="egg-price-box" id="eggPriceBox">250 diamantů</span>
                   </button>
                   <p class="wheel-result" id="eggResult"></p>
-                  <p class="gift-hint egg-prize-hint">Občas padne vzácný duhový had (~10 % šance).</p>
+                  <p class="gift-hint egg-prize-hint">Občas padne vzácný duhový had (~10 % šance) a jen málokdy Král (~3 %).</p>
                 </div>
               </div>
             </div>
@@ -3334,7 +3330,7 @@
         } catch {}
       }
       resetAllProgressOnce();
-      const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10, melon: 100, fire: 100, kral: 2000 };
+      const SKIN_PRICES = { red: 50, white: 10, blue: 10, pink: 10, yellow: 10, melon: 100, fire: 100 };
       const SCORE_PER_DIAMANT = 5;
       // Gems už ve hře nejsou: staré gems se převedou na diamanty (1 gem = 10 diamantů).
       const DIAMANTS_PER_GEM = 10;
@@ -3370,7 +3366,7 @@
       const TEST_SITE = location.hostname.startsWith('test.') || location.hostname === 'localhost';
       const TEST_ONLY_SKINS = [];
       // Zrušení hadi: 'king' byl Král zdarma z testovací adresy – ten se nikam nepřenese a smaže se.
-      // Oficiální Král (za diamanty) má id 'kral'.
+      // Oficiální Král (jen z vajíčka) má id 'kral'.
       const REMOVED_SKINS = ['king'];
       const skinAvailable = (id) => {
         if (REMOVED_SKINS.includes(id)) return false;
@@ -3378,10 +3374,12 @@
         return !MIKULAS_SKINS.includes(id) || isMikulas();
       };
       // Z vajíčka padá vždy jen jeden had (výhra „Všechny hady“ tu není).
+      // Král se dá získat jen z vajíčka (velmi vzácný).
       const EGG_PRIZE_POOL = [
-        { weight: 45, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
-        { weight: 45, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
+        { weight: 44, prize: { id: 'gold', label: 'Zářící had', short: 'Zářící', type: 'skin', skinId: 'gold' } },
+        { weight: 43, prize: { id: 'black', label: 'Černý had', short: 'Černý', type: 'skin', skinId: 'black' } },
         { weight: 10, prize: { id: 'rainbow', label: 'Duhový had', short: 'Duhový', type: 'skin', skinId: 'rainbow' } },
+        { weight: 3, prize: { id: 'kral', label: 'Král', short: 'Král', type: 'skin', skinId: 'kral' } },
       ];
       const WHEEL_PRIZES = [
         { id: 'd50', label: '50 diamantů', short: '50', type: 'diamonds', amount: 50, color: '#0088aa' },
@@ -6380,7 +6378,7 @@
             wardrobe.push(prize.skinId);
           }
           equippedSkin = prize.skinId;
-          const dupGems = prize.skinId === 'gold' ? 100 : prize.skinId === 'rainbow' ? 75 : 50;
+          const dupGems = prize.skinId === 'kral' ? 150 : prize.skinId === 'gold' ? 100 : prize.skinId === 'rainbow' ? 75 : 50;
           if (alreadyHad) {
             diamanty += dupGems;
             eggResultEl.textContent = `${prize.label} už máš – nasazen znovu + ${dupGems} diamantů.`;
@@ -6528,7 +6526,7 @@
         { id: 'melon', how: 'Obchod za 100 💎' },
         { id: 'angel', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
         { id: 'devil', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
-        { id: 'kral', how: 'Obchod za 2000 💎' },
+        { id: 'kral', how: 'Jen z vajíčka štěstí (velmi vzácný, ~3 %)' },
         { id: 'fire', how: 'Obchod za 100 💎' },
       ];
 
@@ -7189,7 +7187,6 @@
       shopYellowSkinBtn.addEventListener('click', () => buySkinAndOpenWardrobe('yellow'));
       document.getElementById('shopAngelSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('angel'));
       document.getElementById('shopDevilSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('devil'));
-      document.getElementById('shopKingSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('kral'));
       document.getElementById('shopFireSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('fire'));
       document.getElementById('shopMelonSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('melon'));
       function updateMikulasShop() {
