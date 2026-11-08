@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.91.1">
+  <meta name="snake-version" content="1.91.2">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5327,7 +5327,6 @@
         const skin = skinAvailable(equippedSkin) ? equippedSkin : 'default';
         if (skin === 'angel') drawAngelWings();
         if (skin === 'devil') drawDevilTail();
-        if (skin === 'king') drawKingCape();
         snake.forEach((seg, i) => {
           const t = i / Math.max(snake.length - 1, 1);
           if (skin === 'angel' || equippedSkin === 'rainbow') {
@@ -5492,7 +5491,7 @@
           ctx.fill();
         });
       }
-      // Král: zlaté kostky s leskem, koruna na hlavě a červený plášť za ocasem.
+      // Král: zlaté kostky s leskem a koruna na hlavě.
       function drawKingCell(x, y) {
         const px = x * CELL + 1;
         const py = y * CELL + 1;
@@ -5537,47 +5536,6 @@
         ctx.beginPath();
         ctx.arc(x + w * 0.5, y - 3, 1.8, 0, Math.PI * 2);
         ctx.fill();
-      }
-      function drawKingCape() {
-        if (snake.length < 2) return;
-        const last = snake[snake.length - 1];
-        const prev = snake[snake.length - 2];
-        const dx = last.x - prev.x;
-        const dy = last.y - prev.y;
-        const cx = last.x * CELL + CELL / 2;
-        const cy = last.y * CELL + CELL / 2;
-        // px, py = kolmý směr (šířka pláště); plášť vlaje ven od ocasu
-        const pxv = -dy;
-        const pyv = dx;
-        const wave = Math.sin(performance.now() / 260) * 2.5;
-        const at = (along, side) => [cx + dx * along + pxv * side, cy + dy * along + pyv * side];
-        ctx.beginPath();
-        ctx.moveTo(...at(4, -9));
-        ctx.quadraticCurveTo(...at(18, -10 + wave), ...at(30, -12 + wave));
-        ctx.quadraticCurveTo(...at(33, 0), ...at(30, 12 + wave));
-        ctx.quadraticCurveTo(...at(18, 10 + wave), ...at(4, 9));
-        ctx.closePath();
-        const [gx0, gy0] = at(4, 0);
-        const [gx1, gy1] = at(30, 0);
-        const cg = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-        cg.addColorStop(0, '#d4143a');
-        cg.addColorStop(1, '#8b0016');
-        ctx.fillStyle = cg;
-        ctx.fill();
-        // hermelínový lem na konci pláště
-        ctx.strokeStyle = '#f4f1ea';
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(...at(30, -12 + wave));
-        ctx.quadraticCurveTo(...at(33, 0), ...at(30, 12 + wave));
-        ctx.stroke();
-        ctx.lineCap = 'butt';
-        ctx.fillStyle = '#111';
-        [-6, 0, 6].forEach((side) => {
-          const [tx, ty] = at(31.5, side);
-          ctx.fillRect(tx - 0.8, ty - 0.8, 1.6, 1.6);
-        });
       }
       function drawDevilTail() {
         if (snake.length < 2) return;
