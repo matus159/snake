@@ -15,33 +15,10 @@
   </defs>
   <g clip-path="url(#bg)">
     <rect width="512" height="512" fill="#0f0f1a"/>
-    <!-- tělo stejně velké, vidět jen napůl -->
-    <rect x="146" y="402" width="220" height="220" rx="22" fill="url(#rainbow)"/>
     <!-- hlava s okem -->
     <rect x="146" y="170" width="220" height="220" rx="22" fill="url(#rainbow)"/>
-    <circle cx="256" cy="262" r="40" fill="#000"/>
-    <circle cx="270" cy="250" r="10" fill="#fff"/>
-    <!-- Mikulášská mitra -->
-    <path d="M160 192 L160 118 Q160 70 256 26 Q352 70 352 118 L352 192 Z" fill="#d62839" stroke="#7a0f1c" stroke-width="6"/>
-    <path d="M256 26 Q300 52 318 92 L256 150 L194 92 Q212 52 256 26 Z" fill="#b51d2e" opacity="0.55"/>
-    <rect x="242" y="44" width="28" height="148" fill="#ffd23f"/>
-    <rect x="160" y="160" width="192" height="32" fill="#ffd23f" stroke="#b8860b" stroke-width="4"/>
-    <g fill="#fff" stroke="#b8860b" stroke-width="3">
-      <rect x="244" y="70" width="24" height="70" rx="3"/>
-      <rect x="226" y="88" width="60" height="22" rx="3"/>
-    </g>
-    <!-- bílá Mikulášská brada a knír -->
-    <g fill="#ffffff">
-      <circle cx="190" cy="352" r="36"/><circle cx="322" cy="352" r="36"/>
-      <circle cx="170" cy="392" r="34"/><circle cx="342" cy="392" r="34"/>
-      <circle cx="205" cy="418" r="40"/><circle cx="307" cy="418" r="40"/>
-      <circle cx="256" cy="430" r="46"/><circle cx="256" cy="378" r="48"/>
-      <circle cx="230" cy="462" r="30"/><circle cx="282" cy="462" r="30"/><circle cx="256" cy="485" r="26"/>
-    </g>
-    <g fill="#e6e6ee">
-      <circle cx="214" cy="440" r="12"/><circle cx="298" cy="440" r="12"/><circle cx="256" cy="462" r="10"/><circle cx="182" cy="398" r="9"/><circle cx="330" cy="398" r="9"/>
-    </g>
-    <!-- knír -->
-    <path d="M256 326 Q222 306 186 322 Q170 330 176 344 Q206 334 232 346 Q248 352 256 340 Q264 352 280 346 Q306 334 336 344 Q342 330 326 322 Q290 306 256 326 Z" fill="#ffffff" stroke="#d8d8e2" stroke-width="3"/>
+    <circle cx="256" cy="280" r="44" fill="#000"/>
+    <!-- tělo stejně velké, vidět jen napůl -->
+    <rect x="146" y="402" width="220" height="220" rx="22" fill="url(#rainbow)"/>
   </g>
 </svg>
