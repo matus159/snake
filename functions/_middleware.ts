@@ -23,6 +23,21 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     const id = context.env.GAME_SERVER.idFromName('global');
     return context.env.GAME_SERVER.get(id).fetch(context.request);
   }
+  if (path === '/manifest.webmanifest') {
+    // Ikony aplikace v období Vánoc pod jinou adresou (/mikulas/…) – podle toho nainstalovaná
+    // aplikace (Chrome, Edge) pozná, že se logo změnilo, a ikonu vymění při dalším otevření.
+    const res = await context.next();
+    if (!isChristmasSeason()) {
+      const out = new Response(res.body, res);
+      out.headers.set('Cache-Control', 'public, max-age=3600');
+      return out;
+    }
+    const manifest = await res.json<{ icons?: { src: string }[] }>();
+    for (const icon of manifest.icons ?? []) icon.src = icon.src.replace(/^\/icon-/, '/mikulas/icon-');
+    return new Response(JSON.stringify(manifest), {
+      headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=3600' },
+    });
+  }
   if (ICONS.includes(path)) {
     const res = isChristmasSeason()
       ? await context.env.ASSETS.fetch(new Request(new URL('/mikulas' + path, url), context.request))
