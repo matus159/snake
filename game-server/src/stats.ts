@@ -1,3 +1,4 @@
+import { addFlag, listFlags } from './flags';
 import { isVulgarName } from './names';
 
 // Počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre a server si to pamatuje
@@ -62,6 +63,16 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     if (entry.names.includes(name)) {
       entry.stats ??= {};
       const prev = entry.stats[name];
+      const dia = count(body.diamanty);
+      const best = count(body.bestScore);
+      // Wizox (hlídač): podezřele rychlý přírůstek diamantů nebo nereálné skóre (owneři se nehlídají)
+      if (!name.toLowerCase().includes('owner')) {
+        if (prev?.at && dia - prev.diamanty >= 500 && now - prev.at < 10 * 60 * 1000) {
+          const min = Math.max(1, Math.round((now - prev.at) / 60000));
+          await addFlag(storage, 'dia', name, `Rychle přibylo ${dia - prev.diamanty} diamantů za ${min} min (${prev.diamanty} → ${dia}).`);
+        }
+        if (best >= 3000) await addFlag(storage, 'score', name, `Nereálně vysoké skóre v jedné hře: ${best}.`);
+      }
       entry.stats[name] = {
         diamanty: count(body.diamanty),
         bestScore: Math.max(prev?.bestScore ?? 0, count(body.bestScore)),
@@ -70,6 +81,17 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     }
     await storage.put(key, entry);
     return json({ ok: true });
+  }
+
+  if (action === 'bot' && request.method === 'GET') {
+    // Wizox (hlídač): zapsaná hlášení + kontrola sprostých jmen (jen když se owner podívá)
+    const flags = await listFlags(storage);
+    const vulgar = new Set<string>();
+    for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
+      for (const n of d.names) if (isVulgarName(n)) vulgar.add(n);
+    }
+    for (const n of vulgar) flags.unshift({ at: 0, name: n, text: 'Sprosté jméno (v žebříčku se neukazuje).' });
+    return json({ flags });
   }
 
   if (action === 'opened' && request.method === 'GET') {
@@ -118,6 +140,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       differentNames: names.size,
       devicesWithMoreNames: devices.filter((d) => d.names.length > 1).map((d) => d.names),
       names: Object.fromEntries([...names].sort((a, b) => (b[1].diamanty ?? -1) - (a[1].diamanty ?? -1))),
+      wizox: await listFlags(storage),
     });
   }
 
