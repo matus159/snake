@@ -1,4 +1,3 @@
-import { addFlag } from './flags';
 // Postup hráče (diamanty, hadi) uložený na serveru pod tajným přenosovým kódem.
 // Kód si hráč zobrazí na jednom zařízení a zadá na druhém – pak má na obou stejný postup.
 // Klíč `pcode:<KÓD>`.
@@ -128,10 +127,6 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
     }
     const id = `${Date.now()}-${newCode()}`;
     await storage.put(`${giftPrefix(to)}${id}`, { from, amount, at: Date.now() } satisfies Gift);
-    // Hlídač: velký dárek si zapíše
-    if (amount >= 500 && !from.toLowerCase().includes('owner')) {
-      await addFlag(storage, `gift-${to.toLowerCase()}`, from, `Poslal velký dárek: ${amount} diamantů hráči ${to}.`);
-    }
     return json({ ok: true });
   }
 
