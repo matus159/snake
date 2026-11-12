@@ -8,7 +8,7 @@ import { isVulgarName } from './names';
 const WATCHED_NAMES = ['robine'];
 
 // Jména, která se v žebříčku nikdy neukážou (kromě ownerů).
-const LEADERBOARD_HIDDEN = ['adam'];
+const LEADERBOARD_HIDDEN = ['adam', 'sss'];
 
 interface NameStats {
   diamanty: number;
