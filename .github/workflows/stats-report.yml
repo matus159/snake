@@ -12,3 +12,6 @@ jobs:
     steps:
       - name: Fetch report
         run: curl -sS --fail https://snake-adamini.pages.dev/api/stats/report
+
+      - name: Check leaderboard
+        run: curl -sS -i https://snake-adamini.pages.dev/api/stats/leaderboard | head -40
