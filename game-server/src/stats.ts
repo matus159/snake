@@ -65,7 +65,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       const prev = entry.stats[name];
       const dia = count(body.diamanty);
       const best = count(body.bestScore);
-      // Hlídač: podezřele rychlý přírůstek diamantů nebo nereálné skóre (owneři se nehlídají)
+      // Wizox (hlídač): podezřele rychlý přírůstek diamantů nebo nereálné skóre (owneři se nehlídají)
       if (!name.toLowerCase().includes('owner')) {
         if (prev?.at && dia - prev.diamanty >= 500 && now - prev.at < 10 * 60 * 1000) {
           const min = Math.max(1, Math.round((now - prev.at) / 60000));
@@ -84,7 +84,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
   }
 
   if (action === 'bot' && request.method === 'GET') {
-    // Hlídač: zapsaná hlášení + kontrola sprostých jmen (jen když se owner podívá)
+    // Wizox (hlídač): zapsaná hlášení + kontrola sprostých jmen (jen když se owner podívá)
     const flags = await listFlags(storage);
     const vulgar = new Set<string>();
     for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
@@ -140,7 +140,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       differentNames: names.size,
       devicesWithMoreNames: devices.filter((d) => d.names.length > 1).map((d) => d.names),
       names: Object.fromEntries([...names].sort((a, b) => (b[1].diamanty ?? -1) - (a[1].diamanty ?? -1))),
-      hlidac: await listFlags(storage),
+      wizox: await listFlags(storage),
     });
   }
 

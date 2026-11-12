@@ -1,4 +1,4 @@
-// Hlídač hráčů: když se při běžném posílání dat (diamanty, dárky) objeví něco podezřelého,
+// Wizox – hlídač hráčů: když se při běžném posílání dat (diamanty, dárky) objeví něco podezřelého,
 // zapíše si to. Nic nehlídá pořád dokola, takže server nezpomaluje – jen jedno porovnání navíc.
 // Owner si hlášení přečte v panelu ownera (/api/stats/bot).
 
