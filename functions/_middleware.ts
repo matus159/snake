@@ -18,6 +18,14 @@ function isChristmasSeason(now = new Date()): boolean {
 export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(context.request.url);
   const path = url.pathname;
+  // /api/hra/… je totéž co /api/stats/… – blokovače reklam adresy se slovem „stats“ často blokují
+  // (pak třeba žebříček psal „Nejde načíst“).
+  if (path.startsWith('/api/hra/')) {
+    const id = context.env.GAME_SERVER.idFromName('global');
+    const target = new URL(context.request.url);
+    target.pathname = '/api/stats/' + path.slice('/api/hra/'.length);
+    return context.env.GAME_SERVER.get(id).fetch(new Request(target, context.request));
+  }
   const isApi = path.startsWith('/api/stats/') || path.startsWith('/api/progress/');
   if (isApi || context.request.headers.get('Upgrade') === 'websocket') {
     const id = context.env.GAME_SERVER.idFromName('global');

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.96.0">
+  <meta name="snake-version" content="1.96.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4320,7 +4320,7 @@
         leaderboardList.innerHTML = '<li class="lb-empty">Načítám…</li>';
         let players;
         try {
-          const res = await fetch('/api/stats/leaderboard', { cache: 'no-store' });
+          const res = await fetch('/api/hra/leaderboard', { cache: 'no-store' });
           players = (await res.json()).players;
         } catch {
           players = null;
@@ -4802,7 +4802,7 @@
           return;
         }
         lastReportedDiamanty = diamanty;
-        fetch('/api/stats/seen', {
+        fetch('/api/hra/seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: playerName, device, diamanty, bestScore: bestGameScore, open }),
@@ -4829,7 +4829,7 @@
         if (getProfileId(playerName) !== 'adamini owner') return;
         let at = null;
         try {
-          const res = await fetch('/api/stats/opened?name=robine', { cache: 'no-store' });
+          const res = await fetch('/api/hra/opened?name=robine', { cache: 'no-store' });
           at = (await res.json()).at;
         } catch {
           return;
