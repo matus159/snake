@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.96.1">
+  <meta name="snake-version" content="1.97.0">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3818,6 +3818,13 @@
         return getActiveBan(name) !== null;
       }
 
+      // délka kicku: krátký kick v sekundách (z kicku přes server), jinak v minutách
+      function formatBanLength(ban) {
+        const sec = ban.seconds ?? ban.minutes * 60;
+        if (sec < 60) return sec === 1 ? '1 sekundu' : sec <= 4 ? `${sec} sekundy` : `${sec} sekund`;
+        return formatBanMinutes(Math.round(sec / 60));
+      }
+
       function formatBanMinutes(n) {
         if (n === 1) return '1 minutu';
         if (n >= 2 && n <= 4) return `${n} minuty`;
@@ -3845,7 +3852,7 @@
           else showModeSelect();
           return;
         }
-        banDurationEl.textContent = `Vyhozen na ${formatBanMinutes(ban.minutes)}`;
+        banDurationEl.textContent = `Vyhozen na ${formatBanLength(ban)}`;
         banTimeLeftEl.textContent = `Zbývá: ${formatBanTimeLeft(ban.until - Date.now())}`;
       }
 
@@ -3867,7 +3874,7 @@
         const ban = getActiveBan(playerName);
         if (!ban) return;
         stopGameForBan();
-        banDurationEl.textContent = `Vyhozen na ${formatBanMinutes(ban.minutes)}`;
+        banDurationEl.textContent = `Vyhozen na ${formatBanLength(ban)}`;
         banReasonEl.textContent = `Zpráva od ownera: ${ban.reason}`;
         updateBanTimeLeft();
         banOverlay.classList.add('visible');
@@ -3907,6 +3914,35 @@
         writeBans(bans);
         checkCurrentPlayerBan();
         return true;
+      }
+
+      // Kick přes server: hra se jednou za 20 s zeptá, jestli hráče owner nevyhodil (lehký dotaz).
+      function applyServerKick(seconds, reason) {
+        const id = getProfileId(playerName);
+        if (!id) return;
+        const bans = readBans();
+        bans[id] = { until: Date.now() + seconds * 1000, reason, minutes: Math.max(1, Math.round(seconds / 60)), seconds };
+        writeBans(bans);
+        checkCurrentPlayerBan();
+      }
+
+      async function checkServerKick() {
+        if (!playerName || document.hidden) return;
+        try {
+          const res = await fetch(`/api/hra/kick?name=${encodeURIComponent(playerName)}`, { cache: 'no-store' });
+          const { kick } = await res.json();
+          if (kick) applyServerKick(kick.seconds, kick.reason);
+        } catch {
+          // bez internetu nic
+        }
+      }
+
+      function sendServerKick(target, seconds, reason) {
+        fetch('/api/hra/kick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: target, seconds, reason }),
+        }).catch(() => {});
       }
 
       function appendOwnerChatLog(text, isSystem) {
@@ -3949,6 +3985,7 @@
         }
         const ok = applyKick(target, minutes, reason);
         if (ok) {
+          sendServerKick(target, minutes * 60, reason);
           appendOwnerChatLog(
             `Hráč ${target} vyhozen na ${minutes} min. Důvod: ${reason}`,
             true
@@ -6814,6 +6851,11 @@
         }
       }
       setInterval(claimGifts, GIFT_POLL_MS);
+      setInterval(checkServerKick, 20000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) checkServerKick();
+      });
+      setTimeout(checkServerKick, 1500);
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) claimGifts();
       });

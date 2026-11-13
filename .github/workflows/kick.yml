@@ -1,0 +1,31 @@
+name: Kick hráče
+
+# Ruční spuštění: vyhodí hráče na danou dobu s důvodem (funguje na jakémkoliv zařízení).
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: Jméno hráče
+        required: true
+      seconds:
+        description: Na kolik sekund
+        required: true
+        default: '300'
+      reason:
+        description: Důvod
+        required: true
+
+jobs:
+  kick:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Send kick
+        env:
+          NAME: ${{ inputs.name }}
+          SECONDS_IN: ${{ inputs.seconds }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          jq -n --arg name "$NAME" --arg reason "$REASON" --argjson seconds "$SECONDS_IN" '{name:$name, seconds:$seconds, reason:$reason}' \
+            | curl -sS --fail -X POST -H 'Content-Type: application/json' --data @- https://snake-adamini.pages.dev/api/hra/kick
