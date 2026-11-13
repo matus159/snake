@@ -83,6 +83,34 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
     return json({ ok: true });
   }
 
+  if (action === 'kick') {
+    // Kick přes server: owner zadá jméno, dobu a důvod; hra hráče si kick vyzvedne (pak se smaže)
+    // a hráče na tu dobu vyhodí – funguje na jakémkoliv zařízení.
+    const url = new URL(request.url);
+    if (request.method === 'POST') {
+      let body: Record<string, unknown>;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: 'Neplatná data.' }, 400);
+      }
+      const name = String(body.name ?? '').trim().slice(0, 20).toLowerCase();
+      const seconds = Math.min(Math.max(1, Math.floor(Number(body.seconds) || 0)), 7 * 24 * 3600);
+      const reason = String(body.reason ?? '').trim().slice(0, 200);
+      if (!name || !reason) return json({ error: 'Chybí jméno nebo důvod.' }, 400);
+      await storage.put(`kick:${name}`, { seconds, reason, at: Date.now() });
+      return json({ ok: true });
+    }
+    const name = (url.searchParams.get('name') ?? '').trim().toLowerCase();
+    if (!name) return json({ kick: null });
+    const kick = await storage.get<{ seconds: number; reason: string; at: number }>(`kick:${name}`);
+    if (!kick) return json({ kick: null });
+    await storage.delete(`kick:${name}`);
+    // nevyzvednutý kick po týdnu propadne
+    if (Date.now() - kick.at > 7 * 24 * 3600 * 1000) return json({ kick: null });
+    return json({ kick: { seconds: kick.seconds, reason: kick.reason } });
+  }
+
   if (action === 'bot' && request.method === 'GET') {
     // Wizox (hlídač): zapsaná hlášení + kontrola sprostých jmen (jen když se owner podívá)
     const flags = await listFlags(storage);
