@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.0">
+  <meta name="snake-version" content="1.97.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -713,6 +713,16 @@
       gap: 0.5rem;
     }
 
+    .owner-kick-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .owner-kick-row .owner-kick-label {
+      flex: 1;
+      min-width: 0;
+    }
+
     .owner-kick-label {
       display: flex;
       flex-direction: column;
@@ -727,12 +737,13 @@
       gap: 0.5rem;
     }
 
+    /* nad všemi menu (výběr režimu, lobby, žebříček…), ať jdou tlačítka kliknout */
     #banOverlay {
-      z-index: 24;
+      z-index: 58;
     }
 
     #ownerChatOverlay {
-      z-index: 25;
+      z-index: 59;
     }
 
     .owner-panel .owner-chat-btn {
@@ -2988,10 +2999,16 @@
               <span>Jméno hráče</span>
               <input type="text" id="kickTargetInput" class="owner-chat-input" maxlength="40" placeholder="např. matus" autocomplete="off" required>
             </label>
+            <div class="owner-kick-row">
             <label class="owner-kick-label">
               <span>Minuty</span>
-              <input type="number" id="kickMinutesInput" class="owner-chat-input" min="1" max="9999" value="5" required>
+              <input type="number" id="kickMinutesInput" class="owner-chat-input" min="0" max="9999" value="5">
             </label>
+            <label class="owner-kick-label">
+              <span>Sekundy</span>
+              <input type="number" id="kickSecondsInput" class="owner-chat-input" min="0" max="59" value="0">
+            </label>
+            </div>
             <label class="owner-kick-label">
               <span>Důvod</span>
               <input type="text" id="kickReasonInput" class="owner-chat-input" maxlength="200" placeholder="proč ho vyhazuješ" autocomplete="off" required>
@@ -3678,6 +3695,7 @@
       const ownerKickForm = document.getElementById('ownerKickForm');
       const kickTargetInput = document.getElementById('kickTargetInput');
       const kickMinutesInput = document.getElementById('kickMinutesInput');
+      const kickSecondsInput = document.getElementById('kickSecondsInput');
       const kickReasonInput = document.getElementById('kickReasonInput');
       const ownerChatSendBtn = document.getElementById('ownerChatSendBtn');
       const ownerChatCloseBtn = document.getElementById('ownerChatCloseBtn');
@@ -3897,7 +3915,7 @@
         banPollTimer = setInterval(checkCurrentPlayerBan, 200);
       }
 
-      function applyKick(targetName, minutes, reason) {
+      function applyKick(targetName, seconds, reason) {
         const id = getProfileId(targetName);
         if (!id) return false;
         const cleanReason = reason.trim();
@@ -3907,9 +3925,10 @@
         }
         const bans = readBans();
         bans[id] = {
-          until: Date.now() + minutes * 60 * 1000,
+          until: Date.now() + seconds * 1000,
           reason: cleanReason,
-          minutes,
+          minutes: Math.max(1, Math.round(seconds / 60)),
+          seconds,
         };
         writeBans(bans);
         checkCurrentPlayerBan();
@@ -3957,9 +3976,10 @@
         if (!isOwner()) return;
         if (running && !paused) pauseGame();
         ownerChatLog.innerHTML = '';
-        appendOwnerChatLog('Vyplň jméno, minuty a důvod, pak klikni Vyhodit hráče.', true);
+        appendOwnerChatLog('Vyplň jméno, minuty a sekundy a důvod, pak klikni Vyhodit hráče.', true);
         kickTargetInput.value = '';
         kickMinutesInput.value = '5';
+        kickSecondsInput.value = '0';
         kickReasonInput.value = '';
         ownerChatOverlay.classList.add('visible');
         kickTargetInput.focus();
@@ -3971,11 +3991,18 @@
 
       function submitOwnerKick() {
         const target = kickTargetInput.value.trim();
-        const minutes = Math.max(1, parseInt(kickMinutesInput.value, 10) || 1);
+        const minutes = Math.max(0, parseInt(kickMinutesInput.value, 10) || 0);
+        const secs = Math.max(0, parseInt(kickSecondsInput.value, 10) || 0);
+        const seconds = minutes * 60 + secs;
         const reason = kickReasonInput.value.trim();
         if (!target) {
           appendOwnerChatLog('Napiš jméno hráče.', true);
           kickTargetInput.focus();
+          return;
+        }
+        if (seconds < 1) {
+          appendOwnerChatLog('Napiš, na kolik minut nebo sekund.', true);
+          kickSecondsInput.focus();
           return;
         }
         if (!reason) {
@@ -3983,11 +4010,11 @@
           kickReasonInput.focus();
           return;
         }
-        const ok = applyKick(target, minutes, reason);
+        const ok = applyKick(target, seconds, reason);
         if (ok) {
-          sendServerKick(target, minutes * 60, reason);
+          sendServerKick(target, seconds, reason);
           appendOwnerChatLog(
-            `Hráč ${target} vyhozen na ${minutes} min. Důvod: ${reason}`,
+            `Hráč ${target} vyhozen na ${formatBanLength({ seconds })}. Důvod: ${reason}`,
             true
           );
           kickReasonInput.value = '';
