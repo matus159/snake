@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.1">
+  <meta name="snake-version" content="1.97.2">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1105,6 +1105,13 @@
       font-weight: 700;
       color: #e8e8e8;
       text-align: center;
+    }
+
+    .shop-skin-label.owned {
+      color: #00ff88;
+      max-width: 9em;
+      margin: 0 auto;
+      line-height: 1.25;
     }
 
     .shop-skin-label .diamanty-word {
@@ -5914,6 +5921,7 @@
 
       function showShopMain() {
         shopView = 'main';
+        updateShopOwned();
         shopMainView.classList.remove('hidden');
         shopWardrobeView.classList.add('hidden');
         shopGiftView.classList.add('hidden');
@@ -7312,9 +7320,27 @@
       document.getElementById('shopDevilSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('devil'));
       document.getElementById('shopFireSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('fire'));
       document.getElementById('shopMelonSkinBtn').addEventListener('click', () => buySkinAndOpenWardrobe('melon'));
+      // Hadi, které hráč už má: místo ceny „Tohoto hada už vlastníš“.
+      function updateShopOwned() {
+        const SHOP_SKIN_BOXES = {
+          shopSkinBtn: 'red', shopWhiteSkinBtn: 'white', shopBlueSkinBtn: 'blue', shopPinkSkinBtn: 'pink',
+          shopYellowSkinBtn: 'yellow', shopAngelSkinBtn: 'angel', shopDevilSkinBtn: 'devil',
+          shopFireSkinBtn: 'fire', shopMelonSkinBtn: 'melon',
+        };
+        for (const [boxId, skinId] of Object.entries(SHOP_SKIN_BOXES)) {
+          const label = document.querySelector(`#${boxId} .shop-skin-label`);
+          if (!label) continue;
+          if (label.dataset.price === undefined) label.dataset.price = label.innerHTML;
+          const owned = wardrobe.includes(skinId);
+          label.classList.toggle('owned', owned);
+          label.innerHTML = owned ? '✓ Tohoto hada už vlastníš' : label.dataset.price;
+        }
+      }
+
       function updateMikulasShop() {
         document.querySelectorAll('.test-only-skin').forEach((el) => el.classList.toggle('hidden', !skinAvailable('angel')));
         document.querySelectorAll('.test-site-skin').forEach((el) => el.classList.toggle('hidden', !TEST_SITE));
+        updateShopOwned();
       }
       updateMikulasShop();
       shopWardrobeBtn.addEventListener('click', openWardrobe);
