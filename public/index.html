@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.2">
+  <meta name="snake-version" content="1.97.3">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4939,7 +4939,14 @@
           document.head.append(el);
         }
         if ('serviceWorker' in navigator && window.isSecureContext) {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+          // updateViaCache: 'none' – nová verze service workeru se stáhne hned, ne až za den
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+            .then((reg) => {
+              document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) reg.update().catch(() => {});
+              });
+            })
+            .catch(() => {});
         }
       }
 
