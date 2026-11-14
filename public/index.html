@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.3">
+  <meta name="snake-version" content="1.97.4">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -6893,6 +6893,25 @@
         }
       }
       setInterval(claimGifts, GIFT_POLL_MS);
+      // Mobil v prohlížeči: hra na celou obrazovku (bez lišty prohlížeče). Prohlížeč to dovolí jen
+      // po dotyku, proto se celá obrazovka zapne při prvním dotyku a znovu při dalším, když z ní hráč
+      // vyjede. V nainstalované aplikaci je hra na celou obrazovku sama. iPhone v Safari to neumí.
+      function goFullscreen() {
+        const mobile = window.matchMedia('(pointer: coarse)').matches;
+        const standalone = window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+        if (!mobile || standalone || document.fullscreenElement || document.webkitFullscreenElement) return;
+        const el = document.documentElement;
+        const req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (!req) return;
+        try {
+          const r = req.call(el, { navigationUI: 'hide' });
+          if (r && r.then) {
+            r.then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
+          }
+        } catch {}
+      }
+      document.addEventListener('touchend', goFullscreen, { passive: true });
+      document.addEventListener('click', goFullscreen);
       setInterval(checkServerKick, 20000);
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) checkServerKick();
