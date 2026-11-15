@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.7">
+  <meta name="snake-version" content="1.97.8">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4275,6 +4275,17 @@
         } catch {}
       }
       window.addEventListener('pagehide', uploadProgress);
+      // Při zavření nebo přepnutí aplikace hned poslat i diamanty do žebříčku (nečekat 5 s).
+      function flushDiamondReport() {
+        if (playerName && diamanty !== lastReportedDiamanty) reportPlayerName();
+      }
+      window.addEventListener('pagehide', flushDiamondReport);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          flushDiamondReport();
+          uploadProgress();
+        }
+      });
 
       // Obrazovka „Přenos“: zobrazí kód tohohle hráče a umí zadat kód z jiného zařízení.
       const transferOverlay = document.getElementById('transferOverlay');
@@ -4457,11 +4468,23 @@
       async function loadLeaderboard() {
         leaderboardList.innerHTML = '<li class="lb-empty">Načítám…</li>';
         let players;
+        // Nové diamanty (třeba z právě dohrané hry) nejdřív poslat, ať žebříček ukazuje aktuální stav.
+        if (playerName && diamanty !== lastReportedDiamanty) {
+          try { await reportPlayerName(); } catch {}
+        }
         try {
           const res = await fetch('/api/hra/leaderboard', { cache: 'no-store' });
           players = (await res.json()).players;
         } catch {
           players = null;
+        }
+        // Vlastní řádek vždycky s diamanty přímo z téhle hry.
+        if (Array.isArray(players) && playerName) {
+          const me = players.find((p) => p.name.toLowerCase() === playerName.toLowerCase());
+          if (me && me.diamanty !== diamanty) {
+            me.diamanty = diamanty;
+            players.sort((a, b) => b.diamanty - a.diamanty);
+          }
         }
         leaderboardList.replaceChildren();
         if (!Array.isArray(players) || !players.length) {
@@ -4940,7 +4963,8 @@
           return;
         }
         lastReportedDiamanty = diamanty;
-        fetch('/api/hra/seen', {
+        clearTimeout(diamondReportTimer);
+        return fetch('/api/hra/seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: playerName, device, diamanty, bestScore: bestGameScore, open }),
