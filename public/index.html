@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.8">
+  <meta name="snake-version" content="1.97.9">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3458,7 +3458,7 @@
       let multiSpectating = false;
       let multiLobbyStatus = 'lobby';
       let lastMultiServerScore = 0;
-      // Hra pro více hráčů: vítěz kola dostane bonus +10 % bodů z kola, aby se vyplatilo hrát s ostatními.
+      // Hra pro více hráčů: vítěz kola dostane bonus +10 % bodů z kola (nahoru, aspoň 1), aby se vyplatilo hrát s ostatními.
       const MULTI_WIN_BONUS = 0.1;
       let multiRoundGained = 0;
       let lastMultiServerTacos = 0;
@@ -4788,16 +4788,13 @@
             applyMultiTacosFromServer(me.tacos);
           }
           if (winner && winner.id === multiPlayerId) {
-            const bonus = Math.floor(multiRoundGained * MULTI_WIN_BONUS);
+            // 10 % zaokrouhleno nahoru a vždycky aspoň 1 bod – i krátké kolo s pár body má bonus.
+            const bonus = Math.max(1, Math.ceil(multiRoundGained * MULTI_WIN_BONUS));
             multiRoundGained = 0;
-            if (bonus > 0) {
-              score += bonus;
-              addGameScore(bonus);
-              updateScoreDisplay();
-            }
-            multiGameOverText.textContent = bonus > 0
-              ? `Vyhrál jsi! Bonus za výhru: +${bonus} bodů (+10 %)`
-              : 'Vyhrál jsi!';
+            score += bonus;
+            addGameScore(bonus);
+            updateScoreDisplay();
+            multiGameOverText.textContent = `Vyhrál jsi! Bonus za výhru: +${bonus} ${bonus === 1 ? 'bod' : bonus < 5 ? 'body' : 'bodů'} (+10 %)`;
           } else if (me && !me.alive) {
             multiGameOverText.textContent = winner ? `Prohrál jsi. Vyhrál ${winner.name}.` : 'Prohrál jsi.';
           } else if (winner) {
