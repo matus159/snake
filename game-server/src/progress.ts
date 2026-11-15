@@ -152,6 +152,8 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
     } else {
       await storage.delete([...pending.keys()]);
     }
+    // Wizox: zapamatovat si přijaté dárky, ať je nebere jako podezřelý přírůstek diamantů.
+    if (total > 0) await noteGiftReceived(storage, name, total);
     // Diamanty rovnou přičíst i do postupu na serveru (přenosový kód), ať se neztratí.
     if (total > 0) {
       for (const [key, stored] of await storage.list<Stored>({ prefix: 'pcode:' })) {
@@ -177,6 +179,23 @@ export async function handleProgressRequest(request: Request, storage: DurableOb
   }
 
   return json({ error: 'Neznámá akce.' }, 404);
+}
+
+// Přijaté dárky za poslední hodinu (klíč `giftin:<jméno>`), aby je Wizox odečetl.
+export interface GiftIn {
+  at: number;
+  amount: number;
+}
+
+export function giftInKey(name: string): string {
+  return `giftin:${name.toLowerCase()}`;
+}
+
+async function noteGiftReceived(storage: DurableObjectStorage, name: string, amount: number): Promise<void> {
+  const now = Date.now();
+  const list = ((await storage.get<GiftIn[]>(giftInKey(name))) ?? []).filter((g) => now - g.at < 60 * 60 * 1000);
+  list.push({ at: now, amount });
+  await storage.put(giftInKey(name), list.slice(-50));
 }
 
 interface Gift {
