@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.97.5">
+  <meta name="snake-version" content="1.97.6">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4127,15 +4127,67 @@
         return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate };
       }
 
+      // Poslední stav, o kterém víme, že ho server má (uloží se až po úspěšném uložení na server).
+      // Podle něj se pozná, co se změnilo tady a co jinde – a nic se nepřepíše starým stavem.
+      const PROGRESS_SYNCED_KEY = 'snake-progress-synced';
+
+      function readSyncedBase(id) {
+        try {
+          return JSON.parse(localStorage.getItem(PROGRESS_SYNCED_KEY) || '{}')[id] || null;
+        } catch {
+          return null;
+        }
+      }
+
+      function writeSyncedBase(id, progress) {
+        try {
+          const all = JSON.parse(localStorage.getItem(PROGRESS_SYNCED_KEY) || '{}');
+          all[id] = progress;
+          localStorage.setItem(PROGRESS_SYNCED_KEY, JSON.stringify(all));
+        } catch {}
+      }
+
+      function sameProgress(a, b) {
+        return !!a && !!b && a.diamanty === b.diamanty
+          && [...a.wardrobe].sort().join() === [...b.wardrobe].sort().join()
+          && a.equippedSkin === b.equippedSkin
+          && (a.weekendWheelSpinDate || null) === (b.weekendWheelSpinDate || null);
+      }
+
+      // Spojí stav tady a na serveru: co se změnilo jen na jedné straně, vyhraje; když obě,
+      // změny diamantů se sečtou a hadi z obou se spojí. Bez známého stavu vyhraje víc diamantů.
+      function mergeProgress(local, server, base) {
+        if (base && sameProgress(local, base)) return { progress: server, upload: false };
+        if (base && sameProgress(server, base)) return { progress: local, upload: true };
+        if (sameProgress(local, server)) return { progress: server, upload: false };
+        let d;
+        if (local.diamanty === server.diamanty) d = local.diamanty;
+        else if (base) d = Math.max(0, local.diamanty + server.diamanty - base.diamanty);
+        else d = Math.max(local.diamanty, server.diamanty);
+        const dates = [local.weekendWheelSpinDate, server.weekendWheelSpinDate].filter(Boolean).sort();
+        return {
+          progress: {
+            diamanty: d,
+            wardrobe: [...new Set([...server.wardrobe, ...local.wardrobe])],
+            equippedSkin: local.equippedSkin,
+            weekendWheelSpinDate: dates.length ? dates[dates.length - 1] : null,
+          },
+          upload: true,
+        };
+      }
+
       function applyServerProgress(id, progress) {
         // Uprostřed hry se nic nepřepisuje, změny z jiného zařízení se načtou v menu.
         if (!progress || getProfileId(playerName) !== id || running || multiInGame) return;
-        let keepRestored = false;
+        const merged = mergeProgress(currentProgress(), progress, readSyncedBase(id));
+        writeSyncedBase(id, progress);
+        progress = merged.progress;
+        let keepRestored = merged.upload;
         if (restoredDiamanty !== null
           && (progress.diamanty < restoredDiamanty || (restoredExact && progress.diamanty !== restoredDiamanty))) {
           progress = { ...progress, diamanty: restoredDiamanty };
           keepRestored = true;
-        } else {
+        } else if (restoredDiamanty !== null) {
           // server už obnovené diamanty má
           restoredDiamanty = null;
         }
@@ -4158,6 +4210,7 @@
         const data = await res.json();
         if (!data.code) return null;
         setProgressCode(id, data.code);
+        writeSyncedBase(id, data.progress);
         lastUploadedProgress = JSON.stringify(data.progress);
         return data.code;
       }
@@ -4199,7 +4252,8 @@
       function uploadProgress() {
         clearTimeout(progressUploadTimer);
         progressUploadTimer = null;
-        const code = progressCode();
+        const id = getProfileId(playerName);
+        const code = progressCode(id);
         if (!code) return;
         const progress = currentProgress();
         const payload = JSON.stringify(progress);
@@ -4211,7 +4265,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, progress }),
             keepalive: true,
-          }).catch(() => {});
+          }).then((res) => {
+            if (res.ok) writeSyncedBase(id, progress);
+            else if (lastUploadedProgress === payload) lastUploadedProgress = '';
+          }).catch(() => {
+            // nepovedlo se – zkusí se to znovu při další změně nebo načtení
+            if (lastUploadedProgress === payload) lastUploadedProgress = '';
+          });
         } catch {}
       }
       window.addEventListener('pagehide', uploadProgress);
@@ -4276,7 +4336,14 @@
         const id = getProfileId(playerName);
         setProgressCode(id, code);
         lastUploadedProgress = '';
-        applyServerProgress(id, merged);
+        // merged už obsahuje obojí – přímo ho použít a nahrát
+        writeSyncedBase(id, data.progress);
+        const profiles = readProfiles();
+        profiles[id] = { ...defaultProfile(), ...merged };
+        writeProfiles(profiles);
+        loadPlayerProfile();
+        refreshCurrencyUI();
+        renderWardrobeSkins();
         uploadProgress();
         updatePlayerNameDisplay();
         reportPlayerName(true);
@@ -6873,6 +6940,9 @@
             if (!g.alreadyAdded) {
               diamanty += g.amount;
               added = true;
+              // server dárek do uloženého postupu přičetl sám
+              const base = readSyncedBase(id);
+              if (base) writeSyncedBase(id, { ...base, diamanty: base.diamanty + g.amount });
             }
             const key = `${id}:${g.id}`;
             if (giftQueuedIds.has(key)) continue;
