@@ -1,4 +1,5 @@
 import { addFlag, listFlags } from './flags';
+import { giftInKey, type GiftIn } from './progress';
 import { isVulgarName } from './names';
 
 // Počítání hráčů: hra pošle jméno, náhodné ID zařízení, diamanty a nejlepší skóre a server si to pamatuje
@@ -66,9 +67,18 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       const dia = count(body.diamanty);
       const best = count(body.bestScore);
       // Wizox (hlídač): podezřele rychlý přírůstek diamantů nebo nereálné skóre (hlídá všechny, i ownery)
-      if (prev?.at && dia - prev.diamanty >= 500 && now - prev.at < 10 * 60 * 1000) {
-        const min = Math.max(1, Math.round((now - prev.at) / 60000));
-        await addFlag(storage, 'dia', name, `Rychle přibylo ${dia - prev.diamanty} diamantů za ${min} min (${prev.diamanty} → ${dia}).`);
+      // Dárky od jiných hráčů (nebo od ownera) se nepočítají – ty jsou v pořádku. Každý dárek se
+      // odečte jen jednou: při prvním hlášení, ve kterém diamanty přibyly.
+      if (prev?.at && dia > prev.diamanty) {
+        const pending = (await storage.get<GiftIn[]>(giftInKey(name))) ?? [];
+        const gifts = pending.reduce((sum, g) => sum + g.amount, 0);
+        if (pending.length) await storage.delete(giftInKey(name));
+        const gained = dia - prev.diamanty - gifts;
+        if (gained >= 500 && now - prev.at < 10 * 60 * 1000) {
+          const min = Math.max(1, Math.round((now - prev.at) / 60000));
+          const giftNote = gifts > 0 ? `, bez ${gifts} z dárků` : '';
+          await addFlag(storage, 'dia', name, `Rychle přibylo ${gained} diamantů za ${min} min (${prev.diamanty} → ${dia}${giftNote}).`);
+        }
       }
       if (best >= 3000) await addFlag(storage, 'score', name, `Nereálně vysoké skóre v jedné hře: ${best}.`);
       entry.stats[name] = {
