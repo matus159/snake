@@ -31,6 +31,19 @@ function count(value: unknown): number {
   return Number.isFinite(n) && n > 0 ? Math.min(n, 100_000_000) : 0;
 }
 
+// Hraje na víc zařízeních? Když jiné zařízení už dřív hlásilo skoro stejně diamantů, jen se načetl
+// postup odjinud (přenosový kód) – to není podvod. Volá se jen výjimečně (při velkém skoku).
+async function knownOnOtherDevice(storage: DurableObjectStorage, ownKey: string, name: string, atLeast: number): Promise<boolean> {
+  const lower = name.toLowerCase();
+  for (const [k, d] of await storage.list<Device>({ prefix: 'seen:' })) {
+    if (k === ownKey) continue;
+    for (const [n, st] of Object.entries(d.stats ?? {})) {
+      if (n.toLowerCase() === lower && st.diamanty >= atLeast) return true;
+    }
+  }
+  return false;
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
     status,
@@ -74,7 +87,7 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
         const gifts = pending.reduce((sum, g) => sum + g.amount, 0);
         if (pending.length) await storage.delete(giftInKey(name));
         const gained = dia - prev.diamanty - gifts;
-        if (gained >= 500 && now - prev.at < 10 * 60 * 1000) {
+        if (gained >= 500 && now - prev.at < 10 * 60 * 1000 && !(await knownOnOtherDevice(storage, key, name, dia - 499))) {
           const min = Math.max(1, Math.round((now - prev.at) / 60000));
           const giftNote = gifts > 0 ? `, bez ${gifts} z dárků` : '';
           await addFlag(storage, 'dia', name, `Rychle přibylo ${gained} diamantů za ${min} min (${prev.diamanty} → ${dia}${giftNote}).`);
