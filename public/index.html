@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.6">
+  <meta name="snake-version" content="1.99.7">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2572,6 +2572,24 @@
       color: #6fe63a;
     }
 
+    .zombie-card .zombie-days {
+      font-size: 0.75rem;
+      color: #8aa;
+      margin-top: -0.6rem;
+    }
+
+    .mode-card.zombie-card.locked {
+      opacity: 0.45;
+      filter: grayscale(0.7);
+      cursor: not-allowed;
+    }
+
+    .mode-card.zombie-card.locked:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: rgba(110, 230, 70, 0.3);
+    }
+
     .mode-select-wrap {
       display: flex;
       flex-direction: column;
@@ -2987,6 +3005,7 @@
                 <div class="computer-icon" aria-hidden="true"></div>
               </div>
               <span class="mode-title">Zombie mód</span>
+              <span class="zombie-days" id="zombieDays" hidden>🔒 Jen v pondělí, úterý a pátek</span>
             </button>
           </div>
         </div>
@@ -4536,6 +4555,7 @@
         hideAllMenuOverlays();
         banOverlay.classList.remove('visible');
         modeSelectOverlay.classList.add('visible');
+        updateZombieCard();
         updatePlayerNameDisplay();
         syncProgressFromServer();
         draw();
@@ -7926,7 +7946,30 @@
         zombieMode = false;
         selectGameMode('single');
       });
-      document.getElementById('zombieModeBtn').addEventListener('click', () => {
+      // Zombie mód jde jen v pondělí, úterý a pátek (celý den, český čas). Owner ho má vždycky.
+      const zombieModeBtn = document.getElementById('zombieModeBtn');
+
+      function zombieAvailable(now = new Date()) {
+        if (playerName && isOwner()) return true;
+        const day = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Prague', weekday: 'short' }).format(now);
+        return ['Mon', 'Tue', 'Fri'].includes(day);
+      }
+
+      function updateZombieCard() {
+        // prvky se hledají tady (funkce se volá i z menu dřív, než se načte zbytek skriptu)
+        const btn = document.getElementById('zombieModeBtn');
+        const days = document.getElementById('zombieDays');
+        if (!btn || !days) return;
+        const ok = zombieAvailable();
+        btn.classList.toggle('locked', !ok);
+        days.hidden = ok;
+      }
+      updateZombieCard();
+      setInterval(updateZombieCard, 30000);
+
+      zombieModeBtn.addEventListener('click', () => {
+        updateZombieCard();
+        if (!zombieAvailable()) return;
         zombieMode = true;
         selectGameMode('single');
       });
