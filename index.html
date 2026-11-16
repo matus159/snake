@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.98.0">
+  <meta name="snake-version" content="1.98.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -58,6 +58,27 @@
       padding: 16px;
       box-shadow: 0 0 40px rgba(0, 217, 255, 0.15), inset 0 0 0 1px rgba(255,255,255,0.06);
       max-width: calc(100vw - 2rem);
+    }
+
+    /* Zvuk zapnout/vypnout: vpravo nad hrací plochou (vedle nadpisu) */
+    .sound-btn {
+      position: absolute;
+      top: -58px;
+      right: 8px;
+      z-index: 5;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(10, 10, 18, 0.85);
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .sound-btn:hover {
+      border-color: #00d9ff;
     }
 
     canvas {
@@ -521,6 +542,17 @@
       h1,
       .info {
         display: none;
+      }
+
+      /* bez nadpisu: tlačítko zvuku dole vpravo (nahoře vpravo je Žebříček) */
+      .sound-btn {
+        top: auto;
+        bottom: 4px;
+        right: 10px;
+        z-index: 60;
+        width: 38px;
+        height: 38px;
+        font-size: 1.15rem;
       }
 
       .game-wrapper {
@@ -2885,6 +2917,7 @@
   <p class="info"><span class="info-keys">Šipky nebo WASD</span><span class="info-touch">Hýbej joystickem nebo přejeď prstem</span> · sbírej kostky, narůstáš · neudeř se do sebe ani do okraje</p>
 
   <div class="game-wrapper">
+    <button type="button" class="sound-btn" id="soundBtn" aria-label="Vypnout zvuk" title="Zvuk">🔊</button>
     <div class="player-notice" id="playerNotice" role="status"></div>
     <div class="gift-notice" id="giftNotice" role="status"></div>
     <div class="spectate-notice" id="spectateNotice" role="status">Prohrál jsi – díváš se, jak hrají ostatní</div>
@@ -4706,6 +4739,7 @@
         const gained = Math.max(0, serverScore - lastMultiServerScore);
         lastMultiServerScore = serverScore;
         if (gained > 0) {
+          playChramst();
           multiRoundGained += gained;
           score += gained;
           addGameScore(gained);
@@ -5908,6 +5942,7 @@
             addGameScore(skinScore);
           }
           updateScoreDisplay();
+          playChramst();
           spawnOneKostka();
           tutorialOnEat();
         } else {
@@ -7195,6 +7230,69 @@
       }
 
       let tacosAutoplayCheck = null;
+
+      // Zvuk „chramst“, když had sežere kostku. Tlačítko 🔊/🔇 nad hrou, volba se pamatuje.
+      // Přes Web Audio: hraje hned (bez zpoždění) a víc zvuků za sebou se nepřeruší.
+      const SOUND_KEY = 'snake-sound';
+      const soundBtn = document.getElementById('soundBtn');
+      let soundOn = true;
+      try { soundOn = localStorage.getItem(SOUND_KEY) !== 'off'; } catch {}
+      let audioCtx = null;
+      let chramstBuf = null;
+      let chramstLoading = null;
+
+      function ensureAudio() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          try { audioCtx = new AC(); } catch { return null; }
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        if (!chramstBuf && !chramstLoading) {
+          chramstLoading = fetch('/sounds/chramst.mp3')
+            .then((r) => r.arrayBuffer())
+            .then((b) => new Promise((res, rej) => audioCtx.decodeAudioData(b, res, rej)))
+            .then((buf) => { chramstBuf = buf; })
+            .catch(() => { chramstLoading = null; });
+        }
+        return audioCtx;
+      }
+
+      function playChramst() {
+        if (!soundOn || !audioCtx || !chramstBuf) return;
+        try {
+          const src = audioCtx.createBufferSource();
+          src.buffer = chramstBuf;
+          src.connect(audioCtx.destination);
+          src.start();
+        } catch {}
+      }
+
+      function updateSoundBtn() {
+        soundBtn.textContent = soundOn ? '🔊' : '🔇';
+        soundBtn.setAttribute('aria-label', soundOn ? 'Vypnout zvuk' : 'Zapnout zvuk');
+      }
+      updateSoundBtn();
+
+      soundBtn.addEventListener('click', () => {
+        soundOn = !soundOn;
+        try { localStorage.setItem(SOUND_KEY, soundOn ? 'on' : 'off'); } catch {}
+        updateSoundBtn();
+        soundBtn.blur(); // ať mezerník ve hře znovu nepřepne zvuk
+        if (soundOn) {
+          ensureAudio();
+          if (chramstBuf) playChramst();
+          else chramstLoading?.then(playChramst);
+        }
+      });
+
+      // Prohlížeč pustí zvuk až po prvním klepnutí nebo klávese – tehdy se zvuk připraví.
+      function unlockAudio() {
+        if (soundOn) ensureAudio();
+      }
+      document.addEventListener('click', unlockAudio);
+      document.addEventListener('touchend', unlockAudio);
+      document.addEventListener('keydown', unlockAudio);
 
       function playTacosMusic() {
         tacosPlayer.playVideo();
