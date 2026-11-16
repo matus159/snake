@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.1">
+  <meta name="snake-version" content="1.99.2">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3334,7 +3334,17 @@
       let zombieTickCount = 0;
       let zombiePopups = [];
       let lastZombieTick = 0;
-      const ZOMBIE_SPEED_MS = 150;
+      // Obtížnost roste se zabitými zombie: úroveň 1 (pomalý a hloupý) až 10 (rychlejší než hráč a chytrý).
+      const ZOMBIE_MAX_LEVEL = 10;
+      function zombieLevel() {
+        return Math.min(ZOMBIE_MAX_LEVEL, zombiesKilled + 1);
+      }
+      function zombieSkill() {
+        return (zombieLevel() - 1) / (ZOMBIE_MAX_LEVEL - 1); // 0 … 1
+      }
+      function zombieSpeedMs() {
+        return Math.round(210 - zombieSkill() * 100); // 210 ms … 110 ms (hráč má 120 ms)
+      }
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
       // Tacos event: část kostek je zlatá s tacos, dávají diamant navíc.
@@ -5467,10 +5477,13 @@
           return false;
         });
         const head = snake[0];
-        // cíl: kousek před hlavou hráče – zombie se mu chce postavit do cesty
+        const skill = zombieSkill();
+        // cíl: hloupý zombie jede rovnou za hlavou (snadno se mu ujede), chytrý míří až 5 polí
+        // před hráče – chce se mu postavit do cesty
+        const ahead = Math.round(skill * 5);
         const aim = {
-          x: Math.max(0, Math.min(COLS - 1, head.x + direction.x * 4)),
-          y: Math.max(0, Math.min(ROWS - 1, head.y + direction.y * 4)),
+          x: Math.max(0, Math.min(COLS - 1, head.x + direction.x * ahead)),
+          y: Math.max(0, Math.min(ROWS - 1, head.y + direction.y * ahead)),
         };
         for (const z of [...zombies]) {
           if (!zombies.includes(z)) continue;
@@ -5486,7 +5499,15 @@
             && !zombieAt(c.x, c.y, z));
           // Rovně má přednost, když to k cíli není horší – zombie jede plynule do L,
           // ne cik-cak po schodech. Zatočí, až když rovně by ho od cíle vzdalovalo.
-          const pick = (safe.length ? safe : options)
+          // chytřejší zombie se víc vyhýbá tělu hráče (hůř se zabíjí)
+          const careful = safe.filter(({ c }) => !snake.slice(1).some((b) => b.x === c.x && b.y === c.y));
+          const avoidBody = Math.random() < skill * 0.75 && careful.length;
+          let pool = avoidBody ? careful : (safe.length ? safe : options);
+          // hloupý zombie občas zabloudí (náhodně zatočí)
+          if (Math.random() < (1 - skill) * 0.3 && pool.length > 1) {
+            pool = [pool[randInt(0, pool.length)]];
+          }
+          const pick = pool
             .map((o) => {
               const straight = o.d.x === z.dir.x && o.d.y === z.dir.y;
               return { ...o, dist: Math.abs(o.c.x - goal.x) + Math.abs(o.c.y - goal.y) - (straight ? 0.5 : 0) };
@@ -5583,7 +5604,7 @@
         ctx.font = 'bold 15px "JetBrains Mono", monospace';
         ctx.textAlign = 'left';
         ctx.fillStyle = '#9be36b';
-        ctx.fillText(`🧟 Zabito: ${zombiesKilled}`, 12, 22);
+        ctx.fillText(`🧟 Zabito: ${zombiesKilled} · Úroveň ${zombieLevel()}`, 12, 22);
       }
 
       function showZombieResult() {
@@ -7470,7 +7491,7 @@
           if (running) draw();
         }
         // Zombie mají vlastní rovnoměrné tempo (o kousek pomalejší než hráč), ať se netrhají.
-        if (zombieMode && running && !tutorialWaitTurn && now - lastZombieTick >= ZOMBIE_SPEED_MS) {
+        if (zombieMode && running && !tutorialWaitTurn && now - lastZombieTick >= zombieSpeedMs()) {
           lastZombieTick = now;
           moveZombies();
           if (running) draw();
