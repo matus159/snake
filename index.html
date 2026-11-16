@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.3">
+  <meta name="snake-version" content="1.99.4">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3331,13 +3331,11 @@
       let zombieTickCount = 0;
       let zombiePopups = [];
       let lastZombieTick = 0;
-      // Obtížnost roste se zabitými zombie: úroveň 1 (pomalý a hloupý) až 10 (rychlejší než hráč a chytrý).
-      const ZOMBIE_MAX_LEVEL = 10;
-      function zombieLevel() {
-        return Math.min(ZOMBIE_MAX_LEVEL, zombiesKilled + 1);
-      }
+      // Obtížnost roste plynule se zabitými zombie: první je pomalý a hloupý, pak je každý
+      // o trochu těžší – nejdřív pomalu, potom rychleji. Nejtěžší po 15 zabitých.
+      const ZOMBIE_HARDEST_AT = 15;
       function zombieSkill() {
-        return (zombieLevel() - 1) / (ZOMBIE_MAX_LEVEL - 1); // 0 … 1
+        return Math.min(1, Math.pow(zombiesKilled / ZOMBIE_HARDEST_AT, 1.4)); // 0 … 1
       }
       function zombieSpeedMs() {
         return Math.round(210 - zombieSkill() * 100); // 210 ms … 110 ms (hráč má 120 ms)
@@ -5601,7 +5599,7 @@
         ctx.font = 'bold 15px "JetBrains Mono", monospace';
         ctx.textAlign = 'left';
         ctx.fillStyle = '#9be36b';
-        ctx.fillText(`🧟 Zabito: ${zombiesKilled} · Úroveň ${zombieLevel()}`, 12, 22);
+        ctx.fillText(`🧟 Zabito: ${zombiesKilled}`, 12, 22);
       }
 
       function showZombieResult() {
