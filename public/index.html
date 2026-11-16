@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.5">
+  <meta name="snake-version" content="1.99.6">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5458,6 +5458,7 @@
       function killZombie(z) {
         zombies = zombies.filter((o) => o !== z);
         zombiesKilled++;
+        playSound('zombie');
         zombieTarget = 2;
         diamanty += ZOMBIE_REWARD;
         updateScoreDisplay();
@@ -7540,6 +7541,10 @@
       let audioCtx = null;
       let chramstBuf = null;
       let chramstLoading = null;
+      // další zvuky (např. smrt zombie) – načtou se spolu s chramst
+      const SOUND_FILES = { zombie: '/sounds/zombie-smrt.mp3' };
+      const soundBufs = {};
+      let soundsLoading = false;
 
       function ensureAudio() {
         if (!audioCtx) {
@@ -7555,7 +7560,28 @@
             .then((buf) => { chramstBuf = buf; })
             .catch(() => { chramstLoading = null; });
         }
+        if (!soundsLoading) {
+          soundsLoading = true;
+          Object.entries(SOUND_FILES).forEach(([name, url]) => {
+            fetch(url)
+              .then((r) => r.arrayBuffer())
+              .then((b) => new Promise((res, rej) => audioCtx.decodeAudioData(b, res, rej)))
+              .then((buf) => { soundBufs[name] = buf; })
+              .catch(() => { soundsLoading = false; });
+          });
+        }
         return audioCtx;
+      }
+
+      function playSound(name) {
+        const buf = soundBufs[name];
+        if (!soundOn || !audioCtx || !buf) return;
+        try {
+          const src = audioCtx.createBufferSource();
+          src.buffer = buf;
+          src.connect(audioCtx.destination);
+          src.start();
+        } catch {}
       }
 
       function playChramst() {
