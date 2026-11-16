@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.98.1">
+  <meta name="snake-version" content="1.99.7">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2542,6 +2542,54 @@
       width: 100%;
     }
 
+    /* Zombie mód: stejná karta jako ostatní, jen zelená, pod nimi uprostřed */
+    .mode-select-zombie {
+      display: flex;
+      justify-content: center;
+      padding-bottom: 0.5rem;
+    }
+
+    .mode-card.zombie-card {
+      border-color: rgba(110, 230, 70, 0.3);
+    }
+
+    .mode-card.zombie-card:hover {
+      border-color: #6fe63a;
+      box-shadow: 0 0 28px rgba(110, 230, 70, 0.28);
+    }
+
+    .zombie-card .computer-icon {
+      border-color: #6fe63a;
+      background: linear-gradient(180deg, #2f4a2d 0%, #1b2a1a 100%);
+      box-shadow: inset 0 0 12px rgba(110, 230, 70, 0.18);
+    }
+
+    .zombie-card .computer-icon::before {
+      background: rgba(110, 230, 70, 0.14);
+    }
+
+    .zombie-card .mode-title {
+      color: #6fe63a;
+    }
+
+    .zombie-card .zombie-days {
+      font-size: 0.75rem;
+      color: #8aa;
+      margin-top: -0.6rem;
+    }
+
+    .mode-card.zombie-card.locked {
+      opacity: 0.45;
+      filter: grayscale(0.7);
+      cursor: not-allowed;
+    }
+
+    .mode-card.zombie-card.locked:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: rgba(110, 230, 70, 0.3);
+    }
+
     .mode-select-wrap {
       display: flex;
       flex-direction: column;
@@ -2651,6 +2699,7 @@
         gap: 0.4rem;
         padding: 0.5rem;
       }
+
 
       .mode-select-layout {
         justify-content: center;
@@ -2950,6 +2999,15 @@
             <span class="mode-title">Hra pro více hráčů</span>
           </button>
           </div>
+          <div class="mode-select-zombie">
+            <button type="button" class="mode-card zombie-card" id="zombieModeBtn">
+              <div class="mode-icons">
+                <div class="computer-icon" aria-hidden="true"></div>
+              </div>
+              <span class="mode-title">Zombie mód</span>
+              <span class="zombie-days" id="zombieDays" hidden>🔒 Jen v pondělí, úterý a pátek</span>
+            </button>
+          </div>
         </div>
       </div>
       <div id="transferOverlay" class="overlay">
@@ -3012,6 +3070,7 @@
       <div id="gameOverOverlay" class="overlay">
         <h2>Konec hry</h2>
         <p>Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="finalDiamanty">0</span></p>
+        <p id="zombieResult" hidden></p>
         <div class="game-over-actions">
           <button class="btn" id="restartBtn">Hrát znovu</button>
           <button class="btn" id="gameOverMenuBtn">Hlavní nabídka</button>
@@ -3282,6 +3341,24 @@
       let lastKostkaSpawn = 0;
       let hueCounter = 0;
       const SPEED_MS = 120;
+      // Zombie mód (stav hry je tady nahoře, kód níž u initGame)
+      let zombieMode = false;
+      let zombies = [];
+      let zombieTarget = 1;
+      let zombieRespawn = [];
+      let zombiesKilled = 0;
+      let zombieTickCount = 0;
+      let zombiePopups = [];
+      let lastZombieTick = 0;
+      // Obtížnost roste plynule se zabitými zombie: první je pomalý a hloupý, pak je každý
+      // o trochu těžší – nejdřív pomalu, potom rychleji. Nejtěžší po 15 zabitých.
+      const ZOMBIE_HARDEST_AT = 15;
+      function zombieSkill() {
+        return Math.min(1, Math.pow(zombiesKilled / ZOMBIE_HARDEST_AT, 1.4)); // 0 … 1
+      }
+      function zombieSpeedMs() {
+        return Math.round(210 - zombieSkill() * 100); // 210 ms … 110 ms (hráč má 120 ms)
+      }
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
       // Tacos event: část kostek je zlatá s tacos, dávají diamant navíc.
@@ -4478,6 +4555,7 @@
         hideAllMenuOverlays();
         banOverlay.classList.remove('visible');
         modeSelectOverlay.classList.add('visible');
+        updateZombieCard();
         updatePlayerNameDisplay();
         syncProgressFromServer();
         draw();
@@ -4967,7 +5045,7 @@
         banOverlay.classList.remove('visible');
         hideAllMenuOverlays();
         if (playerName) {
-          startGreeting.textContent = `Ahoj, ${playerName}!`;
+          startGreeting.textContent = zombieMode ? `🧟 Zombie mód – pozor, ${playerName}!` : `Ahoj, ${playerName}!`;
           startOverlay.classList.add('visible');
         } else {
           nameOverlay.classList.add('visible');
@@ -5344,6 +5422,232 @@
         }
       }
 
+      // ===== Zombie mód =====
+      // Na začátku 1 zombie. Když ho zabiješ, přijdou 2 – a pak jsou pořád 2 (za každého zabitého
+      // přijde nový). Zombie tě honí a chce, abys do něj narazil. Zombie zemře, když narazí do tebe
+      // (do těla), do zdi nebo do jiného zombie. Za každého zabitého +10 💎.
+      const ZOMBIE_REWARD = 10;
+      const ZOMBIE_LEN = 4;
+      const ZOMBIE_RESPAWN_TICKS = 13; // asi 2 vteřiny
+      const ZOMBIE_BEST_KEY = 'snake-zombie-best';
+
+      function initZombies() {
+        zombies = [];
+        zombieRespawn = [];
+        zombiePopups = [];
+        zombiesKilled = 0;
+        zombieTickCount = 0;
+        zombieTarget = 1;
+        if (zombieMode) spawnZombie();
+      }
+
+      function zombieAt(x, y, except = null) {
+        return zombies.some((z) => z !== except && z.body.some((c) => c.x === x && c.y === y));
+      }
+
+      function spawnZombie() {
+        const head = snake[0];
+        const taken = new Set(snake.map((c) => `${c.x},${c.y}`));
+        zombies.forEach((z) => z.body.forEach((c) => taken.add(`${c.x},${c.y}`)));
+        // daleko od hráče, ať má čas reagovat
+        const spots = [];
+        for (let x = ZOMBIE_LEN; x < COLS - ZOMBIE_LEN; x++) {
+          for (let y = 1; y < ROWS - 1; y++) {
+            if (Math.abs(x - head.x) + Math.abs(y - head.y) < 18) continue;
+            let ok = true;
+            for (let i = 0; i < ZOMBIE_LEN && ok; i++) {
+              if (taken.has(`${x - i},${y}`) || taken.has(`${x + i},${y}`)) ok = false;
+            }
+            if (ok) spots.push({ x, y });
+          }
+        }
+        if (!spots.length) return;
+        const p = spots[randInt(0, spots.length)];
+        // hlava míří k hráči, tělo za ní
+        const dx = head.x >= p.x ? 1 : -1;
+        const body = [];
+        for (let i = 0; i < ZOMBIE_LEN; i++) body.push({ x: p.x - dx * i, y: p.y });
+        // Ze začátku jsou zombie hloupí, s každým zabitým je větší šance na chytrého
+        // (po ~8 zabitých už jen chytří).
+        const dumb = Math.random() < Math.max(0, 1 - zombieSkill() * 2.5);
+        // chytřejší zombie se víc vyhýbá tvému tělu (hůř se zabíjí)
+        const careful = !dumb && Math.random() < zombieSkill() * 0.75;
+        zombies.push({ body, dir: { x: dx, y: 0 }, grow: 0, dumb, careful });
+      }
+
+      function killZombie(z) {
+        zombies = zombies.filter((o) => o !== z);
+        zombiesKilled++;
+        playSound('zombie');
+        zombieTarget = 2;
+        diamanty += ZOMBIE_REWARD;
+        updateScoreDisplay();
+        const h = z.body[0];
+        zombiePopups.push({ x: h.x, y: h.y, until: performance.now() + 1300 });
+        // dorovnat na 2 zombie (za chvilku, ať se hráč nadechne)
+        while (zombies.length + zombieRespawn.length < zombieTarget) {
+          zombieRespawn.push(zombieTickCount + ZOMBIE_RESPAWN_TICKS);
+        }
+      }
+
+      function moveZombies() {
+        zombieTickCount++;
+        zombieRespawn = zombieRespawn.filter((t) => {
+          if (zombieTickCount < t) return true;
+          spawnZombie();
+          return false;
+        });
+        const head = snake[0];
+        const skill = zombieSkill();
+        // cíl: hloupý zombie jede rovnou za hlavou (snadno se mu ujede), chytrý míří až 5 polí
+        // před hráče – chce se mu postavit do cesty
+        const ahead = Math.round(skill * 5);
+        const aim = {
+          x: Math.max(0, Math.min(COLS - 1, head.x + direction.x * ahead)),
+          y: Math.max(0, Math.min(ROWS - 1, head.y + direction.y * ahead)),
+        };
+        for (const z of [...zombies]) {
+          if (!zombies.includes(z)) continue;
+          const zh = z.body[0];
+          const near = Math.abs(zh.x - head.x) + Math.abs(zh.y - head.y) <= 3;
+          // Hloupý zombie míří na prostředek tvého těla – snadno do něj vjede a zemře.
+          const goal = z.dumb && snake.length > 2
+            ? snake[Math.floor(snake.length / 2)]
+            : near ? head : aim;
+          const options = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]
+            .filter((d) => !(d.x === -z.dir.x && d.y === -z.dir.y))
+            .map((d) => ({ d, c: { x: zh.x + d.x, y: zh.y + d.y } }));
+          // bezpečné pro zombie: ne do zdi, do sebe ani do jiného zombie (do hráče jít smí – to je jeho cíl)
+          const safe = options.filter(({ c }) => c.x >= 0 && c.x < COLS && c.y >= 0 && c.y < ROWS
+            && !z.body.slice(0, -1).some((b) => b.x === c.x && b.y === c.y)
+            && !zombieAt(c.x, c.y, z));
+          // Rovně má přednost, když to k cíli není horší – zombie jede plynule do L,
+          // ne cik-cak po schodech. Zatočí, až když rovně by ho od cíle vzdalovalo.
+          // chytřejší zombie se víc vyhýbá tělu hráče (hůř se zabíjí)
+          const careful = safe.filter(({ c }) => !snake.slice(1).some((b) => b.x === c.x && b.y === c.y));
+          const avoidBody = z.careful && careful.length;
+          const pool = avoidBody ? careful : (safe.length ? safe : options);
+          const pick = pool
+            .map((o) => {
+              const straight = o.d.x === z.dir.x && o.d.y === z.dir.y;
+              return { ...o, dist: Math.abs(o.c.x - goal.x) + Math.abs(o.c.y - goal.y) - (straight ? 0.5 : 0) };
+            })
+            .sort((a, b) => a.dist - b.dist)[0];
+          const c = pick.c;
+          z.dir = pick.d;
+          // zeď, vlastní tělo nebo jiný zombie → zombie zemře
+          if (c.x < 0 || c.x >= COLS || c.y < 0 || c.y >= ROWS
+            || z.body.slice(0, -1).some((b) => b.x === c.x && b.y === c.y) || zombieAt(c.x, c.y, z)) {
+            killZombie(z);
+            continue;
+          }
+          // narazil hlavou do hlavy hráče → hráč prohrál (hloupý zombie ale zemře sám)
+          if (c.x === head.x && c.y === head.y && z.dumb) {
+            killZombie(z);
+            continue;
+          }
+          if (c.x === head.x && c.y === head.y) {
+            gameOver();
+            return;
+          }
+          // narazil do těla hráče → zombie zemře
+          if (snake.some((b) => b.x === c.x && b.y === c.y)) {
+            killZombie(z);
+            continue;
+          }
+          z.body.unshift(c);
+          const ki = kostky.findIndex((k) => k.x === c.x && k.y === c.y);
+          if (ki !== -1) {
+            // zombie sežral kostku – roste a kostka se objeví jinde
+            kostky.splice(ki, 1);
+            spawnOneKostka();
+          } else {
+            z.body.pop();
+          }
+        }
+      }
+
+      function drawZombies() {
+        const t = performance.now();
+        zombies.forEach((z) => {
+          z.body.forEach((c, i) => {
+            const px = c.x * CELL + 1;
+            const py = c.y * CELL + 1;
+            const size = CELL - 2;
+            const shade = i === 0 ? 0 : (i * 23) % 3;
+            ctx.fillStyle = ['#5f7f4a', '#4f6d3d', '#6b8a52'][shade];
+            ctx.fillRect(px, py, size, size);
+            // fleky a stehy
+            ctx.fillStyle = 'rgba(40, 30, 20, 0.55)';
+            if (i % 2) ctx.fillRect(px + 3, py + 4, 5, 4);
+            else ctx.fillRect(px + size - 8, py + size - 7, 5, 3);
+            if (i > 0 && i % 3 === 0) {
+              ctx.strokeStyle = '#2b2b2b';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(px + 3, py + size / 2);
+              ctx.lineTo(px + size - 3, py + size / 2);
+              for (let k = 5; k < size - 2; k += 4) {
+                ctx.moveTo(px + k, py + size / 2 - 2);
+                ctx.lineTo(px + k, py + size / 2 + 2);
+              }
+              ctx.stroke();
+            }
+          });
+          // hlava: svítící červené oči
+          const h = z.body[0];
+          const cx = h.x * CELL + CELL / 2;
+          const cy = h.y * CELL + CELL / 2;
+          const glow = 0.6 + 0.4 * Math.sin(t / 150);
+          ctx.save();
+          ctx.shadowColor = '#ff2020';
+          ctx.shadowBlur = 8 * glow;
+          ctx.fillStyle = '#ff3030';
+          const ox = z.dir.y !== 0 ? 4 : 0;
+          const oy = z.dir.x !== 0 ? 4 : 0;
+          ctx.beginPath();
+          ctx.arc(cx - ox + z.dir.x * 2, cy - oy + z.dir.y * 2, 2.6, 0, Math.PI * 2);
+          ctx.arc(cx + ox + z.dir.x * 2, cy + oy + z.dir.y * 2, 2.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+        // „+10 💎“ tam, kde zombie zemřel
+        zombiePopups = zombiePopups.filter((p) => p.until > t);
+        zombiePopups.forEach((p) => {
+          const left = (p.until - t) / 1300;
+          ctx.globalAlpha = Math.min(1, left * 2);
+          ctx.font = 'bold 16px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#9be36b';
+          ctx.fillText(`💀 +${ZOMBIE_REWARD} 💎`, p.x * CELL + CELL / 2, p.y * CELL - 6 - (1 - left) * 20);
+          ctx.globalAlpha = 1;
+        });
+      }
+
+      function drawZombieHud() {
+        ctx.font = 'bold 15px "JetBrains Mono", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#9be36b';
+        ctx.fillText(`🧟 Zabito: ${zombiesKilled}`, 12, 22);
+      }
+
+      function showZombieResult() {
+        const el = document.getElementById('zombieResult');
+        if (!zombieMode) {
+          el.hidden = true;
+          return;
+        }
+        let best = 0;
+        try { best = Number(localStorage.getItem(`${ZOMBIE_BEST_KEY}:${getProfileId(playerName)}`)) || 0; } catch {}
+        const record = zombiesKilled > best;
+        if (record) {
+          try { localStorage.setItem(`${ZOMBIE_BEST_KEY}:${getProfileId(playerName)}`, String(zombiesKilled)); } catch {}
+        }
+        el.textContent = `🧟 Zabitých zombie: ${zombiesKilled} (+${zombiesKilled * ZOMBIE_REWARD} 💎)`
+          + (record && zombiesKilled > 0 ? ' – nový rekord!' : ` · rekord: ${Math.max(best, zombiesKilled)}`);
+        el.hidden = false;
+      }
+
       function initGame() {
         const startX = Math.floor(COLS / 2);
         const startY = Math.floor(ROWS / 2);
@@ -5360,6 +5664,7 @@
         hueCounter = 0;
         spawnKostky();
         lastKostkaSpawn = 0;
+        initZombies();
         refreshCurrencyUI();
       }
 
@@ -5596,6 +5901,8 @@
           else drawRect(k.x, k.y, `hsl(${k.hue}, 85%, 55%)`, 1);
         });
 
+        if (zombieMode) drawZombies();
+
         const skin = skinAvailable(equippedSkin) ? equippedSkin : 'default';
         if (skin === 'angel') drawAngelWings();
         if (skin === 'devil') drawDevilTail();
@@ -5662,6 +5969,7 @@
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
         drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'kral' || skin === 'fire' ? 15 : 0);
+        if (zombieMode) drawZombieHud();
       }
 
       // Duhový anděl: svatozář nad hlavou a dvě duhová křídla nad 2. a 3. článkem.
@@ -5921,6 +6229,12 @@
           return;
         }
 
+        // Zombie mód: narazil jsi do zombie – konec
+        if (zombieMode && zombieAt(newHead.x, newHead.y)) {
+          gameOver();
+          return;
+        }
+
         snake.unshift(newHead);
 
         const eatenIndex = kostky.findIndex(k => k.x === newHead.x && k.y === newHead.y);
@@ -5962,6 +6276,7 @@
         bankScoreToDiamanty();
         saveProgress();
         finalDiamantyEl.textContent = diamanty;
+        showZombieResult();
         refreshCurrencyUI();
         reportPlayerName();
         gameOverOverlay.classList.add('visible');
@@ -7199,6 +7514,12 @@
           move();
           if (running) draw();
         }
+        // Zombie mají vlastní rovnoměrné tempo (o kousek pomalejší než hráč), ať se netrhají.
+        if (zombieMode && running && !tutorialWaitTurn && now - lastZombieTick >= zombieSpeedMs()) {
+          lastZombieTick = now;
+          moveZombies();
+          if (running) draw();
+        }
         requestAnimationFrame(loop);
       }
 
@@ -7240,6 +7561,10 @@
       let audioCtx = null;
       let chramstBuf = null;
       let chramstLoading = null;
+      // další zvuky (např. smrt zombie) – načtou se spolu s chramst
+      const SOUND_FILES = { zombie: '/sounds/zombie-smrt.mp3' };
+      const soundBufs = {};
+      let soundsLoading = false;
 
       function ensureAudio() {
         if (!audioCtx) {
@@ -7255,7 +7580,28 @@
             .then((buf) => { chramstBuf = buf; })
             .catch(() => { chramstLoading = null; });
         }
+        if (!soundsLoading) {
+          soundsLoading = true;
+          Object.entries(SOUND_FILES).forEach(([name, url]) => {
+            fetch(url)
+              .then((r) => r.arrayBuffer())
+              .then((b) => new Promise((res, rej) => audioCtx.decodeAudioData(b, res, rej)))
+              .then((buf) => { soundBufs[name] = buf; })
+              .catch(() => { soundsLoading = false; });
+          });
+        }
         return audioCtx;
+      }
+
+      function playSound(name) {
+        const buf = soundBufs[name];
+        if (!soundOn || !audioCtx || !buf) return;
+        try {
+          const src = audioCtx.createBufferSource();
+          src.buffer = buf;
+          src.connect(audioCtx.destination);
+          src.start();
+        } catch {}
       }
 
       function playChramst() {
@@ -7352,6 +7698,7 @@
         const now = performance.now();
         lastTick = now;
         lastKostkaSpawn = now;
+        lastZombieTick = now;
         tutorialOnGameStart();
         draw();
       }
@@ -7595,7 +7942,37 @@
       playerNameInput.addEventListener('input', () => showNameTaken(''));
       changeNameModeBtn.addEventListener('click', openChangeName);
       changeNameStartBtn.addEventListener('click', openChangeName);
-      singlePlayerBtn.addEventListener('click', () => selectGameMode('single'));
+      singlePlayerBtn.addEventListener('click', () => {
+        zombieMode = false;
+        selectGameMode('single');
+      });
+      // Zombie mód jde jen v pondělí, úterý a pátek (celý den, český čas). Owner ho má vždycky.
+      const zombieModeBtn = document.getElementById('zombieModeBtn');
+
+      function zombieAvailable(now = new Date()) {
+        if (playerName && isOwner()) return true;
+        const day = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Prague', weekday: 'short' }).format(now);
+        return ['Mon', 'Tue', 'Fri'].includes(day);
+      }
+
+      function updateZombieCard() {
+        // prvky se hledají tady (funkce se volá i z menu dřív, než se načte zbytek skriptu)
+        const btn = document.getElementById('zombieModeBtn');
+        const days = document.getElementById('zombieDays');
+        if (!btn || !days) return;
+        const ok = zombieAvailable();
+        btn.classList.toggle('locked', !ok);
+        days.hidden = ok;
+      }
+      updateZombieCard();
+      setInterval(updateZombieCard, 30000);
+
+      zombieModeBtn.addEventListener('click', () => {
+        updateZombieCard();
+        if (!zombieAvailable()) return;
+        zombieMode = true;
+        selectGameMode('single');
+      });
       multiPlayerBtn.addEventListener('click', () => selectGameMode('multi'));
       multiBackBtn.addEventListener('click', showModeSelect);
       multiStartBtn.addEventListener('click', requestMultiStart);
