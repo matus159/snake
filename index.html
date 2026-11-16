@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.0">
+  <meta name="snake-version" content="1.99.1">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3333,6 +3333,8 @@
       let zombiesKilled = 0;
       let zombieTickCount = 0;
       let zombiePopups = [];
+      let lastZombieTick = 0;
+      const ZOMBIE_SPEED_MS = 150;
       const KOSTKA_SPAWN_MS = 2000;
       const MAX_KOSTKY = 23;
       // Tacos event: část kostek je zlatá s tacos, dávají diamant navíc.
@@ -5401,7 +5403,7 @@
       // (do těla), do zdi nebo do jiného zombie. Za každého zabitého +10 💎.
       const ZOMBIE_REWARD = 10;
       const ZOMBIE_LEN = 4;
-      const ZOMBIE_RESPAWN_TICKS = 15; // asi 2 vteřiny
+      const ZOMBIE_RESPAWN_TICKS = 13; // asi 2 vteřiny
       const ZOMBIE_BEST_KEY = 'snake-zombie-best';
 
       function initZombies() {
@@ -5464,8 +5466,6 @@
           spawnZombie();
           return false;
         });
-        // zombie je o kousek pomalejší než hráč: každý 4. krok vynechá
-        if (zombieTickCount % 4 === 0) return;
         const head = snake[0];
         // cíl: kousek před hlavou hráče – zombie se mu chce postavit do cesty
         const aim = {
@@ -5484,8 +5484,13 @@
           const safe = options.filter(({ c }) => c.x >= 0 && c.x < COLS && c.y >= 0 && c.y < ROWS
             && !z.body.slice(0, -1).some((b) => b.x === c.x && b.y === c.y)
             && !zombieAt(c.x, c.y, z));
+          // Rovně má přednost, když to k cíli není horší – zombie jede plynule do L,
+          // ne cik-cak po schodech. Zatočí, až když rovně by ho od cíle vzdalovalo.
           const pick = (safe.length ? safe : options)
-            .map((o) => ({ ...o, dist: Math.abs(o.c.x - goal.x) + Math.abs(o.c.y - goal.y) + Math.random() * 0.8 }))
+            .map((o) => {
+              const straight = o.d.x === z.dir.x && o.d.y === z.dir.y;
+              return { ...o, dist: Math.abs(o.c.x - goal.x) + Math.abs(o.c.y - goal.y) - (straight ? 0.5 : 0) };
+            })
             .sort((a, b) => a.dist - b.dist)[0];
           const c = pick.c;
           z.dir = pick.d;
@@ -6212,7 +6217,6 @@
         } else {
           snake.pop();
         }
-        if (zombieMode && running) moveZombies();
       }
 
       const finalDiamantyEl = document.getElementById('finalDiamanty');
@@ -7465,6 +7469,12 @@
           move();
           if (running) draw();
         }
+        // Zombie mají vlastní rovnoměrné tempo (o kousek pomalejší než hráč), ať se netrhají.
+        if (zombieMode && running && !tutorialWaitTurn && now - lastZombieTick >= ZOMBIE_SPEED_MS) {
+          lastZombieTick = now;
+          moveZombies();
+          if (running) draw();
+        }
         requestAnimationFrame(loop);
       }
 
@@ -7618,6 +7628,7 @@
         const now = performance.now();
         lastTick = now;
         lastKostkaSpawn = now;
+        lastZombieTick = now;
         tutorialOnGameStart();
         draw();
       }
