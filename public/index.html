@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.4">
+  <meta name="snake-version" content="1.99.5">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5447,7 +5447,12 @@
         const dx = head.x >= p.x ? 1 : -1;
         const body = [];
         for (let i = 0; i < ZOMBIE_LEN; i++) body.push({ x: p.x - dx * i, y: p.y });
-        zombies.push({ body, dir: { x: dx, y: 0 }, grow: 0 });
+        // Ze začátku jsou zombie hloupí, s každým zabitým je větší šance na chytrého
+        // (po ~8 zabitých už jen chytří).
+        const dumb = Math.random() < Math.max(0, 1 - zombieSkill() * 2.5);
+        // chytřejší zombie se víc vyhýbá tvému tělu (hůř se zabíjí)
+        const careful = !dumb && Math.random() < zombieSkill() * 0.75;
+        zombies.push({ body, dir: { x: dx, y: 0 }, grow: 0, dumb, careful });
       }
 
       function killZombie(z) {
@@ -5484,7 +5489,10 @@
           if (!zombies.includes(z)) continue;
           const zh = z.body[0];
           const near = Math.abs(zh.x - head.x) + Math.abs(zh.y - head.y) <= 3;
-          const goal = near ? head : aim;
+          // Hloupý zombie míří na prostředek tvého těla – snadno do něj vjede a zemře.
+          const goal = z.dumb && snake.length > 2
+            ? snake[Math.floor(snake.length / 2)]
+            : near ? head : aim;
           const options = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]
             .filter((d) => !(d.x === -z.dir.x && d.y === -z.dir.y))
             .map((d) => ({ d, c: { x: zh.x + d.x, y: zh.y + d.y } }));
@@ -5496,12 +5504,8 @@
           // ne cik-cak po schodech. Zatočí, až když rovně by ho od cíle vzdalovalo.
           // chytřejší zombie se víc vyhýbá tělu hráče (hůř se zabíjí)
           const careful = safe.filter(({ c }) => !snake.slice(1).some((b) => b.x === c.x && b.y === c.y));
-          const avoidBody = Math.random() < skill * 0.75 && careful.length;
-          let pool = avoidBody ? careful : (safe.length ? safe : options);
-          // hloupý zombie občas zabloudí (náhodně zatočí)
-          if (Math.random() < (1 - skill) * 0.3 && pool.length > 1) {
-            pool = [pool[randInt(0, pool.length)]];
-          }
+          const avoidBody = z.careful && careful.length;
+          const pool = avoidBody ? careful : (safe.length ? safe : options);
           const pick = pool
             .map((o) => {
               const straight = o.d.x === z.dir.x && o.d.y === z.dir.y;
@@ -5516,7 +5520,11 @@
             killZombie(z);
             continue;
           }
-          // narazil hlavou do hlavy hráče → hráč prohrál
+          // narazil hlavou do hlavy hráče → hráč prohrál (hloupý zombie ale zemře sám)
+          if (c.x === head.x && c.y === head.y && z.dumb) {
+            killZombie(z);
+            continue;
+          }
           if (c.x === head.x && c.y === head.y) {
             gameOver();
             return;
