@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.11">
+  <meta name="snake-version" content="1.99.12">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -8217,13 +8217,10 @@
           friendsListEl.append(li);
           return;
         }
-        all.forEach((f, i) => {
+        all.forEach((f) => {
           const li = document.createElement('li');
           const row = document.createElement('div');
           row.className = f.isMe ? 'friend-row me' : 'friend-row';
-          const rank = document.createElement('span');
-          rank.className = 'lb-rank';
-          rank.textContent = i < 3 ? ['🥇', '🥈', '🥉'][i] : `${i + 1}.`;
           const dot = document.createElement('span');
           dot.className = f.online ? 'friend-dot online' : 'friend-dot';
           dot.title = f.online ? 'Online' : 'Offline';
@@ -8233,7 +8230,7 @@
           const dia = document.createElement('span');
           dia.className = 'friend-dia';
           dia.textContent = `${f.diamanty} 💎`;
-          row.append(rank, dot, name, dia);
+          row.append(dot, name, dia);
           if (!f.isMe) {
             const acts = document.createElement('span');
             acts.className = 'friend-actions';
