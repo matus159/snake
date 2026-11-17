@@ -26,7 +26,7 @@ const MAX_FRIENDS = 30;
 const MAX_REQUESTS = 20;
 const ONLINE_MS = 50 * 1000;
 const INVITE_MS = 3 * 60 * 1000;
-export const FRIEND_REACTIONS = ['👍', '😂', '🔥', 'GG', '😮', '❤️'];
+export const FRIEND_REACTIONS = ['👍', '😂', '🔥', 'GG', '😮', '❤️', '😎', '👋', '👏', '🎉', '😢', '🤯', '🐍', '💎', '🧟', '🏆'];
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 function json(body: unknown, status = 200): Response {
