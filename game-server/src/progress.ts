@@ -1,3 +1,4 @@
+import { handleFriendsRequest } from './friends';
 // Postup hráče (diamanty, hadi) uložený na serveru pod tajným přenosovým kódem.
 // Kód si hráč zobrazí na jednom zařízení a zadá na druhém – pak má na obou stejný postup.
 // Klíč `pcode:<KÓD>`.
@@ -56,6 +57,7 @@ function newCode(): string {
 export async function handleProgressRequest(request: Request, storage: DurableObjectStorage): Promise<Response> {
   const url = new URL(request.url);
   const action = url.pathname.replace('/api/progress/', '');
+  if (action.startsWith('friends/')) return handleFriendsRequest(action.slice('friends/'.length), request, storage);
 
   if (action === 'name' && request.method === 'GET') {
     // Má už tohle jméno někdo jiný (nějaký přenosový kód)?
