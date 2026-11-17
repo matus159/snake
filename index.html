@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.10">
+  <meta name="snake-version" content="1.99.11">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -8121,7 +8121,7 @@
       const friendNotice = document.getElementById('friendNotice');
       const friendNoticeText = document.getElementById('friendNoticeText');
       const FRIEND_REACTIONS = ['👍', '😂', '🔥', 'GG', '😮', '❤️'];
-      const FRIENDS_POLL_MS = 20000;
+      const FRIENDS_POLL_MS = 10000;
       let friendsData = null;
       let friendsOpenExtra = null; // { name, kind: 'gift' | 'react' }
       let friendNoticeQueue = [];
@@ -8345,19 +8345,21 @@
         }
       }
 
-      // Pozvánky a reakce od kamarádů: jedna po druhé, nahoře nad hrou. Uprostřed hry se čeká.
+      // Pozvánky a reakce od kamarádů: jedna po druhé, nahoře nad hrou – v menu i při hraní.
       function showNextFriendNotice() {
-        if (friendNotice.classList.contains('visible') || running || multiInGame) return;
+        if (friendNotice.classList.contains('visible')) return;
         const n = friendNoticeQueue.shift();
         if (!n) return;
         const yes = document.getElementById('friendNoticeYes');
         const no = document.getElementById('friendNoticeNo');
         if (n.kind === 'invite') {
-          friendNoticeSeq++;
+          const seq = ++friendNoticeSeq;
           friendInviteFrom = n.name;
           friendNoticeText.textContent = `🎮 ${n.name} tě zve do hry!`;
           yes.hidden = false;
           no.textContent = 'Ne';
+          // když na ni nikdo neklikne, po chvíli zmizí (ať nepřekáží ve hře)
+          setTimeout(() => { if (seq === friendNoticeSeq) hideFriendNotice(); }, 20000);
         } else {
           friendInviteFrom = null;
           friendNoticeText.textContent = `${n.name} ti poslal ${n.emoji}`;
@@ -8365,7 +8367,7 @@
           no.textContent = 'OK';
           // schovat jen tuhle reakci (ne další, která se mezitím ukáže)
           const seq = ++friendNoticeSeq;
-          setTimeout(() => { if (seq === friendNoticeSeq && !friendInviteFrom) hideFriendNotice(); }, 5000);
+          setTimeout(() => { if (seq === friendNoticeSeq && !friendInviteFrom) hideFriendNotice(); }, 4000);
         }
         friendNotice.classList.add('visible');
       }
@@ -8381,7 +8383,22 @@
         const from = friendInviteFrom;
         friendNotice.classList.remove('visible');
         friendInviteFrom = null;
-        if (!from || running || multiInGame) return;
+        friendNoticeSeq++;
+        if (!from) return;
+        if (multiInGame || multiSpectating) {
+          // už je ve hře pro více hráčů – kamarád se připojí do stejné hry, po kole budou spolu
+          showPlayerNotice(`${from} je ve hře pro více hráčů s tebou – po kole začnete spolu.`);
+          return;
+        }
+        if (running) {
+          // hra pro jednoho skončí, diamanty se uloží
+          running = false;
+          paused = false;
+          bankScoreToDiamanty();
+          saveProgress();
+          refreshCurrencyUI();
+          reportPlayerName();
+        }
         hideAllMenuOverlays();
         shopOverlay.classList.remove('visible');
         pauseOverlay.classList.remove('visible');
@@ -8401,7 +8418,6 @@
       setInterval(() => {
         if (document.hidden) return;
         refreshFriends();
-        showNextFriendNotice();
       }, FRIENDS_POLL_MS);
       setTimeout(() => refreshFriends(), 3000);
       // Zavřel nebo schoval hru → kamarádi ho hned uvidí offline.
