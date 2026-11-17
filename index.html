@@ -8127,6 +8127,7 @@
       let friendNoticeQueue = [];
       let friendInviteFrom = null;
       let friendsBusy = false;
+      let friendNoticeSeq = 0;
 
       async function friendsCall(action, extra = {}) {
         const code = progressCode();
@@ -8352,6 +8353,7 @@
         const yes = document.getElementById('friendNoticeYes');
         const no = document.getElementById('friendNoticeNo');
         if (n.kind === 'invite') {
+          friendNoticeSeq++;
           friendInviteFrom = n.name;
           friendNoticeText.textContent = `🎮 ${n.name} tě zve do hry!`;
           yes.hidden = false;
@@ -8361,12 +8363,15 @@
           friendNoticeText.textContent = `${n.name} ti poslal ${n.emoji}`;
           yes.hidden = true;
           no.textContent = 'OK';
-          setTimeout(() => { if (!friendInviteFrom) hideFriendNotice(); }, 5000);
+          // schovat jen tuhle reakci (ne další, která se mezitím ukáže)
+          const seq = ++friendNoticeSeq;
+          setTimeout(() => { if (seq === friendNoticeSeq && !friendInviteFrom) hideFriendNotice(); }, 5000);
         }
         friendNotice.classList.add('visible');
       }
 
       function hideFriendNotice() {
+        friendNoticeSeq++;
         friendNotice.classList.remove('visible');
         friendInviteFrom = null;
         setTimeout(showNextFriendNotice, 400);
