@@ -145,6 +145,10 @@ export class GameServer implements DurableObject {
     }
   }
 
+  async webSocketError(ws: WebSocket) {
+    await this.webSocketClose(ws);
+  }
+
   async webSocketClose(ws: WebSocket) {
     const attachment = getAttachment(ws);
     if (attachment.playerId) {
@@ -163,12 +167,20 @@ export class GameServer implements DurableObject {
       return;
     }
 
-    const duplicate = [...this.players.values()].some(
+    // Stejné jméno už na serveru je? Nejspíš je to ten samý hráč, kterému spadlo spojení
+    // (zavřel hru, vypadl internet) a server si toho nevšiml – starý „duch“ se odpojí
+    // a pustí se nové připojení.
+    const ghosts = [...this.players.values()].filter(
       (p) => p.ws !== ws && p.name.toLowerCase() === name.toLowerCase(),
     );
-    if (duplicate) {
-      send(ws, { type: 'error', message: 'Toto jméno už je na serveru obsazené.' });
-      return;
+    for (const ghost of ghosts) {
+      try {
+        setAttachment(ghost.ws, {});
+        ghost.ws.close(4000, 'Připojil ses odjinud');
+      } catch {
+        // spojení už je stejně mrtvé
+      }
+      await this.removePlayer(ghost.id);
     }
 
     const existing = [...this.players.entries()].find(([, p]) => p.ws === ws);
