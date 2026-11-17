@@ -112,12 +112,13 @@ export async function handleFriendsRequest(action: string, request: Request, sto
     }
     const requests = [];
     for (const r of me.requests) requests.push({ name: (await loadData(storage, r.from)).name || r.from });
+    // jen od těch, kdo jsou pořád moji kamarádi
     const invites = [];
-    for (const i of me.invites.filter((x) => now - x.at < INVITE_MS)) {
+    for (const i of me.invites.filter((x) => now - x.at < INVITE_MS && me.friends.includes(x.from))) {
       invites.push({ name: (await loadData(storage, i.from)).name || i.from });
     }
     const reacts = [];
-    for (const r of me.reacts) reacts.push({ name: (await loadData(storage, r.from)).name || r.from, emoji: r.emoji });
+    for (const r of me.reacts.filter((x) => me.friends.includes(x.from))) reacts.push({ name: (await loadData(storage, r.from)).name || r.from, emoji: r.emoji });
     // pozvánky a reakce se doručí jen jednou
     me.invites = [];
     me.reacts = [];
