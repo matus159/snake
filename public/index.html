@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.9">
+  <meta name="snake-version" content="1.99.10">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -8399,9 +8399,24 @@
         showNextFriendNotice();
       }, FRIENDS_POLL_MS);
       setTimeout(() => refreshFriends(), 3000);
+      // Zavřel nebo schoval hru → kamarádi ho hned uvidí offline.
+      function sendFriendsOffline() {
+        const code = progressCode();
+        if (!code || !friendsData) return;
+        try {
+          fetch('/api/progress/friends/offline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch {}
+      }
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) setTimeout(() => refreshFriends(), 1000);
+        if (document.hidden) sendFriendsOffline();
+        else setTimeout(() => refreshFriends(), 1000);
       });
+      window.addEventListener('pagehide', sendFriendsOffline);
       document.getElementById('leaderboardBackBtn').addEventListener('click', closeLeaderboard);
       document.getElementById('transferBtn').addEventListener('click', openTransfer);
       document.getElementById('transferBackBtn').addEventListener('click', closeTransfer);

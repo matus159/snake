@@ -24,7 +24,7 @@ interface Device {
 
 const MAX_FRIENDS = 30;
 const MAX_REQUESTS = 20;
-const ONLINE_MS = 70 * 1000;
+const ONLINE_MS = 50 * 1000;
 const INVITE_MS = 3 * 60 * 1000;
 export const FRIEND_REACTIONS = ['👍', '😂', '🔥', 'GG', '😮', '❤️'];
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -123,6 +123,13 @@ export async function handleFriendsRequest(action: string, request: Request, sto
     me.reacts = [];
     await saveData(storage, me);
     return json({ friendCode: `K-${friendCode}`, me: { name: me.name, diamanty: dia.get(meLower) ?? 0 }, friends, requests, invites, reacts });
+  }
+
+  if (action === 'offline') {
+    // hráč zavřel nebo schoval hru – hned offline (nečekat, až vyprší čas)
+    me.online = 0;
+    await saveData(storage, me);
+    return json({ ok: true });
   }
 
   if (action === 'add') {
