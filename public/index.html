@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.14">
+  <meta name="snake-version" content="1.99.15">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2822,6 +2822,16 @@
       padding: 1rem;
     }
 
+    /* Odznak OWNER (zlatý, s korunkou) vedle jména adamini */
+    .owner-badge {
+      display: inline-block;
+      height: 1.6em;
+      width: auto;
+      margin-left: 0.35em;
+      vertical-align: -0.4em;
+      image-rendering: auto;
+    }
+
     #modeSelectGreeting {
       margin: 0;
       font-size: 0.95rem;
@@ -4747,9 +4757,49 @@
         if (isOwner()) syncOwnerInputs();
       }
 
+      // Zlatý odznak OWNER vedle jména adamini (všude, kde se jméno ukazuje).
+      // (bez const nahoře – funkce se volají i dřív, než se tahle část skriptu načte)
+      function hasOwnerBadge(name) {
+        return !!name && ['adamini'].includes(String(name).trim().toLowerCase());
+      }
+
+      var ownerBadgeImgCache = null; // var: funguje i před touto řádkou
+      function ownerBadgeImage() {
+        if (!ownerBadgeImgCache) {
+          ownerBadgeImgCache = new Image();
+          ownerBadgeImgCache.src = '/owner-badge.png';
+        }
+        return ownerBadgeImgCache;
+      }
+
+      function ownerBadgeEl() {
+        const img = document.createElement('img');
+        img.src = '/owner-badge.png';
+        img.alt = 'OWNER';
+        img.title = 'Owner';
+        img.className = 'owner-badge';
+        return img;
+      }
+
+      // Text jména a za ním odznak (když ho hráč má).
+      function setNameWithBadge(el, name, suffix = '') {
+        el.textContent = `${name}${suffix}`;
+        if (hasOwnerBadge(name)) el.append(ownerBadgeEl());
+      }
+
+      // Na plátně: odznak vpravo vedle jména nad hlavou hada.
+      function drawOwnerBadgeAfter(name, cx, baselineY) {
+        const ownerBadgeImg = ownerBadgeImage();
+        if (!hasOwnerBadge(name) || !ownerBadgeImg.complete || !ownerBadgeImg.naturalWidth) return;
+        const h = 15;
+        const w = (ownerBadgeImg.naturalWidth / ownerBadgeImg.naturalHeight) * h;
+        const tw = ctx.measureText(name).width;
+        ctx.drawImage(ownerBadgeImg, cx + tw / 2 + 2, baselineY - h + 2, w, h);
+      }
+
       function updatePlayerNameDisplay() {
-        playerNameDisplay.textContent = playerName || '—';
-        modeSelectGreeting.textContent = playerName || '—';
+        setNameWithBadge(playerNameDisplay, playerName || '—');
+        setNameWithBadge(modeSelectGreeting, playerName || '—');
         updateOwnerPanel();
       }
 
@@ -4851,7 +4901,7 @@
           const li = document.createElement('li');
           const name = document.createElement('span');
           name.className = 'lb-name';
-          name.textContent = p.name;
+          setNameWithBadge(name, p.name);
           const rank = document.createElement('span');
           rank.className = i < 3 ? `lb-rank lb-medal lb-rank-${i + 1}` : 'lb-rank';
           rank.textContent = i < 3 ? String(i + 1) : `${i + 1}.`;
@@ -4930,7 +4980,7 @@
         multiLobbyPlayers.forEach((p) => {
           const li = document.createElement('li');
           if (p.id === multiPlayerId) li.classList.add('self');
-          li.textContent = p.id === multiPlayerId ? `${p.name} (ty)` : p.name;
+          setNameWithBadge(li, p.name, p.id === multiPlayerId ? ' (ty)' : '');
           multiPlayerList.appendChild(li);
         });
       }
@@ -5197,6 +5247,7 @@
         ctx.textBaseline = 'bottom';
         const lines = getNameLines(name, maxWidth);
         let y = head.y * CELL - 2;
+        if (lines.length === 1) drawOwnerBadgeAfter(name, cx, y);
         for (let i = lines.length - 1; i >= 0; i--) {
           ctx.fillText(lines[i], cx, y);
           y -= 11;
@@ -6130,6 +6181,7 @@
         ctx.textBaseline = 'bottom';
         const lines = getNameLines(playerName, maxWidth);
         let y = head.y * CELL - 2 - lift;
+        if (lines.length === 1) drawOwnerBadgeAfter(playerName, cx, y);
         for (let i = lines.length - 1; i >= 0; i--) {
           ctx.fillText(lines[i], cx, y);
           y -= 11;
@@ -8238,7 +8290,7 @@
           dot.title = f.online ? 'Online' : 'Offline';
           const name = document.createElement('span');
           name.className = 'friend-name';
-          name.textContent = f.isMe ? `${f.name} (ty)` : f.name;
+          setNameWithBadge(name, f.name, f.isMe ? ' (ty)' : '');
           const dia = document.createElement('span');
           dia.className = 'friend-dia';
           dia.textContent = `${f.diamanty} 💎`;
