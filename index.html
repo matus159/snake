@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.15">
+  <meta name="snake-version" content="1.99.16">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -79,6 +79,23 @@
 
     .sound-btn:hover {
       border-color: #00d9ff;
+    }
+
+    /* Na mobilu by 🔊 dole vpravo zakrýval „Zpět“ v obchodě a joystick – během hry
+       a v obchodě se schová (přepnout jde v menu). */
+    @media (pointer: coarse) {
+      body.in-game .sound-btn,
+      body.shop-open .sound-btn {
+        display: none;
+      }
+    }
+
+    /* Počítač: hrací plocha má vždy svou plnou velikost, do malého okna se celá hra
+       zmenší (fitDesktopZoom), ať nic není uříznuté. */
+    @media (pointer: fine) {
+      .canvas-container {
+        max-height: none;
+      }
     }
 
     canvas {
@@ -957,6 +974,15 @@
 
     #shopWardrobeView {
       overflow: hidden;
+    }
+
+    /* Dárek: na nízkém mobilu se formulář nevejde – dá se posunout, ať je vidět „Poslat“. */
+    #shopGiftView {
+      overflow-y: auto;
+    }
+
+    #shopGiftView .gift-form {
+      margin-bottom: 0.5rem;
     }
 
     .shop-view.hidden {
@@ -7857,6 +7883,23 @@
       }
 
       let tacosAutoplayCheck = null;
+
+      // Počítač s malým oknem (třeba malé okno aplikace): zmenšit celou hru, ať se vejde.
+      function fitDesktopZoom() {
+        if (!window.matchMedia('(pointer: fine)').matches) return;
+        document.body.style.zoom = '';
+        const needH = document.documentElement.scrollHeight;
+        const needW = document.documentElement.scrollWidth;
+        const scale = Math.min(1, window.innerHeight / needH, window.innerWidth / needW);
+        if (scale < 0.999) document.body.style.zoom = String(Math.max(0.4, scale - 0.005));
+      }
+      let fitZoomTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(fitZoomTimer);
+        fitZoomTimer = setTimeout(fitDesktopZoom, 120);
+      });
+      setTimeout(fitDesktopZoom, 0);
+      window.addEventListener('load', fitDesktopZoom);
 
       // Zvuk „chramst“, když had sežere kostku. Tlačítko 🔊/🔇 nad hrou, volba se pamatuje.
       // Přes Web Audio: hraje hned (bez zpoždění) a víc zvuků za sebou se nepřeruší.
