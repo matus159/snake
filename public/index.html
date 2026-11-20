@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.16">
+  <meta name="snake-version" content="1.99.18">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2405,6 +2405,95 @@
       z-index: 1;
     }
 
+    /* Nabídka instalace aplikace (jen v prohlížeči, jednou na začátku) */
+    .install-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 5, 12, 0.72);
+      padding: 16px;
+    }
+
+    .install-popup.visible {
+      display: flex;
+    }
+
+    .install-card {
+      width: min(440px, 100%);
+      max-height: 100%;
+      overflow-y: auto;
+      padding: 1.2rem 1.4rem;
+      border-radius: 16px;
+      background: #12121c;
+      border: 2px solid #00d9ff;
+      box-shadow: 0 0 40px rgba(0, 217, 255, 0.35);
+      text-align: center;
+      color: #e8e8e8;
+    }
+
+    .install-card img {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+    }
+
+    .install-card h2 {
+      margin: 0.5rem 0;
+      color: #ffd700;
+      font-size: 1.3rem;
+    }
+
+    .install-card p {
+      margin: 0.35rem 0;
+      font-size: 0.92rem;
+      color: #ccc;
+    }
+
+
+    .install-card .install-actions {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+    }
+
+    .install-card .install-have {
+      margin-top: 0.6rem;
+      background: none;
+      border: none;
+      color: #888;
+      font-family: inherit;
+      font-size: 0.82rem;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    @media (max-height: 420px) {
+      .install-card {
+        padding: 0.6rem 1rem;
+      }
+
+      .install-card img {
+        width: 44px;
+        height: 44px;
+      }
+
+      .install-card h2 {
+        font-size: 1.05rem;
+        margin: 0.25rem 0;
+      }
+
+      /* nízký mobil na šířku: bez popisku, ať je vidět i „Aplikaci už mám“ */
+      .install-card > p {
+        display: none;
+      }
+
+    }
+
     .transfer-box {
       width: min(520px, 90%);
       text-align: center;
@@ -3187,6 +3276,18 @@
   </style>
 </head>
 <body>
+  <div class="install-popup" id="installPopup" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="install-card">
+      <img src="/icon-192.png" alt="">
+      <h2 id="installTitle">📲 Nainstaluj si Hada!</h2>
+      <p>Hraj jako aplikace: <strong>na celou obrazovku</strong>, s <strong>ikonou na ploše</strong> a bez lišty prohlížeče. Aktualizuje se sama.</p>
+      <div class="install-actions">
+        <button type="button" class="btn" id="installYesBtn">Nainstalovat</button>
+        <button type="button" class="btn btn-small" id="installLaterBtn">Teď ne</button>
+      </div>
+      <button type="button" class="install-have" id="installHaveBtn">Aplikaci už mám</button>
+    </div>
+  </div>
   <div class="disco-lights" aria-hidden="true"></div>
   <div class="six-seven" id="sixSeven" role="status">67</div>
   <div class="update-screen" id="updateScreen" role="alert">
@@ -7883,6 +7984,93 @@
       }
 
       let tacosAutoplayCheck = null;
+
+      // ===== Nabídka instalace aplikace =====
+      // Jen v prohlížeči (v aplikaci nikdy) a jen JEDNOU za celou dobu: novým hráčům a těm, kdo ji
+      // ještě neviděli – vždy na začátku po otevření hry, ne po hrách.
+      // Kdo aplikaci už má, tomu se neukáže: Chrome/Edge to poznají samy (nepošlou
+      // beforeinstallprompt) a aplikace si to zapíše (sdílené úložiště). Na iPhonu/iPadu se neukazuje.
+      const INSTALL_HAVE_KEY = 'snake-has-app';
+      const INSTALL_SEEN_KEY = 'snake-install-seen';
+      const installPopup = document.getElementById('installPopup');
+      let installPromptEvent = null;
+      let installOffered = false;
+
+      function runningAsApp() {
+        return window.matchMedia('(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)').matches
+          || navigator.standalone === true;
+      }
+
+      function installStore(key, value) {
+        try { localStorage.setItem(key, value); } catch {}
+      }
+
+      function installRead(key) {
+        try { return localStorage.getItem(key); } catch { return null; }
+      }
+
+      if (runningAsApp()) installStore(INSTALL_HAVE_KEY, '1');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        installPromptEvent = e;
+        // Chrome nabízí instalaci → aplikace na tomhle zařízení není (třeba ji smazal)
+        try { localStorage.removeItem(INSTALL_HAVE_KEY); } catch {}
+      });
+      window.addEventListener('appinstalled', () => {
+        installStore(INSTALL_HAVE_KEY, '1');
+        installPromptEvent = null;
+        installPopup.classList.remove('visible');
+      });
+
+      function installMayOffer() {
+        if (installOffered || runningAsApp() || installRead(INSTALL_HAVE_KEY) || installRead(INSTALL_SEEN_KEY)) return false;
+        // jen kde jde instalovat tlačítkem (Chrome, Edge, Android) – na iPhonu/iPadu se neukazuje
+        return !!installPromptEvent;
+      }
+
+      function showInstallPopup() {
+        installOffered = true;
+        installStore(INSTALL_SEEN_KEY, '1'); // ukáže se jen jednou za celou dobu
+        installPopup.classList.add('visible');
+      }
+
+      // Jen na začátku: po načtení (a po „Upravování“) počká chvilku, než prohlížeč řekne,
+      // jestli jde instalovat. Když hráč mezitím začne hrát, tentokrát se nic neukáže.
+      const installStartedAt = Date.now();
+      const installWatch = setInterval(() => {
+        if (installOffered || Date.now() - installStartedAt > 15000 || running || multiInGame) {
+          clearInterval(installWatch);
+          return;
+        }
+        if (updateShowing || document.hidden || Date.now() - installStartedAt < 1500) return;
+        if (installMayOffer()) {
+          clearInterval(installWatch);
+          showInstallPopup();
+        }
+      }, 500);
+
+      document.getElementById('installYesBtn').addEventListener('click', async () => {
+        if (!installPromptEvent) {
+          installPopup.classList.remove('visible');
+          return;
+        }
+        const ev = installPromptEvent;
+        installPromptEvent = null;
+        installPopup.classList.remove('visible');
+        try {
+          await ev.prompt();
+          const choice = await ev.userChoice;
+          if (choice && choice.outcome === 'accepted') installStore(INSTALL_HAVE_KEY, '1');
+        } catch {}
+      });
+      document.getElementById('installLaterBtn').addEventListener('click', () => {
+        installPopup.classList.remove('visible');
+      });
+      document.getElementById('installHaveBtn').addEventListener('click', () => {
+        installStore(INSTALL_HAVE_KEY, '1');
+        installPopup.classList.remove('visible');
+      });
 
       // Počítač s malým oknem (třeba malé okno aplikace): zmenšit celou hru, ať se vejde.
       function fitDesktopZoom() {
