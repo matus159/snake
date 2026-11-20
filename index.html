@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.17">
+  <meta name="snake-version" content="1.99.18">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2452,13 +2452,6 @@
       color: #ccc;
     }
 
-    .install-card ol {
-      text-align: left;
-      margin: 0.5rem auto;
-      padding-left: 1.3rem;
-      font-size: 0.92rem;
-      max-width: 320px;
-    }
 
     .install-card .install-actions {
       display: flex;
@@ -2499,9 +2492,6 @@
         display: none;
       }
 
-      .install-card ol {
-        margin: 0.2rem auto;
-      }
     }
 
     .transfer-box {
@@ -3291,11 +3281,6 @@
       <img src="/icon-192.png" alt="">
       <h2 id="installTitle">📲 Nainstaluj si Hada!</h2>
       <p>Hraj jako aplikace: <strong>na celou obrazovku</strong>, s <strong>ikonou na ploše</strong> a bez lišty prohlížeče. Aktualizuje se sama.</p>
-      <ol id="installIosSteps" hidden>
-        <li>Dole (na iPadu nahoře) klepni na <strong>Sdílet</strong> <span aria-hidden="true">⬆️</span></li>
-        <li>Vyber <strong>Přidat na plochu</strong> <span aria-hidden="true">➕</span></li>
-        <li>Klepni na <strong>Přidat</strong> – Had je na ploše!</li>
-      </ol>
       <div class="install-actions">
         <button type="button" class="btn" id="installYesBtn">Nainstalovat</button>
         <button type="button" class="btn btn-small" id="installLaterBtn">Teď ne</button>
@@ -8004,7 +7989,7 @@
       // Jen v prohlížeči (v aplikaci nikdy) a jen JEDNOU za celou dobu: novým hráčům a těm, kdo ji
       // ještě neviděli – vždy na začátku po otevření hry, ne po hrách.
       // Kdo aplikaci už má, tomu se neukáže: Chrome/Edge to poznají samy (nepošlou
-      // beforeinstallprompt), aplikace si to zapíše (sdílené úložiště) a na iPhonu je „Aplikaci už mám“.
+      // beforeinstallprompt) a aplikace si to zapíše (sdílené úložiště). Na iPhonu/iPadu se neukazuje.
       const INSTALL_HAVE_KEY = 'snake-has-app';
       const INSTALL_SEEN_KEY = 'snake-install-seen';
       const installPopup = document.getElementById('installPopup');
@@ -8014,10 +7999,6 @@
       function runningAsApp() {
         return window.matchMedia('(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)').matches
           || navigator.standalone === true;
-      }
-
-      function isIosDevice() {
-        return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       }
 
       function installStore(key, value) {
@@ -8044,15 +8025,13 @@
 
       function installMayOffer() {
         if (installOffered || runningAsApp() || installRead(INSTALL_HAVE_KEY) || installRead(INSTALL_SEEN_KEY)) return false;
-        return !!installPromptEvent || isIosDevice();
+        // jen kde jde instalovat tlačítkem (Chrome, Edge, Android) – na iPhonu/iPadu se neukazuje
+        return !!installPromptEvent;
       }
 
       function showInstallPopup() {
         installOffered = true;
         installStore(INSTALL_SEEN_KEY, '1'); // ukáže se jen jednou za celou dobu
-        const ios = !installPromptEvent && isIosDevice();
-        document.getElementById('installIosSteps').hidden = !ios;
-        document.getElementById('installYesBtn').textContent = ios ? 'Rozumím' : 'Nainstalovat';
         installPopup.classList.add('visible');
       }
 
@@ -8073,8 +8052,6 @@
 
       document.getElementById('installYesBtn').addEventListener('click', async () => {
         if (!installPromptEvent) {
-          // iPhone: jen návod – kdo klepne Rozumím, tomu se to dál neukazuje
-          installStore(INSTALL_HAVE_KEY, '1');
           installPopup.classList.remove('visible');
           return;
         }
