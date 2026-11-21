@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.19">
+  <meta name="snake-version" content="1.99.20">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2413,6 +2413,51 @@
       z-index: 1;
     }
 
+    /* Animace loga po „Upravování“ (jen na mobilu) */
+    .update-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .update-intro.visible {
+      display: flex;
+    }
+
+    .update-intro video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .update-intro button {
+      position: absolute;
+      padding: 0.45rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .update-intro .intro-skip {
+      right: 14px;
+      bottom: 14px;
+    }
+
+    .update-intro .intro-sound {
+      left: 50%;
+      top: 12px;
+      transform: translateX(-50%);
+    }
+
     /* Nabídka instalace aplikace (jen v prohlížeči, jednou na začátku) */
     .install-popup {
       position: fixed;
@@ -3284,6 +3329,11 @@
   </style>
 </head>
 <body>
+  <div class="update-intro" id="updateIntro" aria-hidden="true">
+    <video id="updateIntroVideo" playsinline preload="none"></video>
+    <button type="button" class="intro-sound" id="updateIntroSound" hidden>🔊 Klepni pro zvuk</button>
+    <button type="button" class="intro-skip" id="updateIntroSkip">Přeskočit ⏭</button>
+  </div>
   <div class="install-popup" id="installPopup" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <div class="install-card">
       <img src="/icon-192.png" alt="">
@@ -7896,7 +7946,43 @@
           updatePending = false;
           updateShowing = false;
           updateScreenEl.classList.remove('visible');
+          playUpdateIntro();
         }, UPDATE_SCREEN_MS);
+      }
+
+      // Po „Upravování“ na mobilu: animace loga Hada přes celou obrazovku (jednou po každé
+      // nové verzi). Zvuk sám spustit nejde – když prohlížeč nedovolí, hraje potichu a klepnutím zvuk zapneš.
+      function playUpdateIntro() {
+        if (!window.matchMedia('(pointer: coarse)').matches) return;
+        const box = document.getElementById('updateIntro');
+        const video = document.getElementById('updateIntroVideo');
+        const soundBtn = document.getElementById('updateIntroSound');
+        const close = () => {
+          box.classList.remove('visible');
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+        };
+        video.onended = close;
+        video.onerror = close;
+        document.getElementById('updateIntroSkip').onclick = close;
+        soundBtn.onclick = () => {
+          video.muted = false;
+          soundBtn.hidden = true;
+        };
+        box.onclick = (e) => {
+          if (e.target === video && video.muted) soundBtn.onclick();
+        };
+        video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? '/had-intro.mp4' : '/had-intro.webm';
+        video.muted = !soundOn;
+        soundBtn.hidden = true;
+        box.classList.add('visible');
+        video.play().catch(() => {
+          // se zvukem to prohlížeč nepustil → potichu a nabídnout zvuk
+          video.muted = true;
+          if (soundOn) soundBtn.hidden = false;
+          video.play().catch(close);
+        });
       }
 
       function drawUpdateSnake(now) {
