@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.24">
+  <meta name="snake-version" content="1.99.25">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2450,6 +2450,47 @@
     .update-intro .intro-skip {
       right: 14px;
       bottom: 14px;
+      z-index: 2;
+    }
+
+    .update-intro .intro-start {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: radial-gradient(ellipse at 50% 45%, #1f2650 0%, #08080f 75%);
+      color: #fff;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .update-intro .intro-start[hidden] {
+      display: none;
+    }
+
+    .update-intro .intro-start img {
+      width: min(30vmin, 220px);
+      height: auto;
+      border-radius: 22%;
+      filter: drop-shadow(0 0 30px rgba(0, 217, 255, 0.5));
+      animation: introPulse 1.4s ease-in-out infinite;
+    }
+
+    .update-intro .intro-start span {
+      font-size: clamp(1.2rem, 4.5vmin, 2.2rem);
+      font-weight: 800;
+      color: #00ff88;
+      text-shadow: 0 0 18px rgba(0, 255, 136, 0.55);
+    }
+
+    @keyframes introPulse {
+      50% { transform: scale(1.06); }
     }
 
     .update-intro .intro-sound {
@@ -3332,6 +3373,7 @@
   <div class="update-intro" id="updateIntro" aria-hidden="true">
     <video id="updateIntroVideo" playsinline preload="none"></video>
     <button type="button" class="intro-sound" id="updateIntroSound" hidden>🔊 Klepni pro zvuk</button>
+    <button type="button" class="intro-start" id="updateIntroStart" hidden><img src="/icon-192.png" alt=""><span id="updateIntroStartText">Klepni pro start 🐍</span></button>
     <button type="button" class="intro-skip" id="updateIntroSkip">Přeskočit ⏭</button>
   </div>
   <div class="install-popup" id="installPopup" role="dialog" aria-modal="true" aria-labelledby="installTitle">
@@ -7999,10 +8041,27 @@
         soundBtn.hidden = true;
         soundBtn.textContent = mobile ? '🔊 Klepni pro zvuk' : '🔊 Klikni pro zvuk';
         box.classList.add('visible');
+        const startBtn = document.getElementById('updateIntroStart');
+        startBtn.hidden = true;
+        document.getElementById('updateIntroStartText').textContent = mobile ? 'Klepni pro start 🐍' : 'Klikni pro start 🐍';
+        startBtn.onclick = (e) => {
+          e.stopPropagation();
+          // klepnutí = prohlížeč už zvuk dovolí
+          startBtn.hidden = true;
+          video.muted = !soundOn;
+          video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(close);
+          });
+        };
         video.play().catch(() => {
-          // se zvukem to prohlížeč nepustil → potichu a nabídnout zvuk
+          // se zvukem to prohlížeč sám nepustil (prohlížeč, iPhone) → obrazovka „Klepni pro start“,
+          // po klepnutí hraje rovnou se zvukem
+          if (soundOn) {
+            startBtn.hidden = false;
+            return;
+          }
           video.muted = true;
-          if (soundOn) soundBtn.hidden = false;
           video.play().catch(close);
         });
       }
