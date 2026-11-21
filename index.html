@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.22">
+  <meta name="snake-version" content="1.99.23">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -7950,11 +7950,10 @@
         }, UPDATE_SCREEN_MS);
       }
 
-      // Animace loga Hada na mobilu přes celou obrazovku: pokaždé při zapnutí hry (prohlížeč
-      // i aplikace). Když je nová verze, pustí se až po „Upravování“ (ne dvakrát).
+      // Animace loga Hada přes celou obrazovku (mobil i počítač, každý svoje video): pokaždé
+      // při zapnutí hry (prohlížeč i aplikace). Když je nová verze, pustí se až po „Upravování“ (ne dvakrát).
       // Zvuk sám spustit nejde – když prohlížeč nedovolí, hraje potichu a klepnutím zvuk zapneš.
       setTimeout(function waitForStartIntro() {
-        if (!window.matchMedia('(pointer: coarse)').matches) return;
         if (updatePending || updateShowing) return; // pustí se po „Upravování“
         // telefon na výšku: počkat, až ho hráč otočí na šířku
         if (phonePortraitQuery.matches) {
@@ -7965,7 +7964,7 @@
       }, 300);
 
       function playUpdateIntro() {
-        if (!window.matchMedia('(pointer: coarse)').matches) return;
+        const mobile = window.matchMedia('(pointer: coarse)').matches;
         const box = document.getElementById('updateIntro');
         const video = document.getElementById('updateIntroVideo');
         const soundBtn = document.getElementById('updateIntroSound');
@@ -7985,9 +7984,14 @@
         box.onclick = (e) => {
           if (e.target === video && video.muted) soundBtn.onclick();
         };
-        video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? '/had-intro.mp4' : '/had-intro.webm';
+        const base = mobile ? '/had-intro' : '/had-intro-pc';
+        video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? `${base}.mp4` : `${base}.webm`;
+        // na počítači může být celá hra zmenšená (fitDesktopZoom) – animace ať je vždy přes celé okno
+        const z = parseFloat(document.body.style.zoom) || 1;
+        box.style.zoom = z !== 1 ? String(1 / z) : '';
         video.muted = !soundOn;
         soundBtn.hidden = true;
+        soundBtn.textContent = mobile ? '🔊 Klepni pro zvuk' : '🔊 Klikni pro zvuk';
         box.classList.add('visible');
         video.play().catch(() => {
           // se zvukem to prohlížeč nepustil → potichu a nabídnout zvuk
@@ -8187,6 +8191,12 @@
         const needW = document.documentElement.scrollWidth;
         const scale = Math.min(1, window.innerHeight / needH, window.innerWidth / needW);
         if (scale < 0.999) document.body.style.zoom = String(Math.max(0.4, scale - 0.005));
+        // okna přes celou obrazovku se nezmenšují
+        const z = parseFloat(document.body.style.zoom) || 1;
+        ['installPopup', 'updateIntro'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.style.zoom = z !== 1 ? String(1 / z) : '';
+        });
       }
       let fitZoomTimer = null;
       window.addEventListener('resize', () => {
@@ -8302,7 +8312,7 @@
       function syncTacosMusic() {
         // Hudba hraje celý event – ve hře i v menu (výběr hry, lobby, pauza);
         // začne až po animaci a odpočtu, když zmizí „Teď!“.
-        // během animace loga (mobil) tacos hudba nehraje
+        // během animace loga tacos hudba nehraje
         const logoIntro = document.getElementById('updateIntro')?.classList.contains('visible');
         const on = tacosActive && !tacosIntroPlaying && !tacosCountdownActive && !logoIntro;
         if (on === tacosMusicOn) return;
