@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.18">
+  <meta name="snake-version" content="1.99.19">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -22,8 +22,16 @@
       box-sizing: border-box;
     }
 
+    /* Pozadí i za stránkou: na mobilu při přetažení, schování lišty prohlížeče nebo kolem
+       výřezu displeje by jinak prosvítala bílá. */
+    html {
+      background: #0f0f1a;
+      overscroll-behavior: none;
+    }
+
     body {
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
