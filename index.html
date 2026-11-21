@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.26">
+  <meta name="snake-version" content="1.99.27">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3376,6 +3376,21 @@
     <button type="button" class="intro-start" id="updateIntroStart" hidden><img src="/icon-192.png" alt=""><span id="updateIntroStartText">Klepni pro start 🐍</span></button>
     <button type="button" class="intro-skip" id="updateIntroSkip">Přeskočit ⏭</button>
   </div>
+  <script>
+    // Animace loga se pouští při zapnutí – černou obrazovku ukázat hned, ať na chvilku
+    // nebliká hra (kromě chvíle, kdy se nejdřív ukáže „Upravování“).
+    (function () {
+      try {
+        var v = document.querySelector('meta[name="snake-version"]').content;
+        var seen = localStorage.getItem('snake-seen-version');
+        var name = localStorage.getItem('snake-player-name');
+        var afterReload = sessionStorage.getItem('snake-update-reload');
+        var updateFirst = v && seen !== v && (seen || name) && !afterReload;
+        var phonePortrait = matchMedia('(pointer: coarse) and (orientation: portrait) and (max-width: 700px)').matches;
+        if (!updateFirst && !phonePortrait) document.getElementById('updateIntro').classList.add('visible');
+      } catch (e) {}
+    })();
+  </script>
   <div class="install-popup" id="installPopup" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <div class="install-card">
       <img src="/icon-192.png" alt="">
@@ -7942,7 +7957,13 @@
         let seen = null;
         try { seen = localStorage.getItem(SEEN_VERSION_KEY); } catch {}
         // Hráč, který hru už hrál (má jméno), ale ještě nemá uloženou verzi, ji taky uvidí.
-        if (GAME_VERSION && seen !== GAME_VERSION && (seen || playerName)) {
+        // po znovunačtení kvůli nové verzi už „Upravování“ podruhé neukazovat
+        let afterReload = false;
+        try {
+          afterReload = sessionStorage.getItem('snake-update-reload') === '1';
+          sessionStorage.removeItem('snake-update-reload');
+        } catch {}
+        if (GAME_VERSION && seen !== GAME_VERSION && (seen || playerName) && !afterReload) {
           updatePending = true;
         } else {
           rememberSeenVersion();
@@ -7981,6 +8002,7 @@
         updateScreenEl.classList.add('visible');
         setTimeout(() => {
           if (updateReload) {
+            try { sessionStorage.setItem('snake-update-reload', '1'); } catch {}
             location.reload();
             return;
           }
