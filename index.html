@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.25">
+  <meta name="snake-version" content="1.99.26">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -8042,12 +8042,15 @@
         soundBtn.textContent = mobile ? '🔊 Klepni pro zvuk' : '🔊 Klikni pro zvuk';
         box.classList.add('visible');
         const startBtn = document.getElementById('updateIntroStart');
+        const skipBtn = document.getElementById('updateIntroSkip');
         startBtn.hidden = true;
+        skipBtn.hidden = false;
         document.getElementById('updateIntroStartText').textContent = mobile ? 'Klepni pro start 🐍' : 'Klikni pro start 🐍';
         startBtn.onclick = (e) => {
           e.stopPropagation();
           // klepnutí = prohlížeč už zvuk dovolí
           startBtn.hidden = true;
+          skipBtn.hidden = false; // Přeskočit až během animace
           video.muted = !soundOn;
           video.play().catch(() => {
             video.muted = true;
@@ -8059,6 +8062,7 @@
           // po klepnutí hraje rovnou se zvukem
           if (soundOn) {
             startBtn.hidden = false;
+            skipBtn.hidden = true; // na obrazovce „Klepni pro start“ Přeskočit není
             return;
           }
           video.muted = true;
