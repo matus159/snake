@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.21">
+  <meta name="snake-version" content="1.99.22">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -8302,7 +8302,9 @@
       function syncTacosMusic() {
         // Hudba hraje celý event – ve hře i v menu (výběr hry, lobby, pauza);
         // začne až po animaci a odpočtu, když zmizí „Teď!“.
-        const on = tacosActive && !tacosIntroPlaying && !tacosCountdownActive;
+        // během animace loga (mobil) tacos hudba nehraje
+        const logoIntro = document.getElementById('updateIntro')?.classList.contains('visible');
+        const on = tacosActive && !tacosIntroPlaying && !tacosCountdownActive && !logoIntro;
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;
