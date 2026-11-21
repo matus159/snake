@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.23">
+  <meta name="snake-version" content="1.99.24">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -7950,7 +7950,7 @@
         }, UPDATE_SCREEN_MS);
       }
 
-      // Animace loga Hada přes celou obrazovku (mobil i počítač, každý svoje video): pokaždé
+      // Animace loga Hada přes celou obrazovku (mobil, počítač, tablet – každý svoje video): pokaždé
       // při zapnutí hry (prohlížeč i aplikace). Když je nová verze, pustí se až po „Upravování“ (ne dvakrát).
       // Zvuk sám spustit nejde – když prohlížeč nedovolí, hraje potichu a klepnutím zvuk zapneš.
       setTimeout(function waitForStartIntro() {
@@ -7984,7 +7984,13 @@
         box.onclick = (e) => {
           if (e.target === video && video.muted) soundBtn.onclick();
         };
-        const base = mobile ? '/had-intro' : '/had-intro-pc';
+        // video podle tvaru obrazovky: mobil na šířku (19,5:9), počítač (16:9),
+        // tablet na šířku (4:3), tablet na výšku (3:4)
+        const ratio = window.innerWidth / window.innerHeight;
+        const base = ratio >= 1.7 ? (mobile ? '/had-intro' : '/had-intro-pc')
+          : ratio >= 1.45 ? '/had-intro-pc'
+          : ratio >= 1.05 ? '/had-intro-tablet'
+          : '/had-intro-tablet-vyska';
         video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? `${base}.mp4` : `${base}.webm`;
         // na počítači může být celá hra zmenšená (fitDesktopZoom) – animace ať je vždy přes celé okno
         const z = parseFloat(document.body.style.zoom) || 1;
