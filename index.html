@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.19">
+  <meta name="snake-version" content="1.99.24">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2413,6 +2413,51 @@
       z-index: 1;
     }
 
+    /* Animace loga po „Upravování“ (jen na mobilu) */
+    .update-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .update-intro.visible {
+      display: flex;
+    }
+
+    .update-intro video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .update-intro button {
+      position: absolute;
+      padding: 0.45rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .update-intro .intro-skip {
+      right: 14px;
+      bottom: 14px;
+    }
+
+    .update-intro .intro-sound {
+      left: 50%;
+      top: 12px;
+      transform: translateX(-50%);
+    }
+
     /* Nabídka instalace aplikace (jen v prohlížeči, jednou na začátku) */
     .install-popup {
       position: fixed;
@@ -3284,6 +3329,11 @@
   </style>
 </head>
 <body>
+  <div class="update-intro" id="updateIntro" aria-hidden="true">
+    <video id="updateIntroVideo" playsinline preload="none"></video>
+    <button type="button" class="intro-sound" id="updateIntroSound" hidden>🔊 Klepni pro zvuk</button>
+    <button type="button" class="intro-skip" id="updateIntroSkip">Přeskočit ⏭</button>
+  </div>
   <div class="install-popup" id="installPopup" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <div class="install-card">
       <img src="/icon-192.png" alt="">
@@ -7896,7 +7946,65 @@
           updatePending = false;
           updateShowing = false;
           updateScreenEl.classList.remove('visible');
+          playUpdateIntro();
         }, UPDATE_SCREEN_MS);
+      }
+
+      // Animace loga Hada přes celou obrazovku (mobil, počítač, tablet – každý svoje video): pokaždé
+      // při zapnutí hry (prohlížeč i aplikace). Když je nová verze, pustí se až po „Upravování“ (ne dvakrát).
+      // Zvuk sám spustit nejde – když prohlížeč nedovolí, hraje potichu a klepnutím zvuk zapneš.
+      setTimeout(function waitForStartIntro() {
+        if (updatePending || updateShowing) return; // pustí se po „Upravování“
+        // telefon na výšku: počkat, až ho hráč otočí na šířku
+        if (phonePortraitQuery.matches) {
+          setTimeout(waitForStartIntro, 500);
+          return;
+        }
+        playUpdateIntro();
+      }, 300);
+
+      function playUpdateIntro() {
+        const mobile = window.matchMedia('(pointer: coarse)').matches;
+        const box = document.getElementById('updateIntro');
+        const video = document.getElementById('updateIntroVideo');
+        const soundBtn = document.getElementById('updateIntroSound');
+        const close = () => {
+          box.classList.remove('visible');
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+        };
+        video.onended = close;
+        video.onerror = close;
+        document.getElementById('updateIntroSkip').onclick = close;
+        soundBtn.onclick = () => {
+          video.muted = false;
+          soundBtn.hidden = true;
+        };
+        box.onclick = (e) => {
+          if (e.target === video && video.muted) soundBtn.onclick();
+        };
+        // video podle tvaru obrazovky: mobil na šířku (19,5:9), počítač (16:9),
+        // tablet na šířku (4:3), tablet na výšku (3:4)
+        const ratio = window.innerWidth / window.innerHeight;
+        const base = ratio >= 1.7 ? (mobile ? '/had-intro' : '/had-intro-pc')
+          : ratio >= 1.45 ? '/had-intro-pc'
+          : ratio >= 1.05 ? '/had-intro-tablet'
+          : '/had-intro-tablet-vyska';
+        video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? `${base}.mp4` : `${base}.webm`;
+        // na počítači může být celá hra zmenšená (fitDesktopZoom) – animace ať je vždy přes celé okno
+        const z = parseFloat(document.body.style.zoom) || 1;
+        box.style.zoom = z !== 1 ? String(1 / z) : '';
+        video.muted = !soundOn;
+        soundBtn.hidden = true;
+        soundBtn.textContent = mobile ? '🔊 Klepni pro zvuk' : '🔊 Klikni pro zvuk';
+        box.classList.add('visible');
+        video.play().catch(() => {
+          // se zvukem to prohlížeč nepustil → potichu a nabídnout zvuk
+          video.muted = true;
+          if (soundOn) soundBtn.hidden = false;
+          video.play().catch(close);
+        });
       }
 
       function drawUpdateSnake(now) {
@@ -8047,11 +8155,12 @@
       // jestli jde instalovat. Když hráč mezitím začne hrát, tentokrát se nic neukáže.
       const installStartedAt = Date.now();
       const installWatch = setInterval(() => {
-        if (installOffered || Date.now() - installStartedAt > 15000 || running || multiInGame) {
+        if (installOffered || Date.now() - installStartedAt > 25000 || running || multiInGame) {
           clearInterval(installWatch);
           return;
         }
         if (updateShowing || document.hidden || Date.now() - installStartedAt < 1500) return;
+        if (document.getElementById('updateIntro').classList.contains('visible')) return; // počkat na konec animace
         if (installMayOffer()) {
           clearInterval(installWatch);
           showInstallPopup();
@@ -8088,6 +8197,12 @@
         const needW = document.documentElement.scrollWidth;
         const scale = Math.min(1, window.innerHeight / needH, window.innerWidth / needW);
         if (scale < 0.999) document.body.style.zoom = String(Math.max(0.4, scale - 0.005));
+        // okna přes celou obrazovku se nezmenšují
+        const z = parseFloat(document.body.style.zoom) || 1;
+        ['installPopup', 'updateIntro'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.style.zoom = z !== 1 ? String(1 / z) : '';
+        });
       }
       let fitZoomTimer = null;
       window.addEventListener('resize', () => {
@@ -8203,7 +8318,9 @@
       function syncTacosMusic() {
         // Hudba hraje celý event – ve hře i v menu (výběr hry, lobby, pauza);
         // začne až po animaci a odpočtu, když zmizí „Teď!“.
-        const on = tacosActive && !tacosIntroPlaying && !tacosCountdownActive;
+        // během animace loga tacos hudba nehraje
+        const logoIntro = document.getElementById('updateIntro')?.classList.contains('visible');
+        const on = tacosActive && !tacosIntroPlaying && !tacosCountdownActive && !logoIntro;
         if (on === tacosMusicOn) return;
         tacosMusicOn = on;
         if (!tacosPlayerReady) return;
