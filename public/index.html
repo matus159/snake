@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.20">
+  <meta name="snake-version" content="1.99.21">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -7950,8 +7950,20 @@
         }, UPDATE_SCREEN_MS);
       }
 
-      // Po „Upravování“ na mobilu: animace loga Hada přes celou obrazovku (jednou po každé
-      // nové verzi). Zvuk sám spustit nejde – když prohlížeč nedovolí, hraje potichu a klepnutím zvuk zapneš.
+      // Animace loga Hada na mobilu přes celou obrazovku: pokaždé při zapnutí hry (prohlížeč
+      // i aplikace). Když je nová verze, pustí se až po „Upravování“ (ne dvakrát).
+      // Zvuk sám spustit nejde – když prohlížeč nedovolí, hraje potichu a klepnutím zvuk zapneš.
+      setTimeout(function waitForStartIntro() {
+        if (!window.matchMedia('(pointer: coarse)').matches) return;
+        if (updatePending || updateShowing) return; // pustí se po „Upravování“
+        // telefon na výšku: počkat, až ho hráč otočí na šířku
+        if (phonePortraitQuery.matches) {
+          setTimeout(waitForStartIntro, 500);
+          return;
+        }
+        playUpdateIntro();
+      }, 300);
+
       function playUpdateIntro() {
         if (!window.matchMedia('(pointer: coarse)').matches) return;
         const box = document.getElementById('updateIntro');
@@ -8133,11 +8145,12 @@
       // jestli jde instalovat. Když hráč mezitím začne hrát, tentokrát se nic neukáže.
       const installStartedAt = Date.now();
       const installWatch = setInterval(() => {
-        if (installOffered || Date.now() - installStartedAt > 15000 || running || multiInGame) {
+        if (installOffered || Date.now() - installStartedAt > 25000 || running || multiInGame) {
           clearInterval(installWatch);
           return;
         }
         if (updateShowing || document.hidden || Date.now() - installStartedAt < 1500) return;
+        if (document.getElementById('updateIntro').classList.contains('visible')) return; // počkat na konec animace
         if (installMayOffer()) {
           clearInterval(installWatch);
           showInstallPopup();
