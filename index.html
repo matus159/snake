@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.27">
+  <meta name="snake-version" content="1.99.28">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2196,6 +2196,155 @@
       z-index: 31;
     }
 
+    /* Adventní kalendář: tlačítko pod Přenosem, vlastní obrazovka */
+    .advent-btn {
+      position: absolute;
+      top: 52px;
+      left: 12px;
+      z-index: 1;
+      background: linear-gradient(135deg, #e01b2a, #ff6b6b);
+      color: #fff;
+    }
+
+    .advent-btn[hidden] {
+      display: none;
+    }
+
+    .advent-btn .advent-dot {
+      display: inline-block;
+      width: 0.6em;
+      height: 0.6em;
+      margin-left: 0.35em;
+      border-radius: 50%;
+      background: #ffd700;
+      box-shadow: 0 0 8px #ffd700;
+      vertical-align: middle;
+    }
+
+    .advent-btn .advent-dot[hidden] {
+      display: none;
+    }
+
+    #adventOverlay {
+      z-index: 31;
+    }
+
+    .advent-box {
+      width: min(720px, 94%);
+      max-height: calc(100% - 80px);
+      overflow-y: auto;
+      padding: 0.8rem 1rem;
+      text-align: center;
+    }
+
+    .advent-box h2 {
+      margin: 0 0 0.3rem;
+      color: #ffd700;
+    }
+
+    .advent-help {
+      margin: 0 0 0.5rem;
+      font-size: 0.85rem;
+      color: #bbb;
+    }
+
+    .advent-msg {
+      min-height: 1.3em;
+      margin: 0.4rem 0 0;
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .advent-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem;
+    }
+
+    .advent-cell {
+      position: relative;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.15rem;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(160deg, #1d3a2a, #122318);
+      color: #e8e8e8;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1.1rem;
+      padding: 0;
+      cursor: default;
+    }
+
+    .advent-cell small {
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .advent-cell.future {
+      opacity: 0.55;
+    }
+
+    .advent-cell.missed {
+      opacity: 0.35;
+      background: #222;
+    }
+
+    .advent-cell.opened {
+      background: linear-gradient(160deg, #3a1d24, #24121a);
+      border-color: rgba(255, 215, 0, 0.35);
+    }
+
+    .advent-cell.today {
+      cursor: pointer;
+      border-color: #ffd700;
+      background: linear-gradient(160deg, #e01b2a, #8f0f1a);
+      box-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
+      animation: adventPulse 1.2s ease-in-out infinite;
+    }
+
+    .advent-cell.just-opened {
+      animation: adventOpen 0.6s ease-out;
+    }
+
+    @keyframes adventPulse {
+      50% { transform: scale(1.06); }
+    }
+
+    @keyframes adventOpen {
+      0% { transform: scale(1.4) rotate(-8deg); }
+      100% { transform: scale(1); }
+    }
+
+    @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+      .advent-btn {
+        top: 40px;
+        left: 6px;
+      }
+
+      .advent-box {
+        max-height: calc(100% - 50px);
+        padding: 0.4rem 0.6rem;
+      }
+
+      .advent-box h2 {
+        font-size: 1.1rem;
+      }
+
+      .advent-grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 0.35rem;
+      }
+
+      .advent-cell {
+        font-size: 0.9rem;
+      }
+    }
+
     /* Kamarádi: tlačítko pod Žebříčkem, vlastní obrazovka */
     .friends-btn {
       position: absolute;
@@ -3456,6 +3605,7 @@
         <button type="button" class="btn btn-small leaderboard-btn" id="leaderboardBtn">Žebříček</button>
         <button type="button" class="btn btn-small friends-btn" id="friendsBtn">Kamarádi<span class="friends-badge" id="friendsBadge" hidden></span></button>
         <button type="button" class="btn btn-small transfer-btn" id="transferBtn">Přenos</button>
+        <button type="button" class="btn btn-small advent-btn" id="adventBtn" hidden>🎄 Advent<span class="advent-dot" id="adventDot" hidden></span></button>
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
           <button type="button" class="btn btn-small" id="changeNameModeBtn">Změnit jméno</button>
@@ -3505,6 +3655,15 @@
           <ol id="leaderboardList"></ol>
         </div>
         <button type="button" class="btn leaderboard-back" id="leaderboardBackBtn">Zpět</button>
+      </div>
+      <div id="adventOverlay" class="overlay">
+        <div class="advent-box">
+          <h2>🎄 Adventní kalendář</h2>
+          <p class="advent-help" id="adventHelp">Každý den jedno okénko – jen ten den, jinak propadne. 24. 12. čeká Vánoční had!</p>
+          <div class="advent-grid" id="adventGrid"></div>
+          <p class="advent-msg" id="adventMsg"></p>
+        </div>
+        <button type="button" class="btn leaderboard-back" id="adventBackBtn">Zpět</button>
       </div>
       <div id="friendsOverlay" class="overlay">
         <div class="friends-box">
@@ -3960,6 +4119,7 @@
         kral: 15,
         melon: 4,
         fire: 4,
+        vanocni: 11,
       };
       const PLAYER_NAME_KEY = 'snake-player-name';
       const PROFILES_KEY = 'snake-profiles';
@@ -4005,7 +4165,15 @@
         kral: 'Král',
         melon: 'Melounový',
         fire: 'Ohnivý',
+        vanocni: 'Vánoční',
       };
+      // Vánoční had (jen z adventního kalendáře 24. 12.): 11 bodů za kostku,
+      // od 24. do 26. 12. místo toho 3 💎 za kostku.
+      function isChristmasBonus(now = new Date()) {
+        const [month, day] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', month: '2-digit', day: '2-digit' })
+          .format(now).split('-').map(Number);
+        return month === 12 && day >= 24 && day <= 26;
+      }
       // Duhový anděl a Čert: jen kolem Mikuláše (5.–7. prosince, český čas) – zdarma, každá snězená
       // kostka dá 3 💎. Jindy je hráč nevidí ani nemůže použít.
       const MIKULAS_SKINS = ['angel', 'devil'];
@@ -4082,6 +4250,10 @@
       let wardrobe = [];
       let weekendWheelSpinDate = null;
       let diamanty = 0;
+      // Adventní kalendář: otevřená okénka (dny 1–24) a vajíčka/kola zdarma z kalendáře.
+      let adventOpened = [];
+      let freeEggs = 0;
+      let freeSpins = 0;
 
       const nameOverlay = document.getElementById('nameOverlay');
       const modeSelectOverlay = document.getElementById('modeSelectOverlay');
@@ -4327,7 +4499,7 @@
       }
 
       function defaultProfile() {
-        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null };
+        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0 };
       }
 
       function readProfiles() {
@@ -4378,6 +4550,9 @@
           wardrobe = [];
           equippedSkin = 'default';
           weekendWheelSpinDate = null;
+          adventOpened = [];
+          freeEggs = 0;
+          freeSpins = 0;
           return;
         }
         const profile = profiles[id] || defaultProfile();
@@ -4396,6 +4571,9 @@
         equippedSkin = profile.equippedSkin || 'default';
         if (!skinAvailable(equippedSkin)) equippedSkin = 'default';
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
+        adventOpened = Array.isArray(profile.advent) ? profile.advent.filter((d) => Number.isInteger(d) && d >= 1 && d <= 24) : [];
+        freeEggs = Math.max(0, parseInt(profile.freeEggs, 10) || 0);
+        freeSpins = Math.max(0, parseInt(profile.freeSpins, 10) || 0);
       }
 
       function isOwner() {
@@ -4696,6 +4874,9 @@
           wardrobe: [...wardrobe],
           equippedSkin,
           weekendWheelSpinDate,
+          advent: [...adventOpened],
+          freeEggs,
+          freeSpins,
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
@@ -4727,7 +4908,7 @@
       }
 
       function currentProgress() {
-        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate };
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins };
       }
 
       // Poslední stav, o kterém víme, že ho server má (uloží se až po úspěšném uložení na server).
@@ -4754,7 +4935,10 @@
         return !!a && !!b && a.diamanty === b.diamanty
           && [...a.wardrobe].sort().join() === [...b.wardrobe].sort().join()
           && a.equippedSkin === b.equippedSkin
-          && (a.weekendWheelSpinDate || null) === (b.weekendWheelSpinDate || null);
+          && (a.weekendWheelSpinDate || null) === (b.weekendWheelSpinDate || null)
+          && [...(a.advent || [])].sort().join() === [...(b.advent || [])].sort().join()
+          && (a.freeEggs || 0) === (b.freeEggs || 0)
+          && (a.freeSpins || 0) === (b.freeSpins || 0);
       }
 
       // Spojí stav tady a na serveru: co se změnilo jen na jedné straně, vyhraje; když obě,
@@ -4768,12 +4952,22 @@
         else if (base) d = Math.max(0, local.diamanty + server.diamanty - base.diamanty);
         else d = Math.max(local.diamanty, server.diamanty);
         const dates = [local.weekendWheelSpinDate, server.weekendWheelSpinDate].filter(Boolean).sort();
+        // vajíčka/kola zdarma: stejně jako diamanty (změny z obou stran se sečtou)
+        const tokens = (k) => {
+          const l = local[k] || 0;
+          const sv = server[k] || 0;
+          if (l === sv) return l;
+          return base ? Math.max(0, l + sv - (base[k] || 0)) : Math.max(l, sv);
+        };
         return {
           progress: {
             diamanty: d,
             wardrobe: [...new Set([...server.wardrobe, ...local.wardrobe])],
             equippedSkin: local.equippedSkin,
             weekendWheelSpinDate: dates.length ? dates[dates.length - 1] : null,
+            advent: [...new Set([...(server.advent || []), ...(local.advent || [])])],
+            freeEggs: tokens('freeEggs'),
+            freeSpins: tokens('freeSpins'),
           },
           upload: true,
         };
@@ -5040,6 +5234,7 @@
       }
 
       function updatePlayerNameDisplay() {
+        updateAdventButton();
         setNameWithBadge(playerNameDisplay, playerName || '—');
         setNameWithBadge(modeSelectGreeting, playerName || '—');
         updateOwnerPanel();
@@ -5074,6 +5269,7 @@
         leaderboardOverlay.classList.remove('visible');
         transferOverlay.classList.remove('visible');
         document.getElementById('friendsOverlay').classList.remove('visible');
+        document.getElementById('adventOverlay').classList.remove('visible');
       }
 
       function showModeSelect() {
@@ -6463,6 +6659,9 @@
             drawRect(seg.x, seg.y, `hsl(${hue}, 92%, 58%)`, 1);
           } else if (skin === 'kral') {
             drawKingCell(seg.x, seg.y);
+          } else if (skin === 'vanocni') {
+            if (i === 0) drawRect(seg.x, seg.y, '#e01b2a', 1);
+            else drawCandyCell(seg.x, seg.y);
           } else if (skin === 'fire') {
             drawFireCell(seg.x, seg.y, i, t);
           } else if (skin === 'melon') {
@@ -6513,10 +6712,11 @@
         if (skin === 'angel') drawAngelHalo(head);
         if (skin === 'devil') drawDevilHead(head);
         if (skin === 'kral') drawKingCrown(head);
+        if (skin === 'vanocni') drawSantaHat(head);
         if (skin === 'fire') drawFireFlame(head);
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
-        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'kral' || skin === 'fire' ? 15 : 0);
+        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'kral' || skin === 'fire' || skin === 'vanocni' ? 15 : 0);
         if (zombieMode) drawZombieHud();
       }
 
@@ -6680,6 +6880,47 @@
         });
       }
       // Král: zlaté kostky s leskem a koruna na hlavě.
+      // Vánoční had: tělo jako cukrová hůlka (červenobílé pruhy), na hlavě Santova čepice.
+      function drawCandyCell(x, y) {
+        const px = x * CELL + 1;
+        const py = y * CELL + 1;
+        const size = CELL - 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(px, py, size, size);
+        ctx.clip();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(px, py, size, size);
+        ctx.fillStyle = '#e01b2a';
+        for (let k = -2; k < 4; k++) {
+          ctx.beginPath();
+          ctx.moveTo(px + k * 8, py + size);
+          ctx.lineTo(px + k * 8 + 4, py + size);
+          ctx.lineTo(px + k * 8 + 4 + size, py);
+          ctx.lineTo(px + k * 8 + size, py);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawSantaHat(head) {
+        const x = head.x * CELL;
+        const y = head.y * CELL;
+        ctx.fillStyle = '#d61f2c';
+        ctx.beginPath();
+        ctx.moveTo(x + 2, y + 3);
+        ctx.quadraticCurveTo(x + CELL * 0.6, y - CELL * 1.0, x + CELL * 1.15, y - CELL * 0.5);
+        ctx.lineTo(x + CELL - 1, y + 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 1, y, CELL + 2, 5);
+        ctx.beginPath();
+        ctx.arc(x + CELL * 1.15, y - CELL * 0.5, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       function drawKingCell(x, y) {
         const px = x * CELL + 1;
         const py = y * CELL + 1;
@@ -6790,7 +7031,8 @@
           // Had vždy naroste jen o 1, bonus z taca a hada jde jen do skóre a diamantů.
           const [eaten] = kostky.splice(eatenIndex, 1);
           const skinScore = SKIN_SCORE_PER_KOSTKA[equippedSkin] || 1;
-          if (MIKULAS_SKINS.includes(equippedSkin) && skinAvailable(equippedSkin)) {
+          if ((MIKULAS_SKINS.includes(equippedSkin) && skinAvailable(equippedSkin))
+            || (equippedSkin === 'vanocni' && isChristmasBonus())) {
             // Mikulášští hadi: každá kostka rovnou 3 💎 (taco ještě svůj 💎 navíc)
             diamanty += MIKULAS_DIAMANTY_PER_KOSTKA + (eaten.taco ? TACO_DIAMANTY : 0);
             addGameScore(1);
@@ -6946,7 +7188,7 @@
         if (skinId === 'rainbow') {
           return '<div class="shop-skin-preview rainbow-skin"><span></span><span></span><span></span><span></span></div>';
         }
-        if (skinId === 'angel' || skinId === 'devil' || skinId === 'kral' || skinId === 'melon' || skinId === 'fire') {
+        if (skinId === 'angel' || skinId === 'devil' || skinId === 'kral' || skinId === 'melon' || skinId === 'fire' || skinId === 'vanocni') {
           return `<img class="shop-skin-img" src="/skin-${skinId}.png" alt="${SKIN_NAMES[skinId]}">`;
         }
         return '<div class="shop-skin-preview default-skin"><span></span><span></span><span></span><span></span></div>';
@@ -6995,7 +7237,8 @@
         if (!wheelSpinBtn) return;
         const balance = diamanty;
         const freeSpin = hasWeekendFreeSpin();
-        const canSpin = !wheelSpinning && !eggCracking && (freeSpin || balance >= WHEEL_SPIN_COST);
+        const adventSpin = !freeSpin && freeSpins > 0;
+        const canSpin = !wheelSpinning && !eggCracking && (freeSpin || adventSpin || balance >= WHEEL_SPIN_COST);
         wheelSpinBtn.disabled = !canSpin;
         wheelSpinBtn.classList.toggle('can-spin', canSpin);
         wheelSpinBtn.classList.toggle('weekend-free', freeSpin && !wheelSpinning);
@@ -7003,6 +7246,8 @@
           wheelSpinBtn.textContent = 'Točí se…';
         } else if (freeSpin && canSpin) {
           wheelSpinBtn.textContent = `Zatočit zdarma (${getWeekendDayLabel()})`;
+        } else if (adventSpin && canSpin) {
+          wheelSpinBtn.textContent = `🎄 Zatočit zdarma (${freeSpins}×)`;
         } else if (canSpin) {
           wheelSpinBtn.textContent = `Zatočit (${WHEEL_SPIN_COST} diamantů)`;
         } else if (isWeekendDay() && !freeSpin) {
@@ -7378,11 +7623,13 @@
       function updateEggUi() {
         if (!eggCrackBtn || !eggPriceBox) return;
         const balance = diamanty;
-        const canCrack = !eggCracking && !wheelSpinning && balance >= EGG_CRACK_COST;
+        const canCrack = !eggCracking && !wheelSpinning && (freeEggs > 0 || balance >= EGG_CRACK_COST);
         eggCrackBtn.disabled = !canCrack;
         eggCrackBtn.classList.toggle('can-crack', canCrack);
         if (eggCracking) {
           eggPriceBox.textContent = 'Rozbíjí se…';
+        } else if (freeEggs > 0) {
+          eggPriceBox.textContent = `🎄 Zdarma (${freeEggs}×)`;
         } else if (canCrack) {
           eggPriceBox.textContent = `${EGG_CRACK_COST} diamantů`;
         } else {
@@ -7447,20 +7694,23 @@
         if (wheelSpinning || eggCracking) return;
         const balance = diamanty;
         const freeSpin = hasWeekendFreeSpin();
-        if (!freeSpin && balance < WHEEL_SPIN_COST) {
+        const adventSpin = !freeSpin && freeSpins > 0;
+        if (!freeSpin && !adventSpin && balance < WHEEL_SPIN_COST) {
           wheelResultEl.textContent = `Potřebuješ ${WHEEL_SPIN_COST} diamantů (máš ${balance}).`;
           updateWheelUi();
           return;
         }
         if (freeSpin) {
           useWeekendFreeSpin();
+        } else if (adventSpin) {
+          freeSpins -= 1;
         } else {
           diamanty = balance - WHEEL_SPIN_COST;
         }
         wheelSpinning = true;
         wheelResultEl.textContent = freeSpin
           ? `Víkendové zatočení zdarma (${getWeekendDayLabel()})…`
-          : 'Točí se…';
+          : adventSpin ? '🎄 Zatočení zdarma z adventního kalendáře…' : 'Točí se…';
         updateWheelUi();
         refreshCurrencyUI();
         saveProgress();
@@ -7522,12 +7772,13 @@
       function crackEgg() {
         if (eggCracking || wheelSpinning) return;
         const balance = diamanty;
-        if (balance < EGG_CRACK_COST) {
+        if (freeEggs <= 0 && balance < EGG_CRACK_COST) {
           eggResultEl.textContent = `Potřebuješ ${EGG_CRACK_COST} diamantů (máš ${balance}).`;
           updateEggUi();
           return;
         }
-        diamanty = balance - EGG_CRACK_COST;
+        if (freeEggs > 0) freeEggs -= 1; // vajíčko zdarma z adventního kalendáře
+        else diamanty = balance - EGG_CRACK_COST;
         eggCracking = true;
         eggResultEl.textContent = 'Rozbíjí se…';
         resetEggVisual();
@@ -7647,6 +7898,7 @@
         { id: 'devil', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
         { id: 'kral', how: 'Jen z vajíčka štěstí (velmi vzácný, ~3 %)' },
         { id: 'fire', how: 'Obchod za 100 💎' },
+        { id: 'vanocni', how: 'Jen z adventního kalendáře (24. 12.)' },
       ];
 
       function renderSkinStats() {
@@ -8612,6 +8864,139 @@
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
       document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
+
+      // ===== Adventní kalendář =====
+      // 1.–24. prosince (český čas) jedno okénko denně – jen v ten den, jinak propadne.
+      // Na testovací adrese jde kalendář vyzkoušet hned: „dnes“ je vždy další neotevřené okénko.
+      const ADVENT_REWARDS = [
+        { dia: 30 }, { dia: 40 }, { dia: 50 }, { egg: 1 }, { dia: 60 }, { dia: 100 },
+        { dia: 40 }, { dia: 50 }, { dia: 60 }, { spin: 1 }, { dia: 50 }, { dia: 70 },
+        { dia: 80 }, { dia: 70 }, { dia: 60 }, { dia: 70 }, { dia: 80 }, { spin: 1 },
+        { dia: 90 }, { dia: 100 }, { egg: 1 }, { dia: 120 }, { dia: 150 }, { skin: 'vanocni', dia: 200 },
+      ];
+      const ADVENT_ALL_BONUS = 500;
+
+      function pragueMonthDay(now = new Date()) {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', month: '2-digit', day: '2-digit' })
+          .format(now).split('-').map(Number);
+      }
+
+      function adventToday() {
+        if (TEST_SITE) {
+          for (let d = 1; d <= 24; d++) if (!adventOpened.includes(d)) return d;
+          return null;
+        }
+        const [month, day] = pragueMonthDay();
+        return month === 12 && day <= 24 ? day : null;
+      }
+
+      function adventVisible() {
+        if (TEST_SITE) return true;
+        const [month, day] = pragueMonthDay();
+        return month === 12 && day <= 26; // ještě pár dní po Vánocích je vidět, co kdo otevřel
+      }
+
+      function adventState(day) {
+        if (adventOpened.includes(day)) return 'opened';
+        if (adventToday() === day) return 'today';
+        if (TEST_SITE) return 'future';
+        const [month, d] = pragueMonthDay();
+        if (month === 12 && day < d) return 'missed';
+        return 'future';
+      }
+
+      function adventRewardIcon(r) {
+        if (r.skin) return '🎅';
+        if (r.egg) return '🥚';
+        if (r.spin) return '🎡';
+        return `💎${r.dia}`;
+      }
+
+      function adventRewardText(r) {
+        if (r.skin) return `🎅 Vánočního hada a ${r.dia} 💎`;
+        if (r.egg) return '🥚 vajíčko štěstí zdarma (najdeš ho v Šatně)';
+        if (r.spin) return '🎡 kolo štěstí zdarma (najdeš ho v Šatně)';
+        return `${r.dia} 💎`;
+      }
+
+      // (funkce se volá i z menu dřív, než se načte tahle část skriptu – proto bez const zvenku)
+      function updateAdventButton() {
+        const btn = document.getElementById('adventBtn');
+        if (!btn) return;
+        btn.hidden = !adventVisible() || !playerName;
+        const today = adventToday();
+        document.getElementById('adventDot').hidden = !(today && !adventOpened.includes(today));
+      }
+
+      function renderAdvent() {
+        const grid = document.getElementById('adventGrid');
+        grid.replaceChildren();
+        for (let day = 1; day <= 24; day++) {
+          const st = adventState(day);
+          const r = ADVENT_REWARDS[day - 1];
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = `advent-cell ${st}`;
+          cell.dataset.day = String(day);
+          const num = document.createElement('span');
+          num.textContent = String(day);
+          const sub = document.createElement('small');
+          sub.textContent = st === 'opened' ? adventRewardIcon(r) : st === 'today' ? 'Otevři!' : st === 'missed' ? '✖' : '🔒';
+          cell.append(num, sub);
+          if (st === 'today') cell.addEventListener('click', () => openAdventDay(day));
+          else cell.disabled = true;
+          grid.append(cell);
+        }
+        const done = adventOpened.length;
+        document.getElementById('adventHelp').textContent = TEST_SITE
+          ? `TEST: otevírej okénka postupně (normálně jen v ten den). Otevřeno ${done}/24.`
+          : `Každý den jedno okénko – jen ten den, jinak propadne. Otevřeno ${done}/24. Za všech 24 bonus ${ADVENT_ALL_BONUS} 💎!`;
+      }
+
+      function openAdvent() {
+        modeSelectOverlay.classList.remove('visible');
+        document.getElementById('adventOverlay').classList.add('visible');
+        document.getElementById('adventMsg').textContent = '';
+        renderAdvent();
+      }
+
+      function closeAdvent() {
+        document.getElementById('adventOverlay').classList.remove('visible');
+        modeSelectOverlay.classList.add('visible');
+        updateAdventButton();
+      }
+
+      function openAdventDay(day) {
+        if (adventToday() !== day || adventOpened.includes(day)) return;
+        const r = ADVENT_REWARDS[day - 1];
+        if (r.dia) diamanty += r.dia;
+        if (r.egg) freeEggs += r.egg;
+        if (r.spin) freeSpins += r.spin;
+        if (r.skin && !wardrobe.includes(r.skin)) {
+          wardrobe.push(r.skin);
+          equippedSkin = r.skin;
+        }
+        adventOpened.push(day);
+        let msg = `🎁 ${day}. prosince: dostáváš ${adventRewardText(r)}!`;
+        if (adventOpened.length === 24) {
+          diamanty += ADVENT_ALL_BONUS;
+          msg += ` 🏆 Otevřel jsi všech 24 okének – bonus ${ADVENT_ALL_BONUS} 💎!`;
+        }
+        if (r.skin) msg += ' Had je nasazený.';
+        saveProgress();
+        refreshCurrencyUI();
+        renderAdvent();
+        const cell = document.querySelector(`.advent-cell[data-day="${day}"]`);
+        if (cell) cell.classList.add('just-opened');
+        document.getElementById('adventMsg').textContent = msg;
+        playChramst();
+        updateAdventButton();
+      }
+
+      document.getElementById('adventBtn').addEventListener('click', openAdvent);
+      document.getElementById('adventBackBtn').addEventListener('click', closeAdvent);
+      updateAdventButton();
+      setInterval(updateAdventButton, 60000);
 
       // ===== Kamarádi =====
       // Kamarádský kód (veřejný) si hráči řeknou osobně; kamarádi jsou, až oba souhlasí.

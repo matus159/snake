@@ -8,6 +8,10 @@ export interface Progress {
   wardrobe: string[];
   equippedSkin: string;
   weekendWheelSpinDate: string | null;
+  // adventní kalendář: otevřená okénka (1–24) a vajíčka/kola zdarma
+  advent: number[];
+  freeEggs: number;
+  freeSpins: number;
 }
 
 interface Stored {
@@ -42,6 +46,11 @@ function cleanProgress(raw: unknown): Progress {
     equippedSkin: typeof p.equippedSkin === 'string' && p.equippedSkin.length <= 20 ? p.equippedSkin : 'default',
     weekendWheelSpinDate:
       typeof p.weekendWheelSpinDate === 'string' && p.weekendWheelSpinDate.length <= 30 ? p.weekendWheelSpinDate : null,
+    advent: Array.isArray(p.advent)
+      ? [...new Set(p.advent.filter((d): d is number => Number.isInteger(d) && (d as number) >= 1 && (d as number) <= 24))]
+      : [],
+    freeEggs: Math.min(count(p.freeEggs), 10),
+    freeSpins: Math.min(count(p.freeSpins), 10),
   };
 }
 
