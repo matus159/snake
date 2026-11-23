@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.29">
+  <meta name="snake-version" content="1.99.30">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -8310,7 +8310,11 @@
           : ratio >= 1.45 ? '/had-intro-pc'
           : ratio >= 1.05 ? '/had-intro-tablet'
           : '/had-intro-tablet-vyska';
-        video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? `${base}.mp4` : `${base}.webm`;
+        // o Vánocích (jako Mikulášská ikona: 10. 11. – 26. 12.) má počítač vánoční animaci
+        const [im, id] = pragueMonthDay();
+        const xmas = (im === 11 && id >= 10) || (im === 12 && id <= 26);
+        const introBase = xmas && base === '/had-intro-pc' ? '/had-intro-pc-vanoce' : base;
+        video.src = video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') ? `${introBase}.mp4` : `${introBase}.webm`;
         // na počítači může být celá hra zmenšená (fitDesktopZoom) – animace ať je vždy přes celé okno
         const z = parseFloat(document.body.style.zoom) || 1;
         box.style.zoom = z !== 1 ? String(1 / z) : '';
