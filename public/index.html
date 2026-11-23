@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.28">
+  <meta name="snake-version" content="1.99.29">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -7902,7 +7902,10 @@
       ];
 
       function renderSkinStats() {
-        statsList.innerHTML = STATS_SKINS.filter(({ id }) => skinAvailable(id)).map(({ id, how, mikulas }) => {
+        // Vánoční had (adventní kalendář) je ve Statistikách vidět až od 1. prosince (nebo když ho hráč má)
+        const showSkinStat = (id) => skinAvailable(id)
+          && (id !== 'vanocni' || TEST_SITE || wardrobe.includes(id) || pragueMonthDay()[0] === 12);
+        statsList.innerHTML = STATS_SKINS.filter(({ id }) => showSkinStat(id)).map(({ id, how, mikulas }) => {
           const points = SKIN_SCORE_PER_KOSTKA[id] || 1;
           if (mikulas) {
             return `<div class="stats-card">${getSkinPreviewHtml(id)}<div class="stats-card-info">`
