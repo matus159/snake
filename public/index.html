@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.34">
+  <meta name="snake-version" content="1.99.36">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -3861,7 +3861,7 @@
         <div class="advent-box">
           <div class="advent-lights" id="adventLights" aria-hidden="true"></div>
           <h2>🎄 Adventní kalendář 🎄</h2>
-          <p class="advent-help" id="adventHelp">Každý den jedno okénko – jen ten den, jinak propadne. 24. 12. čeká Vánoční had!</p>
+          <p class="advent-help" id="adventHelp">Každý den jedno okénko – jen ten den, jinak propadne. 22. 12. čeká Vánoční had!</p>
           <div class="advent-progress" aria-hidden="true"><span id="adventProgress"></span></div>
           <div class="advent-grid" id="adventGrid"></div>
           <p class="advent-msg" id="adventMsg"></p>
@@ -4370,7 +4370,7 @@
         fire: 'Ohnivý',
         vanocni: 'Vánoční',
       };
-      // Vánoční had (jen z adventního kalendáře 24. 12.): 11 bodů za kostku,
+      // Vánoční had (jen z adventního kalendáře, okénko 22. 12.): 11 bodů za kostku,
       // od 24. do 26. 12. místo toho 3 💎 za kostku.
       function isChristmasBonus(now = new Date()) {
         const [month, day] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', month: '2-digit', day: '2-digit' })
@@ -8101,13 +8101,13 @@
         { id: 'devil', how: 'Zdarma, jen 5.–7. prosince', mikulas: true },
         { id: 'kral', how: 'Jen z vajíčka štěstí (velmi vzácný, ~3 %)' },
         { id: 'fire', how: 'Obchod za 100 💎' },
-        { id: 'vanocni', how: 'Jen z adventního kalendáře (24. 12.)' },
+        { id: 'vanocni', how: 'Jen z adventního kalendáře (22. 12.)' },
       ];
 
       function renderSkinStats() {
-        // Vánoční had (adventní kalendář) je ve Statistikách vidět až od 1. prosince (nebo když ho hráč má)
+        // Vánoční had (adventní kalendář) je ve Statistikách vidět až od 29. listopadu (nebo když ho hráč má)
         const showSkinStat = (id) => skinAvailable(id)
-          && (id !== 'vanocni' || TEST_SITE || wardrobe.includes(id) || pragueMonthDay()[0] === 12);
+          && (id !== 'vanocni' || TEST_SITE || wardrobe.includes(id) || adventVisible());
         statsList.innerHTML = STATS_SKINS.filter(({ id }) => showSkinStat(id)).map(({ id, how, mikulas }) => {
           const points = SKIN_SCORE_PER_KOSTKA[id] || 1;
           if (mikulas) {
@@ -9076,7 +9076,13 @@
       document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
 
       // ===== Adventní kalendář =====
-      // 1.–24. prosince (český čas) jedno okénko denně – jen v ten den, jinak propadne.
+      // 29. 11. – 22. 12. (český čas) jedno okénko denně – jen v ten den, jinak propadne.
+      // Okénko 1 = 29. 11., okénko 2 = 30. 11., okénko 3 = 1. 12. … okénko 24 = 22. 12.
+      // Nový adventní den začíná vždy v 5:00 ráno (český čas), ne o půlnoci.
+      function adventMonthDay() {
+        return pragueMonthDay(new Date(Date.now() - 5 * 60 * 60 * 1000));
+      }
+
       // Na testovací adrese jde kalendář vyzkoušet hned: „dnes“ je vždy další neotevřené okénko.
       const ADVENT_REWARDS = [
         { dia: 30 }, { dia: 40 }, { dia: 50 }, { egg: 1 }, { dia: 60 }, { dia: 100 },
@@ -9091,27 +9097,38 @@
           .format(now).split('-').map(Number);
       }
 
+      // které okénko patří k dnešnímu dni (0 = žádné / ještě ne, 25+ = už po kalendáři)
+      function adventDayIndex() {
+        const [month, day] = adventMonthDay();
+        if (month === 11) return day >= 29 ? day - 28 : 0;
+        if (month === 12) return day + 2;
+        return 0;
+      }
+
+      function adventDateText(n) {
+        return n <= 2 ? `${n + 28}. listopadu` : `${n - 2}. prosince`;
+      }
+
       function adventToday() {
         if (TEST_SITE) {
           for (let d = 1; d <= 24; d++) if (!adventOpened.includes(d)) return d;
           return null;
         }
-        const [month, day] = pragueMonthDay();
-        return month === 12 && day <= 24 ? day : null;
+        const n = adventDayIndex();
+        return n >= 1 && n <= 24 ? n : null;
       }
 
       function adventVisible() {
         if (TEST_SITE) return true;
-        const [month, day] = pragueMonthDay();
-        return month === 12 && day <= 26; // ještě pár dní po Vánocích je vidět, co kdo otevřel
+        const [month, day] = adventMonthDay();
+        return (month === 11 && day >= 29) || (month === 12 && day <= 26); // ještě pár dní po Vánocích je vidět, co kdo otevřel
       }
 
       function adventState(day) {
         if (adventOpened.includes(day)) return 'opened';
         if (adventToday() === day) return 'today';
         if (TEST_SITE) return 'future';
-        const [month, d] = pragueMonthDay();
-        if (month === 12 && day < d) return 'missed';
+        if (day < adventDayIndex()) return 'missed';
         return 'future';
       }
 
@@ -9236,7 +9253,7 @@
           equippedSkin = r.skin;
         }
         adventOpened.push(day);
-        let msg = `🎁 ${day}. prosince: dostáváš ${adventRewardText(r)}!`;
+        let msg = `🎁 ${adventDateText(day)}: dostáváš ${adventRewardText(r)}!`;
         if (adventOpened.length === 24) {
           diamanty += ADVENT_ALL_BONUS;
           msg += ` 🏆 Otevřel jsi všech 24 okének – bonus ${ADVENT_ALL_BONUS} 💎!`;
