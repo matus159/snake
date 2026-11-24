@@ -16,15 +16,17 @@ self.addEventListener('activate', (event) =>
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET' || request.mode !== 'navigate') return;
+  // hra je '/', telefon na výšku má otočenou stránku '/otoceny' – každá se uloží zvlášť
+  const key = new URL(request.url).pathname === '/otoceny' ? '/otoceny' : '/';
   event.respondWith(
     fetch(request.url, { cache: 'no-store', credentials: 'same-origin' })
       .then((response) => {
-        if (response.ok) {
+        if (response.ok && !response.redirected) {
           const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put('/', copy));
+          caches.open(CACHE).then((cache) => cache.put(key, copy));
         }
         return response;
       })
-      .catch(() => caches.match('/')),
+      .catch(() => caches.match(key).then((r) => r || caches.match('/'))),
   );
 });

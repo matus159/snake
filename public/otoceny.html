@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Had – sbírej kostky</title>
+  <meta name="theme-color" content="#0f0f1a">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Had">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f0f1a;
+      overscroll-behavior: none;
+    }
+
+    iframe {
+      position: fixed;
+      left: 0;
+      top: 0;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      display: block;
+      background: #0f0f1a;
+      transform-origin: 0 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Telefon na výšku (třeba iPhone se zapnutým zámkem otočení): hra běží v rámečku otočeném
+       o 90°, takže stačí telefon otočit doleva a hraje se na šířku. Když se obrazovka opravdu
+       otočí (zámek vypnutý), rámeček se jen narovná. -->
+  <iframe id="hra" title="Had" allow="autoplay; fullscreen; clipboard-write"></iframe>
+  <script>
+    (function () {
+      // instalaci aplikace zachytit tady (v rámečku by nepřišla) – hra si ji vezme
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.snakeInstallPrompt = e;
+      });
+      var frame = document.getElementById('hra');
+      frame.src = '/' + location.search + location.hash;
+      function layout() {
+        var w = window.innerWidth, h = window.innerHeight;
+        if (h > w) {
+          frame.style.width = h + 'px';
+          frame.style.height = w + 'px';
+          frame.style.transform = 'translate(' + w + 'px, 0) rotate(90deg)';
+        } else {
+          frame.style.width = w + 'px';
+          frame.style.height = h + 'px';
+          frame.style.transform = 'none';
+        }
+      }
+      layout();
+      window.addEventListener('resize', layout);
+      window.addEventListener('orientationchange', function () { setTimeout(layout, 300); });
+      if ('serviceWorker' in navigator && window.isSecureContext) {
+        navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(function () {});
+      }
+    })();
+  </script>
+</body>
+</html>
