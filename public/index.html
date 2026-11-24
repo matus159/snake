@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.36">
+  <meta name="snake-version" content="1.99.37">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -13,6 +13,18 @@
   <meta name="apple-mobile-web-app-title" content="Had">
   <meta name="theme-color" content="#0f0f1a">
   <!-- Aplikace: odkaz na instalaci (manifest) přidává skript (updateAppInstall). -->
+  <script>
+    // Telefon na výšku (třeba iPhone se zapnutým zámkem otočení): hra se sama ukáže otočená
+    // na šířku – otevře se stránka /otoceny (soubor otoceny.html), která hru pustí v otočeném rámečku. Rámeček
+    // má rozměry na šířku, takže uvnitř všechno funguje jako na telefonu na šířku (i ovládání).
+    (function () {
+      try {
+        if (window.top !== window.self) return;
+        if (!matchMedia('(pointer: coarse) and (orientation: portrait) and (max-width: 700px)').matches) return;
+        location.replace('/otoceny' + location.search + location.hash);
+      } catch (e) {}
+    })();
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 
@@ -4148,6 +4160,10 @@
 
   <script>
     (function () {
+      // hlavní okno (hra může běžet v otočeném rámečku – telefon na výšku)
+      const topWin = (() => {
+        try { return window.top && window.top.document ? window.top : window; } catch { return window; }
+      })();
       const canvas = document.getElementById('game');
       const ctx = canvas.getContext('2d');
       // Hra se kreslí v logických rozměrech 960×720, ale plátno má víc pixelů podle displeje
@@ -8345,15 +8361,16 @@
       // vyjede. V nainstalované aplikaci je hra na celou obrazovku sama. iPhone v Safari to neumí.
       function goFullscreen() {
         const mobile = window.matchMedia('(pointer: coarse)').matches;
-        const standalone = window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
-        if (!mobile || standalone || document.fullscreenElement || document.webkitFullscreenElement) return;
-        const el = document.documentElement;
+        const standalone = topWin.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || topWin.navigator.standalone;
+        const topDoc = topWin.document;
+        if (!mobile || standalone || topDoc.fullscreenElement || topDoc.webkitFullscreenElement) return;
+        const el = topDoc.documentElement;
         const req = el.requestFullscreen || el.webkitRequestFullscreen;
         if (!req) return;
         try {
           const r = req.call(el, { navigationUI: 'hide' });
           if (r && r.then) {
-            r.then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
+            r.then(() => topWin.screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
           }
         } catch {}
       }
@@ -8660,8 +8677,8 @@
       let installOffered = false;
 
       function runningAsApp() {
-        return window.matchMedia('(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)').matches
-          || navigator.standalone === true;
+        return topWin.matchMedia('(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)').matches
+          || topWin.navigator.standalone === true;
       }
 
       function installStore(key, value) {
@@ -8674,13 +8691,15 @@
 
       if (runningAsApp()) installStore(INSTALL_HAVE_KEY, '1');
 
-      window.addEventListener('beforeinstallprompt', (e) => {
+      // hra v otočeném rámečku (telefon na výšku): instalaci zachytila hlavní stránka
+      if (topWin !== window && topWin.snakeInstallPrompt) installPromptEvent = topWin.snakeInstallPrompt;
+      topWin.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         installPromptEvent = e;
         // Chrome nabízí instalaci → aplikace na tomhle zařízení není (třeba ji smazal)
         try { localStorage.removeItem(INSTALL_HAVE_KEY); } catch {}
       });
-      window.addEventListener('appinstalled', () => {
+      topWin.addEventListener('appinstalled', () => {
         installStore(INSTALL_HAVE_KEY, '1');
         installPromptEvent = null;
         installPopup.classList.remove('visible');
