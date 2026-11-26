@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.42">
+  <meta name="snake-version" content="1.99.43">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1234,6 +1234,25 @@
       /* černé obtažení stínem by duhu zakrylo – obtáhne se filtrem */
       text-shadow: none !important;
       filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000);
+    }
+
+    .acc-fire-name {
+      animation: accFireName 1.2s ease-in-out infinite;
+    }
+
+    .acc-sparkle-name {
+      color: #ffd23f !important;
+      animation: accSparkleName 1.6s ease-in-out infinite;
+    }
+
+    @keyframes accFireName {
+      0%, 100% { color: #ff3b1f; }
+      50% { color: #ffb300; }
+    }
+
+    @keyframes accSparkleName {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.6) drop-shadow(0 0 4px #fff3a0); }
     }
 
     #gameOverOverlay .acc-result {
@@ -4461,6 +4480,34 @@
         { id: 'ruzove', slot: 'jmeno', icon: '🩷', name: 'Růžové jméno', rarity: 'bezne', price: 80, color: '#ff7ad9' },
         { id: 'zlate', slot: 'jmeno', icon: '🌟', name: 'Zlaté jméno', rarity: 'vzacne', price: 200, color: '#ffd23f' },
         { id: 'duhove', slot: 'jmeno', icon: '🌈', name: 'Duhové jméno', rarity: 'epicke', price: 400, color: 'rainbow' },
+        // 2. várka
+        { id: 'absolvent', slot: 'hlava', icon: '🎓', name: 'Absolventská čepice', rarity: 'bezne', price: 60 },
+        { id: 'helma', slot: 'hlava', icon: '🪖', name: 'Helma', rarity: 'bezne', price: 70 },
+        { id: 'party', slot: 'hlava', icon: '🥳', name: 'Párty čepička', rarity: 'vzacne', price: 150, draw: 'party' },
+        { id: 'kovboj', slot: 'hlava', icon: '🤠', name: 'Kovbojský klobouk', rarity: 'vzacne', price: 180, draw: 'kovboj' },
+        { id: 'carodej', slot: 'hlava', icon: '🧙', name: 'Čarodějnický klobouk', rarity: 'epicke', price: 400, draw: 'carodej' },
+        { id: 'roh', slot: 'hlava', icon: '🦄', name: 'Jednorožčí roh', rarity: 'epicke', price: 450, draw: 'roh' },
+        { id: 'diakoruna', slot: 'hlava', icon: '💎', name: 'Diamantová koruna', rarity: 'legendarni', price: 1500, draw: 'diakoruna' },
+        { id: 'knir', slot: 'oblicej', icon: '🥸', name: 'Knír a brýle', rarity: 'bezne', price: 60, draw: 'knir' },
+        { id: 'nos', slot: 'oblicej', icon: '🤡', name: 'Klaunský nos', rarity: 'bezne', price: 50, draw: 'nos' },
+        { id: 'rouska', slot: 'oblicej', icon: '😷', name: 'Rouška', rarity: 'bezne', price: 40, draw: 'rouska' },
+        { id: 'monokl', slot: 'oblicej', icon: '🧐', name: 'Monokl', rarity: 'vzacne', price: 160, draw: 'monokl' },
+        { id: 'maska', slot: 'oblicej', icon: '🦸', name: 'Maska superhrdiny', rarity: 'epicke', price: 400, draw: 'maska' },
+        { id: 'robooci', slot: 'oblicej', icon: '🤖', name: 'Robotí oči', rarity: 'legendarni', price: 1200, draw: 'robooci' },
+        { id: 'kravata', slot: 'krk', icon: '👔', name: 'Kravata', rarity: 'bezne', price: 60, draw: 'kravata' },
+        { id: 'zvonecek', slot: 'krk', icon: '🔔', name: 'Zvoneček', rarity: 'bezne', price: 50 },
+        { id: 'korale', slot: 'krk', icon: '📿', name: 'Korále', rarity: 'vzacne', price: 150 },
+        { id: 'plast', slot: 'krk', icon: '🦸', name: 'Hrdinský plášť', rarity: 'epicke', price: 450, draw: 'plast' },
+        { id: 'retez', slot: 'krk', icon: '🏆', name: 'Zlatý řetěz', rarity: 'legendarni', price: 1200, draw: 'retez' },
+        { id: 'listy', slot: 'stopa', icon: '🍃', name: 'Listová stopa', rarity: 'bezne', price: 90, colors: ['#4caf50', '#8bc34a', '#c5e1a5'] },
+        { id: 'snih', slot: 'stopa', icon: '❄️', name: 'Sněhová stopa', rarity: 'vzacne', price: 200, colors: ['#ffffff', '#e0f4ff', '#b8e4ff'] },
+        { id: 'srdicka', slot: 'stopa', icon: '❤️', name: 'Srdíčková stopa', rarity: 'vzacne', price: 200, colors: ['#ff3b5c', '#ff7aa2', '#ffb3c8'] },
+        { id: 'blesky', slot: 'stopa', icon: '⚡', name: 'Blesková stopa', rarity: 'epicke', price: 400, colors: ['#fff35c', '#ffe600', '#ffffff'] },
+        { id: 'diamanty', slot: 'stopa', icon: '💎', name: 'Diamantová stopa', rarity: 'legendarni', price: 1200, colors: ['#7ff7ff', '#00d9ff', '#ffffff', '#b388ff'] },
+        { id: 'modre', slot: 'jmeno', icon: '💙', name: 'Modré jméno', rarity: 'bezne', price: 80, color: '#4aa8ff' },
+        { id: 'zelene', slot: 'jmeno', icon: '💚', name: 'Zelené jméno', rarity: 'bezne', price: 80, color: '#3bff7a' },
+        { id: 'ohnive', slot: 'jmeno', icon: '🔥', name: 'Ohnivé jméno', rarity: 'epicke', price: 400, color: 'fire' },
+        { id: 'trpytive', slot: 'jmeno', icon: '✨', name: 'Třpytivé jméno', rarity: 'legendarni', price: 1000, color: 'sparkle' },
       ];
       const ACC_BY_ID = Object.fromEntries(ACCESSORIES.map((a) => [a.id, a]));
       let shopTab = 'hadi';
@@ -5779,7 +5826,9 @@
         const a = accId && ACC_BY_ID[accId];
         const ok = a && a.slot === 'jmeno';
         el.classList.toggle('acc-rainbow-name', !!ok && a.color === 'rainbow');
-        el.style.color = ok && a.color !== 'rainbow' ? a.color : '';
+        el.classList.toggle('acc-fire-name', !!ok && a.color === 'fire');
+        el.classList.toggle('acc-sparkle-name', !!ok && a.color === 'sparkle');
+        el.style.color = ok && a.color.startsWith('#') ? a.color : '';
       }
 
       function updatePlayerNameDisplay() {
@@ -7170,7 +7219,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const nameStyle = accOn.jmeno && ACC_BY_ID[accOn.jmeno];
-        if (nameStyle) ctx.fillStyle = nameStyle.color === 'rainbow' ? `hsl(${(performance.now() / 10) % 360}, 95%, 65%)` : nameStyle.color;
+        if (nameStyle) ctx.fillStyle = accNameCanvasColor(nameStyle.color);
         const lines = getNameLines(playerName, maxWidth);
         let y = head.y * CELL - 2 - lift;
         if (lines.length === 1) drawOwnerBadgeAfter(playerName, cx, y);
@@ -9590,12 +9639,14 @@
         const top = head.y * CELL;
         let lift = 0;
         const neck = ACC_BY_ID[accOn.krk];
-        if (neck) drawAccEmoji(neck.icon, cx, top + CELL - 1, 13);
+        if (neck && !drawAccCustom(neck.draw, cx, top)) drawAccEmoji(neck.icon, cx, top + CELL - 1, 13);
         const face = ACC_BY_ID[accOn.oblicej];
-        if (face) drawAccEmoji(face.icon, cx, top + CELL * 0.42, 15);
+        if (face && !drawAccCustom(face.draw, cx, top)) drawAccEmoji(face.icon, cx, top + CELL * 0.42, 15);
         const hat = ACC_BY_ID[accOn.hlava];
         if (hat) {
-          if (hat.id === 'svatozar') {
+          if (drawAccCustom(hat.draw, cx, top)) {
+            // nakresleno
+          } else if (hat.id === 'svatozar') {
             ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 2.5;
             ctx.beginPath();
@@ -9617,6 +9668,113 @@
           lift = 15;
         }
         return lift;
+      }
+
+      function accNameCanvasColor(c) {
+        const now = performance.now();
+        if (c === 'rainbow') return `hsl(${(now / 10) % 360}, 95%, 65%)`;
+        if (c === 'fire') return `hsl(${18 + Math.sin(now / 190) * 18}, 100%, 55%)`;
+        if (c === 'sparkle') return `hsl(48, 100%, ${60 + Math.sin(now / 160) * 18}%)`;
+        return c;
+      }
+
+      // Doplňky, které se kreslí vlastním tvarem (emoji obličeje by zakrylo hlavu hada)
+      function drawAccCustom(kind, cx, top) {
+        if (!kind) return false;
+        const C = CELL;
+        ctx.save();
+        switch (kind) {
+          case 'party':
+            ctx.fillStyle = '#3bb4ff';
+            ctx.beginPath(); ctx.moveTo(cx - 6, top + 1); ctx.lineTo(cx + 6, top + 1); ctx.lineTo(cx, top - 15); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(cx - 4, top - 4); ctx.lineTo(cx + 4, top - 5); ctx.moveTo(cx - 2, top - 9); ctx.lineTo(cx + 2, top - 10); ctx.stroke();
+            ctx.fillStyle = '#ff4fa3'; ctx.beginPath(); ctx.arc(cx, top - 15, 2.5, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'kovboj':
+            ctx.fillStyle = '#8b5a2b';
+            ctx.beginPath(); ctx.ellipse(cx, top, 13, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillRect(cx - 6, top - 9, 12, 9);
+            ctx.fillStyle = '#5a3412'; ctx.fillRect(cx - 6, top - 3, 12, 2.5);
+            break;
+          case 'carodej':
+            ctx.fillStyle = '#5b2a9c';
+            ctx.beginPath(); ctx.ellipse(cx, top, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(cx - 7, top); ctx.lineTo(cx + 7, top); ctx.lineTo(cx + 5, top - 18); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#ffd23f'; ctx.font = '7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('★', cx + 1, top - 5);
+            break;
+          case 'roh': {
+            const g = ctx.createLinearGradient(cx, top - 15, cx, top);
+            g.addColorStop(0, '#fff6c0'); g.addColorStop(1, '#ff9ad5');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.moveTo(cx - 3.5, top + 1); ctx.lineTo(cx + 3.5, top + 1); ctx.lineTo(cx + 1, top - 15); ctx.closePath(); ctx.fill();
+            break;
+          }
+          case 'diakoruna': {
+            const x = cx - C / 2 + 2, y = top - 1, w = C - 4;
+            ctx.beginPath();
+            ctx.moveTo(x, y); ctx.lineTo(x, y - 7); ctx.lineTo(x + w * 0.22, y - 3); ctx.lineTo(x + w * 0.5, y - 11);
+            ctx.lineTo(x + w * 0.78, y - 3); ctx.lineTo(x + w, y - 7); ctx.lineTo(x + w, y); ctx.closePath();
+            const g = ctx.createLinearGradient(x, y - 11, x, y);
+            g.addColorStop(0, '#e8ffff'); g.addColorStop(1, '#00b8e6');
+            ctx.fillStyle = g; ctx.fill();
+            ctx.strokeStyle = '#006a8a'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.sin(performance.now() / 150) * 0.5})`;
+            ctx.beginPath(); ctx.arc(x + w * 0.5, y - 6, 1.6, 0, Math.PI * 2); ctx.fill();
+            break;
+          }
+          case 'knir':
+            ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(cx - 4, top + 7, 3, 0, Math.PI * 2); ctx.arc(cx + 4, top + 7, 3, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = '#3a2210';
+            ctx.beginPath(); ctx.ellipse(cx - 3, top + 14, 4, 1.8, -0.3, 0, Math.PI * 2); ctx.ellipse(cx + 3, top + 14, 4, 1.8, 0.3, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'nos':
+            ctx.fillStyle = '#ff2030';
+            ctx.beginPath(); ctx.arc(cx + 2, top + 11, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.arc(cx + 1, top + 9.5, 1.2, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'rouska':
+            ctx.fillStyle = '#eaf6ff'; ctx.fillRect(cx - 8, top + 10, 16, 8);
+            ctx.strokeStyle = '#9cc8e8'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx - 7, top + 13); ctx.lineTo(cx + 7, top + 13); ctx.moveTo(cx - 7, top + 15.5); ctx.lineTo(cx + 7, top + 15.5); ctx.stroke();
+            break;
+          case 'monokl':
+            ctx.strokeStyle = '#d4a017'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.arc(cx + 2, top + 9, 4.5, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx + 5, top + 13); ctx.lineTo(cx + 7, top + 19); ctx.stroke();
+            break;
+          case 'maska':
+            ctx.fillStyle = '#c4162a'; ctx.fillRect(cx - 10, top + 5, 20, 6);
+            ctx.fillStyle = '#fff'; ctx.fillRect(cx - 6, top + 6.5, 4, 3); ctx.fillRect(cx + 2, top + 6.5, 4, 3);
+            break;
+          case 'robooci': {
+            const glow = 6 + Math.sin(performance.now() / 120) * 4;
+            ctx.fillStyle = '#222'; ctx.fillRect(cx - 9, top + 5, 18, 7);
+            ctx.shadowColor = '#ff2030'; ctx.shadowBlur = glow; ctx.fillStyle = '#ff3040';
+            ctx.fillRect(cx - 7, top + 7, 5, 3); ctx.fillRect(cx + 2, top + 7, 5, 3);
+            break;
+          }
+          case 'kravata':
+            ctx.fillStyle = '#1e4fd6';
+            ctx.beginPath(); ctx.moveTo(cx - 2.5, top + C - 3); ctx.lineTo(cx + 2.5, top + C - 3); ctx.lineTo(cx + 3.5, top + C + 7); ctx.lineTo(cx, top + C + 10); ctx.lineTo(cx - 3.5, top + C + 7); ctx.closePath(); ctx.fill();
+            break;
+          case 'plast':
+            ctx.fillStyle = 'rgba(214, 30, 46, 0.9)';
+            ctx.beginPath(); ctx.moveTo(cx - 9, top + C - 4); ctx.lineTo(cx + 9, top + C - 4); ctx.lineTo(cx + 13, top + C + 10); ctx.lineTo(cx - 13, top + C + 10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(cx, top + C - 3, 2, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'retez':
+            ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(cx, top + C - 6, 8, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+            ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(cx, top + C + 2.5, 3, 0, Math.PI * 2); ctx.fill();
+            break;
+          default:
+            ctx.restore();
+            return false;
+        }
+        ctx.restore();
+        return true;
       }
 
       function drawAccTrail() {
