@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.47">
+  <meta name="snake-version" content="1.99.48">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -6153,7 +6153,7 @@
 
         multiWs.onopen = () => {
           opened = true;
-          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName, acc: { ...accOn } }));
         };
 
         multiWs.onmessage = (event) => {
@@ -6330,7 +6330,7 @@
         multiWs.send(JSON.stringify({ type: 'start' }));
       }
 
-      function drawMultiplayerName(head, name, color) {
+      function drawMultiplayerName(head, name, color, lift = 0) {
         if (!name || !head) return;
         const cx = head.x * CELL + CELL / 2;
         const maxWidth = CELL * 5;
@@ -6339,7 +6339,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const lines = getNameLines(name, maxWidth);
-        let y = head.y * CELL - 2;
+        let y = head.y * CELL - 2 - lift;
         if (lines.length === 1) drawOwnerBadgeAfter(name, cx, y);
         for (let i = lines.length - 1; i >= 0; i--) {
           ctx.fillText(lines[i], cx, y);
@@ -6384,6 +6384,8 @@
 
         (multiServerState.players || []).forEach((p) => {
           if (!p.alive || !p.snake || !p.snake.length) return;
+          const pAcc = p.id === multiPlayerId ? accOn : p.acc || {};
+          drawAccTrail(p.snake, pAcc);
           const base = MULTI_COLORS[p.colorIndex % MULTI_COLORS.length];
           p.snake.forEach((seg, i) => {
             const t = i / Math.max(p.snake.length - 1, 1);
@@ -6397,8 +6399,11 @@
           ctx.beginPath();
           ctx.arc(head.x * CELL + CELL / 2, head.y * CELL + CELL / 2, 4, 0, Math.PI * 2);
           ctx.fill();
-          const nameColor = p.id === multiPlayerId ? '#00ff88' : '#e8e8e8';
-          drawMultiplayerName(head, p.name, nameColor);
+          const lift = drawAccOnHead(head, pAcc);
+          const nameAcc = pAcc.jmeno && ACC_BY_ID[pAcc.jmeno];
+          const named = nameAcc && nameAcc.slot === 'jmeno';
+          const nameColor = named ? accNameCanvasColor(nameAcc.color) : p.id === multiPlayerId ? '#00ff88' : '#e8e8e8';
+          drawMultiplayerName(head, named && nameAcc.color === 'royal' ? `👑 ${p.name}` : p.name, nameColor, lift);
         });
       }
 
@@ -6409,7 +6414,7 @@
         multiGameOverOverlay.classList.remove('visible');
         multiOverlay.classList.add('visible');
         if (multiWs && multiWs.readyState === WebSocket.OPEN) {
-          multiWs.send(JSON.stringify({ type: 'join', name: playerName }));
+          multiWs.send(JSON.stringify({ type: 'join', name: playerName, acc: { ...accOn } }));
         } else {
           connectMultiplayer();
         }
@@ -7306,7 +7311,7 @@
         if (zombieMode) drawZombies();
 
         const skin = skinAvailable(equippedSkin) ? equippedSkin : 'default';
-        drawAccTrail();
+        drawAccTrail(snake, accOn);
         if (skin === 'angel') drawAngelWings();
         if (skin === 'devil') drawDevilTail();
         if (skin === 'fire') drawFireSparks();
@@ -7373,7 +7378,7 @@
         if (skin === 'kral') drawKingCrown(head);
         if (skin === 'vanocni') drawSantaHat(head);
         if (skin === 'fire') drawFireFlame(head);
-        const accLift = drawAccOnHead(head);
+        const accLift = drawAccOnHead(head, accOn);
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
         drawPlayerNameAboveHead(head, Math.max(accLift, skin === 'angel' ? 10 : skin === 'devil' || skin === 'kral' || skin === 'fire' || skin === 'vanocni' ? 15 : 0));
@@ -9721,15 +9726,15 @@
         ctx.restore();
       }
 
-      function drawAccOnHead(head) {
+      function drawAccOnHead(head, on = accOn) {
         const cx = head.x * CELL + CELL / 2;
         const top = head.y * CELL;
         let lift = 0;
-        const neck = ACC_BY_ID[accOn.krk];
+        const neck = ACC_BY_ID[on.krk];
         if (neck && !drawAccCustom(neck.draw, cx, top)) drawAccEmoji(neck.icon, cx, top + CELL - 1, 13);
-        const face = ACC_BY_ID[accOn.oblicej];
+        const face = ACC_BY_ID[on.oblicej];
         if (face && !drawAccCustom(face.draw, cx, top)) drawAccEmoji(face.icon, cx, top + CELL * 0.42, 15);
-        const hat = ACC_BY_ID[accOn.hlava];
+        const hat = ACC_BY_ID[on.hlava];
         if (hat) {
           if (drawAccCustom(hat.draw, cx, top)) {
             // nakresleno
@@ -9983,9 +9988,10 @@
         return true;
       }
 
-      function drawAccTrail() {
-        const tr = ACC_BY_ID[accOn.stopa];
-        if (!tr || snake.length < 2) return;
+      function drawAccTrail(body = snake, on = accOn) {
+        const tr = ACC_BY_ID[on.stopa];
+        const snake = body; // stopa za tímhle hadem (vlastní nebo jiného hráče)
+        if (!tr || !snake || snake.length < 2) return;
         const now = performance.now();
         const n = Math.min(6, snake.length);
         for (let k = 0; k < n; k++) {

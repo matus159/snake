@@ -29,8 +29,21 @@ function setAttachment(ws: WebSocket, attachment: WsAttachment) {
   ws.serializeAttachment(attachment);
 }
 
-function newPlayer(id: string, ws: WebSocket, name: string, colorIndex: number): Player {
+const ACC_SLOTS = ['hlava', 'oblicej', 'krk', 'stopa', 'jmeno'];
+
+// Doplňky z klienta: jen známá místa a krátká id (co id znamená, ví hra u ostatních hráčů).
+function cleanAcc(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(raw as Record<string, unknown>).filter(
+      ([slot, id]) => ACC_SLOTS.includes(slot) && typeof id === 'string' && /^[a-z0-9]{1,20}$/.test(id),
+    ),
+  ) as Record<string, string>;
+}
+
+function newPlayer(id: string, ws: WebSocket, name: string, colorIndex: number, acc: Record<string, string> = {}): Player {
   return {
+    acc,
     id,
     ws,
     name,
@@ -61,7 +74,7 @@ export class GameServer implements DurableObject {
     for (const ws of this.state.getWebSockets()) {
       const att = getAttachment(ws);
       if (!att.playerId || !att.name || this.players.has(att.playerId)) continue;
-      this.players.set(att.playerId, newPlayer(att.playerId, ws, att.name, att.colorIndex ?? this.players.size % 8));
+      this.players.set(att.playerId, newPlayer(att.playerId, ws, att.name, att.colorIndex ?? this.players.size % 8, cleanAcc(att.acc)));
     }
     this.state.blockConcurrencyWhile(async () => {
       // Dárky už ve hře nejsou: smaže starou frontu nedoručených dárků.
@@ -158,6 +171,7 @@ export class GameServer implements DurableObject {
 
   private async handleJoin(ws: WebSocket, msg: Record<string, unknown>) {
     const name = String(msg.name || '').trim().slice(0, 20);
+    const acc = cleanAcc(msg.acc);
     if (!name) {
       send(ws, { type: 'error', message: 'Chybí jméno.' });
       return;
@@ -186,7 +200,8 @@ export class GameServer implements DurableObject {
     const existing = [...this.players.entries()].find(([, p]) => p.ws === ws);
     if (existing) {
       existing[1].name = name;
-      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex });
+      existing[1].acc = acc;
+      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex, acc });
       this.sendWelcome(ws, existing[0]);
       this.broadcastLobby();
       return;
@@ -194,11 +209,11 @@ export class GameServer implements DurableObject {
 
     const id = `p_${Date.now()}_${randInt(1000, 9999)}`;
     const colorIndex = this.players.size % 8;
-    const player = newPlayer(id, ws, name, colorIndex);
+    const player = newPlayer(id, ws, name, colorIndex, acc);
     // Kdo přijde, když kolo běží, počká na další kolo (dřív to shodilo celou hru).
     if (this.gameStatus === 'playing') player.alive = false;
     this.players.set(id, player);
-    setAttachment(ws, { playerId: id, name, colorIndex });
+    setAttachment(ws, { playerId: id, name, colorIndex, acc });
     this.sendWelcome(ws, id);
     this.broadcastLobby();
   }
@@ -244,6 +259,7 @@ export class GameServer implements DurableObject {
         tacos: p.tacos,
         alive: p.alive,
         colorIndex: p.colorIndex,
+        acc: p.acc,
       })),
     };
   }

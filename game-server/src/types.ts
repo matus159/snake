@@ -30,6 +30,8 @@ export interface Player {
   tacos: number;
   alive: boolean;
   colorIndex: number;
+  // nasazené doplňky (hlava, obličej, krk, stopa, jméno) – ostatní je vidí na hadovi
+  acc: Record<string, string>;
 }
 
 export interface WsAttachment {
@@ -37,4 +39,5 @@ export interface WsAttachment {
   // Jméno a barva hráče – aby se lobby dalo obnovit, když Cloudflare server uspí (hibernace).
   name?: string;
   colorIndex?: number;
+  acc?: Record<string, string>;
 }
