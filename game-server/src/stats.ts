@@ -12,6 +12,9 @@ const WATCHED_NAMES = ['robine'];
 // Jména, která se v žebříčku nikdy neukážou (kromě ownerů).
 const LEADERBOARD_HIDDEN = ['adam', 'sss'];
 
+// Barvy jména z obchodu (doplňky), které se ukazují v žebříčku.
+const NAME_STYLES = ['ruzove', 'zlate', 'duhove'];
+
 interface NameStats {
   diamanty: number;
   bestScore: number;
@@ -162,9 +165,15 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
         if (!prev || s.diamanty > prev.diamanty) best.set(key, { name: n, diamanty: s.diamanty });
       }
     }
+    // Barva jména (doplněk „jméno“ koupený v obchodě) – podle uloženého postupu hráče
+    const nameStyles = new Map<string, string>();
+    for (const st of (await storage.list<{ name: string; progress?: { acc?: string[]; accOn?: Record<string, string> } }>({ prefix: 'pcode:' })).values()) {
+      const style = st.progress?.accOn?.jmeno;
+      if (st.name && style && NAME_STYLES.includes(style) && st.progress?.acc?.includes(style)) nameStyles.set(st.name.toLowerCase(), style);
+    }
     const players = [...best.values()]
       .sort((a, b) => b.diamanty - a.diamanty)
-      .map(({ name, diamanty }) => ({ name, diamanty }));
+      .map(({ name, diamanty }) => ({ name, diamanty, nameStyle: nameStyles.get(name.toLowerCase()) ?? null }));
     return json({ players });
   }
 
