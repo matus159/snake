@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.41">
+  <meta name="snake-version" content="1.99.42">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1231,6 +1231,9 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent !important;
+      /* černé obtažení stínem by duhu zakrylo – obtáhne se filtrem */
+      text-shadow: none !important;
+      filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000);
     }
 
     #gameOverOverlay .acc-result {
@@ -5771,13 +5774,19 @@
         ctx.drawImage(ownerBadgeImg, cx + tw / 2 + 2, baselineY - h + 2, w, h);
       }
 
+      // Barva jména z doplňků (menu, žebříček)
+      function applyNameStyle(el, accId) {
+        const a = accId && ACC_BY_ID[accId];
+        const ok = a && a.slot === 'jmeno';
+        el.classList.toggle('acc-rainbow-name', !!ok && a.color === 'rainbow');
+        el.style.color = ok && a.color !== 'rainbow' ? a.color : '';
+      }
+
       function updatePlayerNameDisplay() {
         updateAdventButton();
         setNameWithBadge(playerNameDisplay, playerName || '—');
         setNameWithBadge(modeSelectGreeting, playerName || '—');
-        const nameAcc = accOn.jmeno && ACC_BY_ID[accOn.jmeno];
-        modeSelectGreeting.classList.toggle('acc-rainbow-name', !!nameAcc && nameAcc.color === 'rainbow');
-        modeSelectGreeting.style.color = nameAcc && nameAcc.color !== 'rainbow' ? nameAcc.color : '';
+        applyNameStyle(modeSelectGreeting, accOn.jmeno);
         updateOwnerPanel();
       }
 
@@ -5863,6 +5872,7 @@
         // Vlastní řádek vždycky s diamanty přímo z téhle hry.
         if (Array.isArray(players) && playerName) {
           const me = players.find((p) => p.name.toLowerCase() === playerName.toLowerCase());
+          if (me) me.nameStyle = accOn.jmeno || null; // vlastní barva jména hned (bez čekání na server)
           if (me && me.diamanty !== diamanty) {
             me.diamanty = diamanty;
             players.sort((a, b) => b.diamanty - a.diamanty);
@@ -5881,6 +5891,7 @@
           const name = document.createElement('span');
           name.className = 'lb-name';
           setNameWithBadge(name, p.name);
+          applyNameStyle(name, p.nameStyle);
           const rank = document.createElement('span');
           rank.className = i < 3 ? `lb-rank lb-medal lb-rank-${i + 1}` : 'lb-rank';
           rank.textContent = i < 3 ? String(i + 1) : `${i + 1}.`;
