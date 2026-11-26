@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.40">
+  <meta name="snake-version" content="1.99.41">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4432,7 +4432,6 @@
         epicke: { label: 'epické', bonus: 3 },
         legendarni: { label: 'legendární', bonus: 5 },
       };
-      const ACC_MAX_BONUS = 10;
       const ACC_SLOTS = [
         { id: 'hlava', label: '🎩 HLAVA', tab: 'doplnky' },
         { id: 'oblicej', label: '😎 OBLIČEJ', tab: 'doplnky' },
@@ -9425,11 +9424,11 @@
 
       // ===== Doplňky (čepice, brýle, šály, stopy, barva jména) =====
       // Každý doplněk dává malý bonus k bodům podle vzácnosti (jen hra pro jednoho hráče a zombie mód,
-      // ve hře pro více hráčů ne – ať je to fér). Bonusy se sčítají, nejvíc +10 %.
+      // ve hře pro více hráčů ne – ať je to fér). Bonusy se sčítají bez omezení.
 
       function accBonusPct() {
         const sum = Object.values(accOn).reduce((t, id) => t + (ACC_BY_ID[id] ? ACC_RARITY[ACC_BY_ID[id].rarity].bonus : 0), 0);
-        return Math.min(ACC_MAX_BONUS, sum);
+        return sum;
       }
 
       // Sleva dne: každý den (od 5:00) jeden doplněk o 50 % levněji
@@ -9512,7 +9511,7 @@
         const box = document.getElementById('accWardrobe');
         if (!box) return;
         const pct = accBonusPct();
-        let html = `<p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(max +${ACC_MAX_BONUS} %, jen hra pro jednoho a zombie mód)</span></p>`;
+        let html = `<p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(hra pro jednoho a zombie mód)</span></p>`;
         ACC_SLOTS.filter((sl) => sl.tab === shopTab).forEach((sl) => {
           const mine = ACCESSORIES.filter((a) => a.slot === sl.id && accOwned.includes(a.id));
           html += `<div class="acc-slot"><div class="acc-slot-title">${sl.label}</div><div class="acc-chips">`;
