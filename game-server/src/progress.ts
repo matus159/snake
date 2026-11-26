@@ -12,7 +12,12 @@ export interface Progress {
   advent: number[];
   freeEggs: number;
   freeSpins: number;
+  // doplňky: koupené (id) a nasazené podle místa (hlava, obličej, krk, stopa, jméno)
+  acc: string[];
+  accOn: Record<string, string>;
 }
+
+const ACC_SLOTS = ['hlava', 'oblicej', 'krk', 'stopa', 'jmeno'];
 
 interface Stored {
   name: string;
@@ -51,6 +56,14 @@ function cleanProgress(raw: unknown): Progress {
       : [],
     freeEggs: Math.min(count(p.freeEggs), 10),
     freeSpins: Math.min(count(p.freeSpins), 10),
+    acc: Array.isArray(p.acc)
+      ? [...new Set(p.acc.filter((s): s is string => typeof s === 'string' && s.length <= 20))].slice(0, 60)
+      : [],
+    accOn: Object.fromEntries(
+      Object.entries(p.accOn && typeof p.accOn === 'object' ? (p.accOn as Record<string, unknown>) : {}).filter(
+        ([slot, id]) => ACC_SLOTS.includes(slot) && typeof id === 'string' && id.length <= 20,
+      ),
+    ) as Record<string, string>,
   };
 }
 

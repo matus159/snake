@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.39">
+  <meta name="snake-version" content="1.99.40">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1003,6 +1003,252 @@
 
     #shopGiftView .gift-form {
       margin-bottom: 0.5rem;
+    }
+
+    /* ===== Doplňky: záložky v obchodě, mřížka věcí, řádky v šatně ===== */
+    .shop-tabs {
+      display: flex;
+      gap: 0.4rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0.2rem 0.5rem 0.3rem;
+      flex-shrink: 0;
+    }
+
+    .shop-tab {
+      padding: 0.35rem 0.75rem;
+      border-radius: 9px;
+      border: 1px solid #2c2c44;
+      background: #1a1a2a;
+      color: #ddd;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .shop-tab.active {
+      background: linear-gradient(135deg, #00d9ff, #00ff88);
+      color: #081018;
+      border-color: transparent;
+    }
+
+    #accShopView {
+      align-self: stretch;
+      width: 100%;
+      padding: 0.2rem 130px 0.8rem;
+    }
+
+    @media (max-width: 760px), (pointer: coarse) and (max-height: 500px) {
+      #accShopView {
+        padding: 0.2rem 92px 0.6rem;
+      }
+    }
+
+    .acc-deal {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.3rem 0.7rem;
+      justify-content: center;
+      margin: 0 auto 0.6rem;
+      max-width: 640px;
+      padding: 0.4rem 0.8rem;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #3a1450, #5a1a2a);
+      border: 1px solid #ff7a8c;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .acc-deal s {
+      color: #aaa;
+      font-weight: 400;
+    }
+
+    .acc-deal b {
+      color: #ffd23f;
+    }
+
+    .acc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+      gap: 0.6rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .acc-item {
+      --r: #5fd35f;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+      padding: 0.45rem 0.4rem 0.5rem;
+      border-radius: 12px;
+      background: #141424;
+      border: 2px solid var(--r);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--r) 30%, transparent);
+      text-align: center;
+    }
+
+    .acc-item.r-vzacne { --r: #3bb4ff; }
+    .acc-item.r-epicke { --r: #c45cff; }
+    .acc-item.r-legendarni { --r: #ffd23f; }
+
+    .acc-item .acc-icon {
+      font-size: 1.9rem;
+      line-height: 1.2;
+    }
+
+    .acc-item .acc-name {
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+
+    .acc-item .acc-rarity {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--r);
+      text-transform: uppercase;
+    }
+
+    .acc-item .acc-bonus {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #ffd23f;
+    }
+
+    .acc-item .acc-buy {
+      margin-top: 0.25rem;
+      padding: 0.25rem 0.7rem;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #00d9ff, #00ff88);
+      color: #081018;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .acc-item .acc-buy.owned {
+      background: #2a2a40;
+      color: #9f9;
+      cursor: default;
+    }
+
+    .acc-item .acc-sale {
+      position: absolute;
+      top: -8px;
+      right: -6px;
+      padding: 1px 6px;
+      border-radius: 7px;
+      background: #e01b2a;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+
+    .acc-wardrobe {
+      max-width: 720px;
+      margin: 0 auto 0.5rem;
+      text-align: left;
+    }
+
+    .acc-wardrobe h4 {
+      margin: 0 0 0.2rem;
+      color: #00d9ff;
+      text-align: center;
+    }
+
+    .acc-wardrobe .acc-total {
+      margin: 0 0 0.5rem;
+      text-align: center;
+      font-weight: 800;
+      color: #ffd23f;
+    }
+
+    .acc-slot {
+      margin-bottom: 0.35rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: 10px;
+      background: #141424;
+      border: 1px solid #2c2c44;
+    }
+
+    .acc-slot {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .acc-slot-title {
+      flex: 0 0 6.5rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #9ab;
+    }
+
+    .acc-chips {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .acc-chip {
+      min-width: 2.4rem;
+      height: 2.2rem;
+      padding: 0 0.45rem;
+      border-radius: 8px;
+      border: 2px solid #333;
+      background: #1e1e32;
+      color: #eee;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .acc-chip small {
+      font-size: 0.7rem;
+    }
+
+    .acc-chip.on {
+      border-color: #00ff88;
+      background: #123024;
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.55);
+    }
+
+    .acc-slot .acc-none {
+      font-size: 0.72rem;
+      color: #778;
+    }
+
+    .acc-rainbow-name {
+      background: linear-gradient(90deg, #ff6b6b, #ffd23f, #3bff7a, #3bb4ff, #c45cff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+    }
+
+    #gameOverOverlay .acc-result {
+      margin: 0.2rem 0;
+      font-weight: 800;
+    }
+
+    #gameOverOverlay .acc-result[hidden] {
+      display: none;
+    }
+
+    #gameOverOverlay .acc-bonus-line {
+      color: #ffd23f;
+    }
+
+    #gameOverOverlay .acc-total-line {
+      color: #00ff88;
+      font-size: 1.2em;
     }
 
     .shop-view.hidden {
@@ -3651,6 +3897,8 @@
 
     /* Tlačítka (i kolo štěstí a výhra z vajíčka) mají tmavé písmo – s černým obtažením by nešlo přečíst, proto bílé. */
     .btn,
+    .shop-tab.active,
+    .acc-item .acc-buy,
     .wheel-gems-cost.can-spin,
     .wheel-gems-cost.weekend-free,
     .egg-prize-reveal {
@@ -3938,6 +4186,8 @@
         <h2>Konec hry</h2>
         <p>Diamanty: <svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg><span id="finalDiamanty">0</span></p>
         <p id="zombieResult" hidden></p>
+        <p class="acc-result acc-bonus-line" id="accBonusLine" hidden></p>
+        <p class="acc-result acc-total-line" id="accTotalLine" hidden></p>
         <div class="game-over-actions">
           <button class="btn" id="restartBtn">Hrát znovu</button>
           <button class="btn" id="gameOverMenuBtn">Hlavní nabídka</button>
@@ -3999,7 +4249,18 @@
         </div>
         <div id="shopMessage" class="shop-message"></div>
         <div id="shopMainView" class="shop-view">
+          <div class="shop-tabs" id="shopTabs">
+            <button type="button" class="shop-tab active" data-tab="hadi">🐍 Hadi</button>
+            <button type="button" class="shop-tab" data-tab="doplnky">🎩 Doplňky</button>
+            <button type="button" class="shop-tab" data-tab="stopy">✨ Stopy</button>
+            <button type="button" class="shop-tab" data-tab="jmeno">🏷️ Jméno</button>
+          </div>
           <div class="shop-body">
+            <div id="accShopView" class="hidden">
+              <div id="accWardrobe" class="acc-wardrobe"></div>
+              <div class="acc-deal" id="accDeal"></div>
+              <div class="acc-grid" id="accGrid"></div>
+            </div>
             <div class="shop-content">
               <div class="shop-skins-row">
                 <div class="shop-skin-box" id="shopSkinBtn">
@@ -4164,6 +4425,44 @@
       const topWin = (() => {
         try { return window.top && window.top.document ? window.top : window; } catch { return window; }
       })();
+      // doplňky – data (používají se už při načtení postupu hráče)
+      const ACC_RARITY = {
+        bezne: { label: 'běžné', bonus: 1 },
+        vzacne: { label: 'vzácné', bonus: 2 },
+        epicke: { label: 'epické', bonus: 3 },
+        legendarni: { label: 'legendární', bonus: 5 },
+      };
+      const ACC_MAX_BONUS = 10;
+      const ACC_SLOTS = [
+        { id: 'hlava', label: '🎩 HLAVA', tab: 'doplnky' },
+        { id: 'oblicej', label: '😎 OBLIČEJ', tab: 'doplnky' },
+        { id: 'krk', label: '🧣 KRK', tab: 'doplnky' },
+        { id: 'stopa', label: '✨ STOPA', tab: 'stopy' },
+        { id: 'jmeno', label: '🏷️ JMÉNO', tab: 'jmeno' },
+      ];
+      const ACCESSORIES = [
+        { id: 'masle', slot: 'hlava', icon: '🎀', name: 'Mašle', rarity: 'bezne', price: 50 },
+        { id: 'ksiltovka', slot: 'hlava', icon: '🧢', name: 'Kšiltovka', rarity: 'vzacne', price: 150 },
+        { id: 'klobouk', slot: 'hlava', icon: '🎩', name: 'Kouzelnický klobouk', rarity: 'vzacne', price: 240 },
+        { id: 'svatozar', slot: 'hlava', icon: '😇', name: 'Svatozář', rarity: 'epicke', price: 400 },
+        { id: 'rohy', slot: 'hlava', icon: '😈', name: 'Čertí rohy', rarity: 'epicke', price: 400 },
+        { id: 'koruna', slot: 'hlava', icon: '👑', name: 'Zlatá koruna', rarity: 'legendarni', price: 1000 },
+        { id: 'bryle', slot: 'oblicej', icon: '🕶️', name: 'Brýle', rarity: 'bezne', price: 50 },
+        { id: 'lyzarske', slot: 'oblicej', icon: '🥽', name: 'Lyžařské brýle', rarity: 'vzacne', price: 150 },
+        { id: 'sala', slot: 'krk', icon: '🧣', name: 'Šála', rarity: 'bezne', price: 80 },
+        { id: 'medaile', slot: 'krk', icon: '🏅', name: 'Medaile', rarity: 'vzacne', price: 150 },
+        { id: 'bubliny', slot: 'stopa', icon: '🫧', name: 'Bublinková stopa', rarity: 'bezne', price: 100, colors: ['#bfefff', '#8fd8ff', '#ffffff'] },
+        { id: 'hvezdy', slot: 'stopa', icon: '✨', name: 'Hvězdná stopa', rarity: 'vzacne', price: 200, colors: ['#ffe66d', '#fff6c0', '#ffd23f'] },
+        { id: 'ohen', slot: 'stopa', icon: '🔥', name: 'Ohnivá stopa', rarity: 'vzacne', price: 200, colors: ['#ff7a00', '#ffd23f', '#ff3b3b'] },
+        { id: 'duha', slot: 'stopa', icon: '🌈', name: 'Duhová stopa', rarity: 'epicke', price: 400, colors: 'rainbow' },
+        { id: 'konfety', slot: 'stopa', icon: '🎉', name: 'Konfetová stopa', rarity: 'epicke', price: 400, colors: ['#ff3b3b', '#ffd23f', '#3bff7a', '#3bb4ff', '#ff5ee0'] },
+        { id: 'ruzove', slot: 'jmeno', icon: '🩷', name: 'Růžové jméno', rarity: 'bezne', price: 80, color: '#ff7ad9' },
+        { id: 'zlate', slot: 'jmeno', icon: '🌟', name: 'Zlaté jméno', rarity: 'vzacne', price: 200, color: '#ffd23f' },
+        { id: 'duhove', slot: 'jmeno', icon: '🌈', name: 'Duhové jméno', rarity: 'epicke', price: 400, color: 'rainbow' },
+      ];
+      const ACC_BY_ID = Object.fromEntries(ACCESSORIES.map((a) => [a.id, a]));
+      let shopTab = 'hadi';
+
       const canvas = document.getElementById('game');
       const ctx = canvas.getContext('2d');
       // Hra se kreslí v logických rozměrech 960×720, ale plátno má víc pixelů podle displeje
@@ -4468,6 +4767,8 @@
       let equippedSkin = 'default';
       let wardrobe = [];
       let weekendWheelSpinDate = null;
+      let accOwned = []; // koupené doplňky (id)
+      let accOn = {}; // nasazené doplňky: { hlava, oblicej, krk, stopa, jmeno }
       let diamanty = 0;
       // Adventní kalendář: otevřená okénka (dny 1–24) a vajíčka/kola zdarma z kalendáře.
       let adventOpened = [];
@@ -4718,7 +5019,7 @@
       }
 
       function defaultProfile() {
-        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0 };
+        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {} };
       }
 
       function readProfiles() {
@@ -4769,6 +5070,8 @@
           wardrobe = [];
           equippedSkin = 'default';
           weekendWheelSpinDate = null;
+          accOwned = [];
+          accOn = {};
           adventOpened = [];
           freeEggs = 0;
           freeSpins = 0;
@@ -4790,6 +5093,11 @@
         equippedSkin = profile.equippedSkin || 'default';
         if (!skinAvailable(equippedSkin)) equippedSkin = 'default';
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
+        accOwned = Array.isArray(profile.acc) ? profile.acc.filter((a) => ACC_BY_ID[a]) : [];
+        accOn = {};
+        Object.entries(profile.accOn || {}).forEach(([slot, a]) => {
+          if (ACC_BY_ID[a] && ACC_BY_ID[a].slot === slot && accOwned.includes(a)) accOn[slot] = a;
+        });
         adventOpened = Array.isArray(profile.advent) ? profile.advent.filter((d) => Number.isInteger(d) && d >= 1 && d <= 24) : [];
         freeEggs = Math.max(0, parseInt(profile.freeEggs, 10) || 0);
         freeSpins = Math.max(0, parseInt(profile.freeSpins, 10) || 0);
@@ -5096,6 +5404,8 @@
           advent: [...adventOpened],
           freeEggs,
           freeSpins,
+          acc: [...accOwned],
+          accOn: { ...accOn },
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
@@ -5127,7 +5437,7 @@
       }
 
       function currentProgress() {
-        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins };
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn } };
       }
 
       // Poslední stav, o kterém víme, že ho server má (uloží se až po úspěšném uložení na server).
@@ -5157,7 +5467,13 @@
           && (a.weekendWheelSpinDate || null) === (b.weekendWheelSpinDate || null)
           && [...(a.advent || [])].sort().join() === [...(b.advent || [])].sort().join()
           && (a.freeEggs || 0) === (b.freeEggs || 0)
-          && (a.freeSpins || 0) === (b.freeSpins || 0);
+          && (a.freeSpins || 0) === (b.freeSpins || 0)
+          && [...(a.acc || [])].sort().join() === [...(b.acc || [])].sort().join()
+          && JSON.stringify(sortedObj(a.accOn)) === JSON.stringify(sortedObj(b.accOn));
+      }
+
+      function sortedObj(o) {
+        return Object.fromEntries(Object.entries(o || {}).sort());
       }
 
       // Spojí stav tady a na serveru: co se změnilo jen na jedné straně, vyhraje; když obě,
@@ -5187,6 +5503,8 @@
             advent: [...new Set([...(server.advent || []), ...(local.advent || [])])],
             freeEggs: tokens('freeEggs'),
             freeSpins: tokens('freeSpins'),
+            acc: [...new Set([...(server.acc || []), ...(local.acc || [])])],
+            accOn: { ...(local.accOn || {}) },
           },
           upload: true,
         };
@@ -5357,6 +5675,8 @@
           wardrobe: [...new Set([...data.progress.wardrobe, ...local.wardrobe])],
           equippedSkin: data.progress.equippedSkin,
           weekendWheelSpinDate: data.progress.weekendWheelSpinDate || local.weekendWheelSpinDate,
+          acc: [...new Set([...(data.progress.acc || []), ...(local.acc || [])])],
+          accOn: { ...(data.progress.accOn || {}) },
         };
         playerName = data.name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
@@ -5456,6 +5776,9 @@
         updateAdventButton();
         setNameWithBadge(playerNameDisplay, playerName || '—');
         setNameWithBadge(modeSelectGreeting, playerName || '—');
+        const nameAcc = accOn.jmeno && ACC_BY_ID[accOn.jmeno];
+        modeSelectGreeting.classList.toggle('acc-rainbow-name', !!nameAcc && nameAcc.color === 'rainbow');
+        modeSelectGreeting.style.color = nameAcc && nameAcc.color !== 'rainbow' ? nameAcc.color : '';
         updateOwnerPanel();
       }
 
@@ -6836,6 +7159,8 @@
         ctx.fillStyle = '#00ff88';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
+        const nameStyle = accOn.jmeno && ACC_BY_ID[accOn.jmeno];
+        if (nameStyle) ctx.fillStyle = nameStyle.color === 'rainbow' ? `hsl(${(performance.now() / 10) % 360}, 95%, 65%)` : nameStyle.color;
         const lines = getNameLines(playerName, maxWidth);
         let y = head.y * CELL - 2 - lift;
         if (lines.length === 1) drawOwnerBadgeAfter(playerName, cx, y);
@@ -6867,6 +7192,7 @@
         if (zombieMode) drawZombies();
 
         const skin = skinAvailable(equippedSkin) ? equippedSkin : 'default';
+        drawAccTrail();
         if (skin === 'angel') drawAngelWings();
         if (skin === 'devil') drawDevilTail();
         if (skin === 'fire') drawFireSparks();
@@ -6933,9 +7259,10 @@
         if (skin === 'kral') drawKingCrown(head);
         if (skin === 'vanocni') drawSantaHat(head);
         if (skin === 'fire') drawFireFlame(head);
+        const accLift = drawAccOnHead(head);
 
         // svatozář a rohy jsou nad hlavou – jméno o kousek výš
-        drawPlayerNameAboveHead(head, skin === 'angel' ? 10 : skin === 'devil' || skin === 'kral' || skin === 'fire' || skin === 'vanocni' ? 15 : 0);
+        drawPlayerNameAboveHead(head, Math.max(accLift, skin === 'angel' ? 10 : skin === 'devil' || skin === 'kral' || skin === 'fire' || skin === 'vanocni' ? 15 : 0));
         if (zombieMode) drawZombieHud();
       }
 
@@ -7282,6 +7609,7 @@
         pauseOverlay.classList.remove('visible');
         showShopMain();
         shopOverlay.classList.remove('visible');
+        applyAccBonus();
         bankScoreToDiamanty();
         saveProgress();
         finalDiamantyEl.textContent = diamanty;
@@ -7376,6 +7704,7 @@
       function showShopMain() {
         shopView = 'main';
         updateShopOwned();
+        if (typeof setShopTab === 'function' && shopTab !== 'hadi') renderAccShop();
         shopMainView.classList.remove('hidden');
         shopWardrobeView.classList.add('hidden');
         shopGiftView.classList.add('hidden');
@@ -9093,6 +9422,214 @@
       shopBtn.addEventListener('click', openShop);
       shopBackBtn.addEventListener('click', shopBack);
       document.getElementById('leaderboardBtn').addEventListener('click', openLeaderboard);
+
+      // ===== Doplňky (čepice, brýle, šály, stopy, barva jména) =====
+      // Každý doplněk dává malý bonus k bodům podle vzácnosti (jen hra pro jednoho hráče a zombie mód,
+      // ve hře pro více hráčů ne – ať je to fér). Bonusy se sčítají, nejvíc +10 %.
+
+      function accBonusPct() {
+        const sum = Object.values(accOn).reduce((t, id) => t + (ACC_BY_ID[id] ? ACC_RARITY[ACC_BY_ID[id].rarity].bonus : 0), 0);
+        return Math.min(ACC_MAX_BONUS, sum);
+      }
+
+      // Sleva dne: každý den (od 5:00) jeden doplněk o 50 % levněji
+      function accDealId() {
+        const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', year: 'numeric', month: '2-digit', day: '2-digit' })
+          .format(new Date(Date.now() - 5 * 60 * 60 * 1000));
+        const day = Math.floor(Date.parse(`${key}T00:00:00Z`) / 86400000);
+        return ACCESSORIES[(day * 7) % ACCESSORIES.length].id;
+      }
+
+      function accPrice(a) {
+        return a.id === accDealId() ? Math.ceil(a.price / 2) : a.price;
+      }
+
+      function accDealTimeLeft() {
+        const now = new Date();
+        const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+        const [h, m] = fmt.format(now).split(':').map(Number);
+        let mins = (5 * 60 - (h * 60 + m) + 24 * 60) % (24 * 60);
+        if (mins === 0) mins = 24 * 60;
+        return `${Math.floor(mins / 60)} h ${mins % 60} min`;
+      }
+
+      function setShopTab(tab) {
+        shopTab = tab;
+        document.querySelectorAll('#shopTabs .shop-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+        const hadi = tab === 'hadi';
+        shopMainView.querySelector('.shop-content').classList.toggle('hidden', !hadi);
+        document.getElementById('accShopView').classList.toggle('hidden', hadi);
+        if (!hadi) renderAccShop();
+      }
+
+      function renderAccShop() {
+        renderAccWardrobe();
+        const deal = ACC_BY_ID[accDealId()];
+        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA DNE: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">⏳ ještě ${accDealTimeLeft()}</span>`;
+        const grid = document.getElementById('accGrid');
+        grid.replaceChildren();
+        const slots = ACC_SLOTS.filter((sl) => sl.tab === shopTab).map((sl) => sl.id);
+        ACCESSORIES.filter((a) => slots.includes(a.slot)).forEach((a) => {
+          const r = ACC_RARITY[a.rarity];
+          const owned = accOwned.includes(a.id);
+          const el = document.createElement('div');
+          el.className = `acc-item r-${a.rarity}`;
+          el.innerHTML = `${a.id === deal.id && !owned ? '<span class="acc-sale">−50 %</span>' : ''}
+            <div class="acc-icon">${a.icon}</div>
+            <div class="acc-name">${a.name}</div>
+            <div class="acc-rarity">${r.label}</div>
+            <div class="acc-bonus">⭐ +${r.bonus} % bodů</div>`;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'acc-buy' + (owned ? ' owned' : '');
+          btn.textContent = owned ? '✔ Máš' : `${accPrice(a)} 💎`;
+          if (!owned) btn.addEventListener('click', () => buyAccessory(a.id));
+          el.append(btn);
+          grid.append(el);
+        });
+      }
+
+      function buyAccessory(id) {
+        const a = ACC_BY_ID[id];
+        if (!a || accOwned.includes(id)) return;
+        const price = accPrice(a);
+        if (diamanty < price) {
+          showShopMessage(`Nemáš dost diamantů – potřebuješ ${price} 💎.`);
+          return;
+        }
+        diamanty -= price;
+        accOwned.push(id);
+        accOn[a.slot] = id; // rovnou nasadit
+        saveProgress();
+        refreshCurrencyUI();
+        renderAccShop();
+        updatePlayerNameDisplay();
+        showShopMessage(`Koupeno: ${a.icon} ${a.name}! Nasazeno – v Šatně ho můžeš sundat.`);
+      }
+
+      // Nahoře v záložce: co máš nasazené (klepnutím měníš) a celkový bonus
+      function renderAccWardrobe() {
+        const box = document.getElementById('accWardrobe');
+        if (!box) return;
+        const pct = accBonusPct();
+        let html = `<p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(max +${ACC_MAX_BONUS} %, jen hra pro jednoho a zombie mód)</span></p>`;
+        ACC_SLOTS.filter((sl) => sl.tab === shopTab).forEach((sl) => {
+          const mine = ACCESSORIES.filter((a) => a.slot === sl.id && accOwned.includes(a.id));
+          html += `<div class="acc-slot"><div class="acc-slot-title">${sl.label}</div><div class="acc-chips">`;
+          if (!mine.length) {
+            html += '<span class="acc-none">Zatím nic – kup si něco níž 👇</span>';
+          } else {
+            html += `<button type="button" class="acc-chip${accOn[sl.id] ? '' : ' on'}" data-slot="${sl.id}" data-acc="">✖</button>`;
+            mine.forEach((a) => {
+              html += `<button type="button" class="acc-chip${accOn[sl.id] === a.id ? ' on' : ''}" data-slot="${sl.id}" data-acc="${a.id}" title="${a.name}">${a.icon}</button>`;
+            });
+          }
+          html += '</div></div>';
+        });
+        box.innerHTML = html;
+      }
+
+      document.getElementById('accWardrobe').addEventListener('click', (e) => {
+        const chip = e.target.closest('.acc-chip');
+        if (!chip) return;
+        const { slot, acc } = chip.dataset;
+        if (acc && !accOwned.includes(acc)) return;
+        if (acc) accOn[slot] = acc;
+        else delete accOn[slot];
+        saveProgress();
+        renderAccShop();
+        updatePlayerNameDisplay();
+        draw();
+      });
+
+      document.getElementById('shopTabs').addEventListener('click', (e) => {
+        const tab = e.target.closest('.shop-tab');
+        if (tab) setShopTab(tab.dataset.tab);
+      });
+
+      // Konec hry: bonus za doplňky se přičte k bodům (body se pak mění na diamanty jako vždy)
+      function applyAccBonus() {
+        const bonusLine = document.getElementById('accBonusLine');
+        const totalLine = document.getElementById('accTotalLine');
+        const pct = accBonusPct();
+        bonusLine.hidden = true;
+        totalLine.hidden = true;
+        if (!pct || gameScore <= 0) return;
+        const bonus = Math.max(1, Math.round((gameScore * pct) / 100));
+        score += bonus;
+        addGameScore(bonus);
+        updateScoreDisplay();
+        bonusLine.textContent = `⭐ Bonus za doplňky (+${pct} %): +${bonus}`;
+        totalLine.textContent = `Celkem: ${gameScore}`;
+        bonusLine.hidden = false;
+        totalLine.hidden = false;
+      }
+
+      // Kreslení doplňků na hadovi (vrací, o kolik má jméno nad hlavou jít výš)
+      function drawAccEmoji(emoji, cx, cy, size) {
+        ctx.save();
+        ctx.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, cx, cy);
+        ctx.restore();
+      }
+
+      function drawAccOnHead(head) {
+        const cx = head.x * CELL + CELL / 2;
+        const top = head.y * CELL;
+        let lift = 0;
+        const neck = ACC_BY_ID[accOn.krk];
+        if (neck) drawAccEmoji(neck.icon, cx, top + CELL - 1, 13);
+        const face = ACC_BY_ID[accOn.oblicej];
+        if (face) drawAccEmoji(face.icon, cx, top + CELL * 0.42, 15);
+        const hat = ACC_BY_ID[accOn.hlava];
+        if (hat) {
+          if (hat.id === 'svatozar') {
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(cx, top - 6, 8, 3, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (hat.id === 'rohy') {
+            ctx.fillStyle = '#d4202f';
+            [-1, 1].forEach((side) => {
+              ctx.beginPath();
+              ctx.moveTo(cx + side * 3, top + 1);
+              ctx.lineTo(cx + side * 9, top - 9);
+              ctx.lineTo(cx + side * 8, top + 1);
+              ctx.closePath();
+              ctx.fill();
+            });
+          } else {
+            drawAccEmoji(hat.icon, cx, top - 5, 16);
+          }
+          lift = 15;
+        }
+        return lift;
+      }
+
+      function drawAccTrail() {
+        const tr = ACC_BY_ID[accOn.stopa];
+        if (!tr || snake.length < 2) return;
+        const now = performance.now();
+        const n = Math.min(6, snake.length);
+        for (let k = 0; k < n; k++) {
+          const seg = snake[snake.length - 1 - k];
+          for (let j = 0; j < 2; j++) {
+            const ph = now / 260 + k * 1.3 + j * 2.1;
+            const x = seg.x * CELL + CELL / 2 + Math.sin(ph) * 7;
+            const y = seg.y * CELL + CELL / 2 + Math.cos(ph * 1.3) * 7;
+            const col = tr.colors === 'rainbow' ? `hsl(${(now / 8 + k * 40 + j * 90) % 360}, 95%, 62%)` : tr.colors[(k + j) % tr.colors.length];
+            ctx.globalAlpha = 0.85 - k * 0.12;
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.arc(x, y, 3.2 - k * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
 
       // ===== Adventní kalendář =====
       // 1.–24. prosince (český čas) jedno okénko denně – jen v ten den, jinak propadne.
