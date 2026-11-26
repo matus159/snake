@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.45">
+  <meta name="snake-version" content="1.99.46">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4299,7 +4299,7 @@
         <div id="shopMainView" class="shop-view">
           <div class="shop-tabs" id="shopTabs">
             <button type="button" class="shop-tab active" data-tab="hadi">🐍 Hadi</button>
-            <button type="button" class="shop-tab" data-tab="doplnky">🎩 Doplňky – nabídka dne</button>
+            <button type="button" class="shop-tab" data-tab="doplnky">🎩 Doplňky – nabídka</button>
           </div>
           <div class="shop-body">
             <div id="accShopView" class="hidden">
@@ -9547,14 +9547,8 @@
       }
 
       // Sleva dne: každý den (od 5:00) jeden doplněk o 50 % levněji
-      // Střídání: každý den v 5:00 je v obchodě jiných 8 doplňků (stejných pro všechny hráče):
+      // Střídání: každých 5 hodin je v obchodě jiných 8 doplňků (stejných pro všechny hráče):
       // 3 běžné, 3 vzácné, 1 epický a 1 legendární (někdy místo něj další epický). Koupené věci zůstávají.
-      function accDayNumber() {
-        const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', year: 'numeric', month: '2-digit', day: '2-digit' })
-          .format(new Date(Date.now() - 5 * 60 * 60 * 1000));
-        return Math.floor(Date.parse(`${key}T00:00:00Z`) / 86400000);
-      }
-
       function accRandom(seed) {
         let t = seed >>> 0;
         return () => {
@@ -9567,7 +9561,7 @@
 
       let accOfferCache = { day: null, ids: [], deal: null };
       function accTodayOffer() {
-        const day = accDayNumber();
+        const day = accOfferPeriod();
         if (accOfferCache.day === day) return accOfferCache;
         const rnd = accRandom(day * 2654435761);
         const pick = (rarity, n, taken) => {
@@ -9595,12 +9589,14 @@
         return a.id === accDealId() ? Math.ceil(a.price / 2) : a.price;
       }
 
+      const ACC_OFFER_MS = 5 * 60 * 60 * 1000; // nabídka se mění každých 5 hodin
+
+      function accOfferPeriod() {
+        return Math.floor(Date.now() / ACC_OFFER_MS);
+      }
+
       function accDealTimeLeft() {
-        const now = new Date();
-        const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-        const [h, m] = fmt.format(now).split(':').map(Number);
-        let mins = (5 * 60 - (h * 60 + m) + 24 * 60) % (24 * 60);
-        if (mins === 0) mins = 24 * 60;
+        const mins = Math.max(1, Math.ceil((ACC_OFFER_MS - (Date.now() % ACC_OFFER_MS)) / 60000));
         return `${Math.floor(mins / 60)} h ${mins % 60} min`;
       }
 
@@ -9616,7 +9612,7 @@
       function renderAccShop() {
         renderAccWardrobe();
         const deal = ACC_BY_ID[accDealId()];
-        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA DNE: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za ${accDealTimeLeft()}</span>`;
+        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za ${accDealTimeLeft()}</span>`;
         const grid = document.getElementById('accGrid');
         grid.replaceChildren();
         accTodayOffer().ids.map((id) => ACC_BY_ID[id]).forEach((a) => {
