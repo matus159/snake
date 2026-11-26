@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.46">
+  <meta name="snake-version" content="1.99.47">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -9547,7 +9547,7 @@
       }
 
       // Sleva dne: každý den (od 5:00) jeden doplněk o 50 % levněji
-      // Střídání: každých 5 hodin je v obchodě jiných 8 doplňků (stejných pro všechny hráče):
+      // Střídání: každých 10 hodin je v obchodě jiných 8 doplňků (stejných pro všechny hráče):
       // 3 běžné, 3 vzácné, 1 epický a 1 legendární (někdy místo něj další epický). Koupené věci zůstávají.
       function accRandom(seed) {
         let t = seed >>> 0;
@@ -9589,7 +9589,7 @@
         return a.id === accDealId() ? Math.ceil(a.price / 2) : a.price;
       }
 
-      const ACC_OFFER_MS = 5 * 60 * 60 * 1000; // nabídka se mění každých 5 hodin
+      const ACC_OFFER_MS = 10 * 60 * 60 * 1000; // nabídka se mění každých 10 hodin
 
       function accOfferPeriod() {
         return Math.floor(Date.now() / ACC_OFFER_MS);
