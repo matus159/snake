@@ -15,6 +15,8 @@ export interface Progress {
   // doplňky: koupené (id) a nasazené podle místa (hlava, obličej, krk, stopa, jméno)
   acc: string[];
   accOn: Record<string, string>;
+  // vylepšené doplňky: id → 2 nebo 3 hvězdy
+  accLvl: Record<string, number>;
 }
 
 const ACC_SLOTS = ['hlava', 'oblicej', 'krk', 'stopa', 'jmeno'];
@@ -64,6 +66,11 @@ function cleanProgress(raw: unknown): Progress {
         ([slot, id]) => ACC_SLOTS.includes(slot) && typeof id === 'string' && id.length <= 20,
       ),
     ) as Record<string, string>,
+    accLvl: Object.fromEntries(
+      Object.entries(p.accLvl && typeof p.accLvl === 'object' ? (p.accLvl as Record<string, unknown>) : {})
+        .filter(([id, l]) => id.length <= 20 && (l === 2 || l === 3))
+        .slice(0, 100),
+    ) as Record<string, number>,
   };
 }
 
