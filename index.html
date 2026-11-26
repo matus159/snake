@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.48">
+  <meta name="snake-version" content="1.99.49">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1279,6 +1279,114 @@
     @keyframes accSparkleName {
       0%, 100% { filter: brightness(1); }
       50% { filter: brightness(1.6) drop-shadow(0 0 4px #fff3a0); }
+    }
+
+    .acc-own-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .acc-own {
+      --r: #5fd35f;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 12px;
+      background: #141424;
+      border: 2px solid var(--r);
+    }
+
+    .acc-own.r-vzacne { --r: #3bb4ff; }
+    .acc-own.r-epicke { --r: #c45cff; }
+    .acc-own.r-legendarni { --r: #ffd23f; }
+    .acc-own.r-mytiske { --r: #ff3b5c; }
+
+    .acc-own.on {
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+
+    .acc-own-icon {
+      font-size: 1.9rem;
+    }
+
+    .acc-own-icon.lvl2 {
+      filter: drop-shadow(0 0 4px #fff);
+    }
+
+    .acc-own-icon.lvl3 {
+      filter: drop-shadow(0 0 5px #ffd23f) drop-shadow(0 0 9px #ffb300);
+    }
+
+    .acc-own-mid {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .acc-own-slot {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #9ab;
+    }
+
+    .acc-own-name {
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .acc-own-stars {
+      font-size: 0.8rem;
+    }
+
+    .acc-star-off {
+      filter: grayscale(1);
+      opacity: 0.25;
+    }
+
+    .acc-own-bonus {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #ffd23f;
+    }
+
+    .acc-own-bonus small {
+      color: #9ab;
+      font-weight: 400;
+    }
+
+    .acc-own-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      align-items: stretch;
+    }
+
+    .acc-own-btn {
+      padding: 0.3rem 0.55rem;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #00d9ff, #00ff88);
+      color: #fff !important;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.72rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .acc-own-btn.acc-up {
+      background: linear-gradient(135deg, #b06bff, #ff4fa3);
+    }
+
+    .acc-own-max {
+      padding: 0.3rem 0.55rem;
+      border-radius: 8px;
+      background: #3a3010;
+      color: #ffd23f;
+      font-weight: 800;
+      font-size: 0.72rem;
+      text-align: center;
     }
 
     #gameOverOverlay .acc-result {
@@ -4870,6 +4978,7 @@
       let weekendWheelSpinDate = null;
       let accOwned = []; // koupené doplňky (id)
       let accOn = {}; // nasazené doplňky: { hlava, oblicej, krk, stopa, jmeno }
+      let accLvl = {}; // vylepšené doplňky: { id: 2 nebo 3 } (bez záznamu = ⭐)
       let diamanty = 0;
       // Adventní kalendář: otevřená okénka (dny 1–24) a vajíčka/kola zdarma z kalendáře.
       let adventOpened = [];
@@ -5120,7 +5229,7 @@
       }
 
       function defaultProfile() {
-        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {} };
+        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {}, accLvl: {} };
       }
 
       function readProfiles() {
@@ -5173,6 +5282,7 @@
           weekendWheelSpinDate = null;
           accOwned = [];
           accOn = {};
+          accLvl = {};
           adventOpened = [];
           freeEggs = 0;
           freeSpins = 0;
@@ -5195,6 +5305,10 @@
         if (!skinAvailable(equippedSkin)) equippedSkin = 'default';
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
         accOwned = Array.isArray(profile.acc) ? profile.acc.filter((a) => ACC_BY_ID[a]) : [];
+        accLvl = {};
+        Object.entries(profile.accLvl || {}).forEach(([a, l]) => {
+          if (accOwned.includes(a) && (l === 2 || l === 3)) accLvl[a] = l;
+        });
         accOn = {};
         Object.entries(profile.accOn || {}).forEach(([slot, a]) => {
           if (ACC_BY_ID[a] && ACC_BY_ID[a].slot === slot && accOwned.includes(a)) accOn[slot] = a;
@@ -5507,6 +5621,7 @@
           freeSpins,
           acc: [...accOwned],
           accOn: { ...accOn },
+          accLvl: { ...accLvl },
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
@@ -5538,7 +5653,7 @@
       }
 
       function currentProgress() {
-        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn } };
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn }, accLvl: { ...accLvl } };
       }
 
       // Poslední stav, o kterém víme, že ho server má (uloží se až po úspěšném uložení na server).
@@ -5570,7 +5685,15 @@
           && (a.freeEggs || 0) === (b.freeEggs || 0)
           && (a.freeSpins || 0) === (b.freeSpins || 0)
           && [...(a.acc || [])].sort().join() === [...(b.acc || [])].sort().join()
-          && JSON.stringify(sortedObj(a.accOn)) === JSON.stringify(sortedObj(b.accOn));
+          && JSON.stringify(sortedObj(a.accOn)) === JSON.stringify(sortedObj(b.accOn))
+          && JSON.stringify(sortedObj(a.accLvl)) === JSON.stringify(sortedObj(b.accLvl));
+      }
+
+      // vylepšení doplňků z obou stran – vyšší hvězdy vyhrají
+      function maxLevels(a, b) {
+        const out = { ...(a || {}) };
+        Object.entries(b || {}).forEach(([id, l]) => { out[id] = Math.max(out[id] || 1, l); });
+        return out;
       }
 
       function sortedObj(o) {
@@ -5606,6 +5729,7 @@
             freeSpins: tokens('freeSpins'),
             acc: [...new Set([...(server.acc || []), ...(local.acc || [])])],
             accOn: { ...(local.accOn || {}) },
+            accLvl: maxLevels(local.accLvl, server.accLvl),
           },
           upload: true,
         };
@@ -5778,6 +5902,7 @@
           weekendWheelSpinDate: data.progress.weekendWheelSpinDate || local.weekendWheelSpinDate,
           acc: [...new Set([...(data.progress.acc || []), ...(local.acc || [])])],
           accOn: { ...(data.progress.accOn || {}) },
+          accLvl: maxLevels(local.accLvl, data.progress.accLvl),
         };
         playerName = data.name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
@@ -9546,9 +9671,27 @@
       // Každý doplněk dává malý bonus k bodům podle vzácnosti (jen hra pro jednoho hráče a zombie mód,
       // ve hře pro více hráčů ne – ať je to fér). Bonusy se sčítají bez omezení.
 
+      // ⭐⭐ = +1 % navíc, ⭐⭐⭐ = +2 % navíc
+      function accItemBonus(id) {
+        const a = ACC_BY_ID[id];
+        return a ? ACC_RARITY[a.rarity].bonus + ((accLvl[id] || 1) - 1) : 0;
+      }
+
       function accBonusPct() {
-        const sum = Object.values(accOn).reduce((t, id) => t + (ACC_BY_ID[id] ? ACC_RARITY[ACC_BY_ID[id].rarity].bonus : 0), 0);
-        return sum;
+        return Object.values(accOn).reduce((t, id) => t + accItemBonus(id), 0);
+      }
+
+      // vylepšení: na ⭐⭐ za polovinu ceny, na ⭐⭐⭐ za celou cenu
+      function accUpgradeCost(id) {
+        const a = ACC_BY_ID[id];
+        const lvl = accLvl[id] || 1;
+        if (!a || lvl >= 3) return null;
+        return lvl === 1 ? Math.ceil(a.price / 2) : a.price;
+      }
+
+      function accStars(id) {
+        const lvl = accLvl[id] || 1;
+        return '⭐'.repeat(lvl) + `<span class="acc-star-off">${'⭐'.repeat(3 - lvl)}</span>`;
       }
 
       // Sleva dne: každý den (od 5:00) jeden doplněk o 50 % levněji
@@ -9663,30 +9806,54 @@
         const box = document.getElementById('accWardrobe');
         if (!box) return;
         const pct = accBonusPct();
-        let html = `<h4>👕 Tvoje doplňky</h4><p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(hra pro jednoho a zombie mód)</span></p>`;
-        ACC_SLOTS.filter((sl) => sl.tab === shopTab).forEach((sl) => {
-          const mine = ACCESSORIES.filter((a) => a.slot === sl.id && accOwned.includes(a.id));
-          if (!mine.length) return; // jen místa, kde něco máš
-          html += `<div class="acc-slot"><div class="acc-slot-title">${sl.label}</div><div class="acc-chips">`;
-          {
-            html += `<button type="button" class="acc-chip${accOn[sl.id] ? '' : ' on'}" data-slot="${sl.id}" data-acc="">✖</button>`;
-            mine.forEach((a) => {
-              html += `<button type="button" class="acc-chip${accOn[sl.id] === a.id ? ' on' : ''}" data-slot="${sl.id}" data-acc="${a.id}" title="${a.name}">${a.icon}</button>`;
-            });
-          }
-          html += '</div></div>';
+        let html = `<h4>👕 Tvoje doplňky</h4><p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(hra pro jednoho a zombie mód)</span></p><div class="acc-own-list">`;
+        ACC_SLOTS.forEach((sl) => {
+          ACCESSORIES.filter((a) => a.slot === sl.id && accOwned.includes(a.id)).forEach((a) => {
+            const on = accOn[sl.id] === a.id;
+            const lvl = accLvl[a.id] || 1;
+            const cost = accUpgradeCost(a.id);
+            const extra = lvl > 1 ? ` <small>(${ACC_RARITY[a.rarity].bonus} % + ${lvl - 1} % za hvězdy)</small>` : '';
+            html += `<div class="acc-own r-${a.rarity}${on ? ' on' : ''}">
+              <div class="acc-own-icon lvl${lvl}">${a.icon}</div>
+              <div class="acc-own-mid">
+                <div class="acc-own-slot">${sl.label.replace(/^\S+\s/, '')}${on ? ' · nasazeno' : ''}</div>
+                <div class="acc-own-name">${a.name}</div>
+                <div class="acc-own-stars">${accStars(a.id)}</div>
+                <div class="acc-own-bonus">+${accItemBonus(a.id)} % bodů${extra}</div>
+              </div>
+              <div class="acc-own-btns">
+                <button type="button" class="acc-own-btn" data-act="${on ? 'off' : 'on'}" data-slot="${sl.id}" data-acc="${a.id}">${on ? 'Sundat' : 'Nasadit'}</button>
+                ${cost === null ? '<span class="acc-own-max">✔ MAX</span>' : `<button type="button" class="acc-own-btn acc-up" data-act="up" data-acc="${a.id}">⬆️ ${'⭐'.repeat(lvl + 1)} za ${cost} 💎</button>`}
+              </div>
+            </div>`;
+          });
         });
+        html += '</div>';
         if (!accOwned.length) html += '<p class="acc-none" style="text-align:center">Zatím nemáš žádné doplňky – kup si něco z nabídky nahoře 👆</p>';
         box.innerHTML = html;
       }
 
       document.getElementById('accWardrobe').addEventListener('click', (e) => {
-        const chip = e.target.closest('.acc-chip');
-        if (!chip) return;
-        const { slot, acc } = chip.dataset;
-        if (acc && !accOwned.includes(acc)) return;
-        if (acc) accOn[slot] = acc;
-        else delete accOn[slot];
+        const btn = e.target.closest('.acc-own-btn');
+        if (!btn) return;
+        const { act, slot, acc } = btn.dataset;
+        if (!accOwned.includes(acc)) return;
+        if (act === 'up') {
+          const cost = accUpgradeCost(acc);
+          if (cost === null) return;
+          if (diamanty < cost) {
+            showShopMessage(`Na vylepšení potřebuješ ${cost} 💎.`);
+            return;
+          }
+          diamanty -= cost;
+          accLvl[acc] = (accLvl[acc] || 1) + 1;
+          refreshCurrencyUI();
+          showShopMessage(`Vylepšeno: ${ACC_BY_ID[acc].icon} ${ACC_BY_ID[acc].name} → ${'⭐'.repeat(accLvl[acc])}`);
+        } else if (act === 'on') {
+          accOn[slot] = acc;
+        } else {
+          delete accOn[slot];
+        }
         saveProgress();
         renderAccShop();
         updatePlayerNameDisplay();
@@ -9730,12 +9897,23 @@
         const cx = head.x * CELL + CELL / 2;
         const top = head.y * CELL;
         let lift = 0;
+        // vylepšené doplňky (jen vlastní) se třpytí: ⭐⭐ bílá záře, ⭐⭐⭐ zlatá
+        const lvls = on === accOn ? accLvl : {};
+        const glow = (id) => {
+          const l = lvls[id] || 1;
+          ctx.shadowColor = l === 3 ? '#ffd23f' : '#ffffff';
+          ctx.shadowBlur = l === 1 ? 0 : (l === 3 ? 9 : 5) + Math.sin(performance.now() / 180) * 2;
+        };
+        ctx.save();
         const neck = ACC_BY_ID[on.krk];
+        if (neck) glow(neck.id);
         if (neck && !drawAccCustom(neck.draw, cx, top)) drawAccEmoji(neck.icon, cx, top + CELL - 1, 13);
         const face = ACC_BY_ID[on.oblicej];
+        if (face) glow(face.id);
         if (face && !drawAccCustom(face.draw, cx, top)) drawAccEmoji(face.icon, cx, top + CELL * 0.42, 15);
         const hat = ACC_BY_ID[on.hlava];
         if (hat) {
+          glow(hat.id);
           if (drawAccCustom(hat.draw, cx, top)) {
             // nakresleno
           } else if (hat.id === 'svatozar') {
@@ -9759,6 +9937,7 @@
           }
           lift = 15;
         }
+        ctx.restore();
         return lift;
       }
 
