@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.49">
+  <meta name="snake-version" content="1.99.50">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1068,6 +1068,21 @@
 
     .acc-deal b {
       color: #ffd23f;
+    }
+
+    .acc-chance {
+      margin: -0.3rem auto 0.6rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #c9d3f0;
+    }
+
+    .acc-chance .c-leg {
+      color: #ffd23f;
+    }
+
+    .acc-chance .c-myt {
+      color: #ff5a74;
     }
 
     .acc-grid {
@@ -4412,6 +4427,7 @@
           <div class="shop-body">
             <div id="accShopView" class="hidden">
               <div class="acc-deal" id="accDeal"></div>
+              <p class="acc-chance" id="accChance"></p>
               <div class="acc-grid" id="accGrid"></div>
               <div id="accWardrobe" class="acc-wardrobe"></div>
             </div>
@@ -9707,6 +9723,9 @@
         };
       }
 
+      // šance, že v nabídce bude mýtická / legendární věc (jinak epická navíc)
+      const ACC_CHANCE_MYTHIC = 0.15;
+      const ACC_CHANCE_LEGEND = 0.35;
       let accOfferCache = { day: null, ids: [], deal: null };
       function accTodayOffer() {
         const day = accOfferPeriod();
@@ -9724,7 +9743,7 @@
         ids.push(...pick('epicke', 1, ids));
         // poslední místo: mýtická zřídka (asi 1× za týden), jinak legendární nebo epická
         const r8 = rnd();
-        ids.push(...pick(r8 < 1 / 7 ? 'mytiske' : r8 < 0.5 ? 'legendarni' : 'epicke', 1, ids));
+        ids.push(...pick(r8 < ACC_CHANCE_MYTHIC ? 'mytiske' : r8 < ACC_CHANCE_MYTHIC + ACC_CHANCE_LEGEND ? 'legendarni' : 'epicke', 1, ids));
         accOfferCache = { day, ids, deal: ids[Math.floor(rnd() * ids.length)] };
         return accOfferCache;
       }
@@ -9761,6 +9780,7 @@
         renderAccWardrobe();
         const deal = ACC_BY_ID[accDealId()];
         document.getElementById('accDeal').innerHTML = `🏷️ SLEVA: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za ${accDealTimeLeft()}</span>`;
+        document.getElementById('accChance').innerHTML = `🎲 Šance v každé nabídce: <b class="c-leg">🟡 legendární ${Math.round(ACC_CHANCE_LEGEND * 100)} %</b> · <b class="c-myt">🔴 mýtická ${Math.round(ACC_CHANCE_MYTHIC * 100)} %</b>`;
         const grid = document.getElementById('accGrid');
         grid.replaceChildren();
         accTodayOffer().ids.map((id) => ACC_BY_ID[id]).forEach((a) => {
