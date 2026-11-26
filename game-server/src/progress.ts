@@ -12,8 +12,6 @@ export interface Progress {
   advent: number[];
   freeEggs: number;
   freeSpins: number;
-  // denní truhla: den (YYYY-MM-DD, od 5:00), kdy ji hráč naposledy otevřel
-  chestDate: string | null;
 }
 
 interface Stored {
@@ -53,7 +51,6 @@ function cleanProgress(raw: unknown): Progress {
       : [],
     freeEggs: Math.min(count(p.freeEggs), 10),
     freeSpins: Math.min(count(p.freeSpins), 10),
-    chestDate: typeof p.chestDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p.chestDate) ? p.chestDate : null,
   };
 }
 
