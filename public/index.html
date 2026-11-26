@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.43">
+  <meta name="snake-version" content="1.99.44">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1153,7 +1153,7 @@
 
     .acc-wardrobe {
       max-width: 720px;
-      margin: 0 auto 0.5rem;
+      margin: 0.8rem auto 0.5rem;
       text-align: left;
     }
 
@@ -4273,15 +4273,13 @@
         <div id="shopMainView" class="shop-view">
           <div class="shop-tabs" id="shopTabs">
             <button type="button" class="shop-tab active" data-tab="hadi">🐍 Hadi</button>
-            <button type="button" class="shop-tab" data-tab="doplnky">🎩 Doplňky</button>
-            <button type="button" class="shop-tab" data-tab="stopy">✨ Stopy</button>
-            <button type="button" class="shop-tab" data-tab="jmeno">🏷️ Jméno</button>
+            <button type="button" class="shop-tab" data-tab="doplnky">🎩 Doplňky – nabídka dne</button>
           </div>
           <div class="shop-body">
             <div id="accShopView" class="hidden">
-              <div id="accWardrobe" class="acc-wardrobe"></div>
               <div class="acc-deal" id="accDeal"></div>
               <div class="acc-grid" id="accGrid"></div>
+              <div id="accWardrobe" class="acc-wardrobe"></div>
             </div>
             <div class="shop-content">
               <div class="shop-skins-row">
@@ -4458,8 +4456,8 @@
         { id: 'hlava', label: '🎩 HLAVA', tab: 'doplnky' },
         { id: 'oblicej', label: '😎 OBLIČEJ', tab: 'doplnky' },
         { id: 'krk', label: '🧣 KRK', tab: 'doplnky' },
-        { id: 'stopa', label: '✨ STOPA', tab: 'stopy' },
-        { id: 'jmeno', label: '🏷️ JMÉNO', tab: 'jmeno' },
+        { id: 'stopa', label: '✨ STOPA', tab: 'doplnky' },
+        { id: 'jmeno', label: '🏷️ JMÉNO', tab: 'doplnky' },
       ];
       const ACCESSORIES = [
         { id: 'masle', slot: 'hlava', icon: '🎀', name: 'Mašle', rarity: 'bezne', price: 50 },
@@ -9492,11 +9490,46 @@
       }
 
       // Sleva dne: každý den (od 5:00) jeden doplněk o 50 % levněji
-      function accDealId() {
+      // Střídání: každý den v 5:00 je v obchodě jiných 8 doplňků (stejných pro všechny hráče):
+      // 3 běžné, 3 vzácné, 1 epický a 1 legendární (někdy místo něj další epický). Koupené věci zůstávají.
+      function accDayNumber() {
         const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Prague', year: 'numeric', month: '2-digit', day: '2-digit' })
           .format(new Date(Date.now() - 5 * 60 * 60 * 1000));
-        const day = Math.floor(Date.parse(`${key}T00:00:00Z`) / 86400000);
-        return ACCESSORIES[(day * 7) % ACCESSORIES.length].id;
+        return Math.floor(Date.parse(`${key}T00:00:00Z`) / 86400000);
+      }
+
+      function accRandom(seed) {
+        let t = seed >>> 0;
+        return () => {
+          t = (t + 0x6d2b79f5) >>> 0;
+          let r = Math.imul(t ^ (t >>> 15), 1 | t);
+          r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+          return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      let accOfferCache = { day: null, ids: [], deal: null };
+      function accTodayOffer() {
+        const day = accDayNumber();
+        if (accOfferCache.day === day) return accOfferCache;
+        const rnd = accRandom(day * 2654435761);
+        const pick = (rarity, n, taken) => {
+          const pool = ACCESSORIES.filter((a) => a.rarity === rarity && !taken.includes(a.id));
+          const out = [];
+          while (out.length < n && pool.length) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0].id);
+          return out;
+        };
+        const ids = [];
+        ids.push(...pick('bezne', 3, ids));
+        ids.push(...pick('vzacne', 3, ids));
+        ids.push(...pick('epicke', 1, ids));
+        ids.push(...pick(rnd() < 0.4 ? 'legendarni' : 'epicke', 1, ids));
+        accOfferCache = { day, ids, deal: ids[Math.floor(rnd() * ids.length)] };
+        return accOfferCache;
+      }
+
+      function accDealId() {
+        return accTodayOffer().deal;
       }
 
       function accPrice(a) {
@@ -9524,11 +9557,10 @@
       function renderAccShop() {
         renderAccWardrobe();
         const deal = ACC_BY_ID[accDealId()];
-        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA DNE: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">⏳ ještě ${accDealTimeLeft()}</span>`;
+        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA DNE: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za ${accDealTimeLeft()}</span>`;
         const grid = document.getElementById('accGrid');
         grid.replaceChildren();
-        const slots = ACC_SLOTS.filter((sl) => sl.tab === shopTab).map((sl) => sl.id);
-        ACCESSORIES.filter((a) => slots.includes(a.slot)).forEach((a) => {
+        accTodayOffer().ids.map((id) => ACC_BY_ID[id]).forEach((a) => {
           const r = ACC_RARITY[a.rarity];
           const owned = accOwned.includes(a.id);
           const el = document.createElement('div');
@@ -9550,7 +9582,7 @@
 
       function buyAccessory(id) {
         const a = ACC_BY_ID[id];
-        if (!a || accOwned.includes(id)) return;
+        if (!a || accOwned.includes(id) || !accTodayOffer().ids.includes(id)) return;
         const price = accPrice(a);
         if (diamanty < price) {
           showShopMessage(`Nemáš dost diamantů – potřebuješ ${price} 💎.`);
@@ -9571,13 +9603,12 @@
         const box = document.getElementById('accWardrobe');
         if (!box) return;
         const pct = accBonusPct();
-        let html = `<p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(hra pro jednoho a zombie mód)</span></p>`;
+        let html = `<h4>👕 Tvoje doplňky</h4><p class="acc-total">Tvůj bonus: ⭐ +${pct} % bodů <span style="font-weight:400;color:#9ab">(hra pro jednoho a zombie mód)</span></p>`;
         ACC_SLOTS.filter((sl) => sl.tab === shopTab).forEach((sl) => {
           const mine = ACCESSORIES.filter((a) => a.slot === sl.id && accOwned.includes(a.id));
+          if (!mine.length) return; // jen místa, kde něco máš
           html += `<div class="acc-slot"><div class="acc-slot-title">${sl.label}</div><div class="acc-chips">`;
-          if (!mine.length) {
-            html += '<span class="acc-none">Zatím nic – kup si něco níž 👇</span>';
-          } else {
+          {
             html += `<button type="button" class="acc-chip${accOn[sl.id] ? '' : ' on'}" data-slot="${sl.id}" data-acc="">✖</button>`;
             mine.forEach((a) => {
               html += `<button type="button" class="acc-chip${accOn[sl.id] === a.id ? ' on' : ''}" data-slot="${sl.id}" data-acc="${a.id}" title="${a.name}">${a.icon}</button>`;
@@ -9585,6 +9616,7 @@
           }
           html += '</div></div>';
         });
+        if (!accOwned.length) html += '<p class="acc-none" style="text-align:center">Zatím nemáš žádné doplňky – kup si něco z nabídky nahoře 👆</p>';
         box.innerHTML = html;
       }
 
