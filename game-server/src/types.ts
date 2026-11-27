@@ -30,7 +30,7 @@ export interface Player {
   tacos: number;
   alive: boolean;
   colorIndex: number;
-  // nasazené doplňky (hlava, obličej, krk, stopa, jméno) – ostatní je vidí na hadovi
+  // nasazené doplňky (hlava, obličej, pusa, krk, stopa, jméno) – ostatní je vidí na hadovi
   acc: Record<string, string>;
 }
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.59">
+  <meta name="snake-version" content="1.99.61">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1118,6 +1118,15 @@
 
     @keyframes accMythic {
       50% { box-shadow: 0 0 22px #ff3b5c, 0 0 6px #ffd23f inset; }
+    }
+
+    .acc-item .acc-slot-tag {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #9ab;
+      padding: 0.05rem 0.4rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .acc-item .acc-icon {
@@ -4967,6 +4976,7 @@
       const ACC_SLOTS = [
         { id: 'hlava', label: '🎩 HLAVA', tab: 'doplnky' },
         { id: 'oblicej', label: '😎 OBLIČEJ', tab: 'doplnky' },
+        { id: 'pusa', label: '👅 PUSA', tab: 'doplnky' },
         { id: 'krk', label: '🧣 KRK', tab: 'doplnky' },
         { id: 'stopa', label: '✨ STOPA', tab: 'doplnky' },
         { id: 'jmeno', label: '🏷️ JMÉNO', tab: 'doplnky' },
@@ -5028,7 +5038,7 @@
         { id: 'plamkoruna', slot: 'hlava', icon: '🔥', name: 'Plamenná koruna', rarity: 'legendarni', price: 1400, draw: 'plamkoruna' },
         { id: 'vesmirkoruna', slot: 'hlava', icon: '🌌', name: 'Koruna vesmíru', rarity: 'mytiske', price: 3000, draw: 'vesmirkoruna' },
         { id: 'dracihelma', slot: 'hlava', icon: '🐉', name: 'Dračí helma', rarity: 'mytiske', price: 3000, draw: 'dracihelma' },
-        { id: 'jazyk', slot: 'oblicej', icon: '😜', name: 'Vyplazený jazyk', rarity: 'bezne', price: 40, draw: 'jazyk' },
+        { id: 'jazyk', slot: 'pusa', icon: '😜', name: 'Vyplazený jazyk', rarity: 'bezne', price: 40, draw: 'jazyk' },
         { id: 'tvaricky', slot: 'oblicej', icon: '😊', name: 'Červené tvářičky', rarity: 'bezne', price: 40, draw: 'tvaricky' },
         { id: 'neon', slot: 'oblicej', icon: '🕶️', name: 'Neonové brýle', rarity: 'vzacne', price: 180, draw: 'neon' },
         { id: 'laser', slot: 'oblicej', icon: '👁️', name: 'Laserové oči', rarity: 'legendarni', price: 1300, draw: 'laser' },
@@ -10203,7 +10213,7 @@
         const deal = ACC_BY_ID[accDealId()];
         document.getElementById('accDeal').innerHTML = `🏷️ SLEVA: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za <span id="accTimeLeft">${accDealTimeLeft()}</span></span>`;
         accShownPeriod = accOfferPeriod();
-        document.getElementById('accChance').innerHTML = `🎲 Šance v každé nabídce: <b class="c-leg">🟡 legendární ${Math.round(ACC_CHANCE_LEGEND * 100)} %</b> · <b class="c-myt">🔴 mýtická ${Math.round(ACC_CHANCE_MYTHIC * 100)} %</b>`;
+        document.getElementById('accChance').innerHTML = `ℹ️ Z každé kategorie (🎩 hlava, 😎 obličej, 👅 pusa, 🧣 krk, ✨ stopa, 🏷️ jméno) můžeš mít nasazenou <b>1 věc</b> – z různých kategorií klidně všechny najednou.<br>🎲 Šance v každé nabídce: <b class="c-leg">🟡 legendární ${Math.round(ACC_CHANCE_LEGEND * 100)} %</b> · <b class="c-myt">🔴 mýtická ${Math.round(ACC_CHANCE_MYTHIC * 100)} %</b>`;
         const grid = document.getElementById('accGrid');
         grid.replaceChildren();
         accTodayOffer().ids.map((id) => ACC_BY_ID[id]).forEach((a) => {
@@ -10212,6 +10222,7 @@
           const el = document.createElement('div');
           el.className = `acc-item r-${a.rarity}`;
           el.innerHTML = `${a.id === deal.id && !owned ? '<span class="acc-sale">−50 %</span>' : ''}
+            <div class="acc-slot-tag">${ACC_SLOTS.find((sl) => sl.id === a.slot).label}</div>
             <div class="acc-icon">${a.icon}</div>
             <div class="acc-name">${a.name}</div>
             <div class="acc-rarity">${r.label}</div>
@@ -10367,6 +10378,9 @@
         const face = ACC_BY_ID[on.oblicej];
         if (face) glow(face.id);
         if (face && !drawAccCustom(face.draw, cx, top)) drawAccEmoji(face.icon, cx, top + CELL * 0.42, 15);
+        const mouth = ACC_BY_ID[on.pusa];
+        if (mouth) glow(mouth.id);
+        if (mouth && !drawAccCustom(mouth.draw, cx, top)) drawAccEmoji(mouth.icon, cx, top + CELL * 0.8, 12);
         const hat = ACC_BY_ID[on.hlava];
         if (hat) {
           glow(hat.id);

@@ -25,7 +25,7 @@ export interface Progress {
 
 const CNT_KEYS = ['hry', 'kostky', 'zombie', 'vyhry'];
 
-const ACC_SLOTS = ['hlava', 'oblicej', 'krk', 'stopa', 'jmeno'];
+const ACC_SLOTS = ['hlava', 'oblicej', 'pusa', 'krk', 'stopa', 'jmeno'];
 
 interface Stored {
   name: string;
