@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.65">
+  <meta name="snake-version" content="1.99.66">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1081,6 +1081,10 @@
       color: #ffd23f;
     }
 
+    .acc-chance .c-sup {
+      color: #ff9af0;
+    }
+
     .acc-chance .c-myt {
       color: #ff5a74;
     }
@@ -1111,6 +1115,30 @@
     .acc-item.r-vzacne { --r: #3bb4ff; }
     .acc-item.r-epicke { --r: #c45cff; }
     .acc-item.r-legendarni { --r: #ffd23f; }
+    .acc-item.r-supermytiske,
+    .acc-own.r-supermytiske {
+      --r: #ff5ee0;
+      border-color: transparent;
+      background:
+        linear-gradient(#141424, #141424) padding-box,
+        linear-gradient(90deg, #ff3b3b, #ffd23f, #3bff7a, #3bb4ff, #c45cff, #ff3b3b) border-box;
+      background-size: 100% 100%, 300% 100%;
+      animation: accSuper 2.5s linear infinite;
+      box-shadow: 0 0 16px rgba(255, 94, 224, 0.55);
+    }
+
+    .acc-item.r-supermytiske .acc-rarity {
+      background: linear-gradient(90deg, #ff6b6b, #ffd23f, #3bff7a, #3bb4ff, #c45cff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      text-shadow: none !important;
+    }
+
+    @keyframes accSuper {
+      to { background-position: 0 0, 300% 0; }
+    }
+
     .acc-item.r-mytiske {
       --r: #ff3b5c;
       animation: accMythic 1.6s ease-in-out infinite;
@@ -1292,6 +1320,15 @@
     .acc-royal-name {
       color: #ffd23f !important;
       animation: accSparkleName 2s ease-in-out infinite;
+    }
+
+    .acc-legend-name::before {
+      content: '👑 ';
+      -webkit-text-fill-color: initial;
+    }
+
+    .acc-legend-name {
+      animation: accRainbowName 2s linear infinite, accSparkleName 1.6s ease-in-out infinite;
     }
 
     .acc-royal-name::before {
@@ -4972,6 +5009,7 @@
         epicke: { label: 'epické', bonus: 3 },
         legendarni: { label: 'legendární', bonus: 5 },
         mytiske: { label: 'mýtické', bonus: 8 },
+        supermytiske: { label: 'super mýtické', bonus: 12 },
       };
       const ACC_SLOTS = [
         { id: 'hlava', label: '🎩 HLAVA', tab: 'doplnky' },
@@ -5055,6 +5093,15 @@
         { id: 'fialove', slot: 'jmeno', icon: '💜', name: 'Fialové jméno', rarity: 'bezne', price: 80, color: '#b57bff' },
         { id: 'ledove', slot: 'jmeno', icon: '❄️', name: 'Ledové jméno', rarity: 'epicke', price: 400, color: 'ice' },
         { id: 'kralovske', slot: 'jmeno', icon: '👑', name: 'Královské jméno', rarity: 'mytiske', price: 2500, color: 'royal' },
+        // 🌈 super mýtické (+12 %)
+        { id: 'galaxkoruna', slot: 'hlava', icon: '🌌', name: 'Koruna galaxie', rarity: 'supermytiske', price: 8000, draw: 'galaxkoruna' },
+        { id: 'dracek', slot: 'hlava', icon: '🐉', name: 'Živý dráček', rarity: 'supermytiske', price: 8000, draw: 'dracek' },
+        { id: 'ocivesmir', slot: 'oblicej', icon: '🪐', name: 'Oči vesmíru', rarity: 'supermytiske', price: 7000, draw: 'ocivesmir' },
+        { id: 'duhdech', slot: 'pusa', icon: '🌈', name: 'Duhový dech', rarity: 'supermytiske', price: 7000, draw: 'duhdech' },
+        { id: 'fenix', slot: 'krk', icon: '🔥', name: 'Křídla fénixe', rarity: 'supermytiske', price: 8000, draw: 'fenix' },
+        { id: 'meteory', slot: 'stopa', icon: '☄️', name: 'Meteorický déšť', rarity: 'supermytiske', price: 8000, colors: ['#ffb300', '#ff5a1c', '#ffd23f'] },
+        { id: 'trhlina', slot: 'stopa', icon: '🌀', name: 'Časová trhlina', rarity: 'supermytiske', price: 7500, colors: ['#b06bff', '#7a3cff', '#ff5ee0', '#ffffff'] },
+        { id: 'legenda', slot: 'jmeno', icon: '👑', name: 'Legenda', rarity: 'supermytiske', price: 5000, color: 'legend' },
         // jen z adventního kalendáře (v obchodě nejsou)
         { id: 'venec', slot: 'hlava', icon: '🕯️', name: 'Adventní věneček', rarity: 'legendarni', price: 0, advent: true, draw: 'venec' },
         { id: 'prskavky', slot: 'stopa', icon: '🎇', name: 'Prskavková stopa', rarity: 'mytiske', price: 0, advent: true, colors: ['#fff6c0', '#ffd23f', '#ffffff', '#ffb300'] },
@@ -6427,6 +6474,8 @@
         el.classList.toggle('acc-sparkle-name', !!ok && a.color === 'sparkle');
         el.classList.toggle('acc-ice-name', !!ok && a.color === 'ice');
         el.classList.toggle('acc-royal-name', !!ok && a.color === 'royal');
+        el.classList.toggle('acc-legend-name', !!ok && a.color === 'legend');
+        el.classList.toggle('acc-rainbow-name', !!ok && (a.color === 'rainbow' || a.color === 'legend'));
         el.style.color = ok && a.color.startsWith('#') ? a.color : '';
       }
 
@@ -6956,7 +7005,7 @@
           const nameAcc = pAcc.jmeno && ACC_BY_ID[pAcc.jmeno];
           const named = nameAcc && nameAcc.slot === 'jmeno';
           const nameColor = named ? accNameCanvasColor(nameAcc.color) : p.id === multiPlayerId ? '#00ff88' : '#e8e8e8';
-          drawMultiplayerName(head, named && nameAcc.color === 'royal' ? `👑 ${p.name}` : p.name, nameColor, lift);
+          drawMultiplayerName(head, named && (nameAcc.color === 'royal' || nameAcc.color === 'legend') ? `👑 ${p.name}` : p.name, nameColor, lift);
         });
       }
 
@@ -7833,7 +7882,7 @@
         ctx.textBaseline = 'bottom';
         const nameStyle = accOn.jmeno && ACC_BY_ID[accOn.jmeno];
         if (nameStyle) ctx.fillStyle = accNameCanvasColor(nameStyle.color);
-        const royal = nameStyle && nameStyle.color === 'royal';
+        const royal = nameStyle && (nameStyle.color === 'royal' || nameStyle.color === 'legend');
         const lines = getNameLines(royal ? `👑 ${playerName}` : playerName, maxWidth);
         let y = head.y * CELL - 2 - lift;
         if (lines.length === 1) drawOwnerBadgeAfter(playerName, cx, y);
@@ -10163,6 +10212,7 @@
       // šance, že v nabídce bude mýtická / legendární věc (jinak epická navíc)
       const ACC_CHANCE_MYTHIC = 0.15;
       const ACC_CHANCE_LEGEND = 0.35;
+      const ACC_CHANCE_SUPER = 0.12;
       let accOfferCache = { day: null, ids: [], deal: null };
       function accTodayOffer() {
         const day = accOfferPeriod();
@@ -10180,7 +10230,7 @@
         ids.push(...pick('epicke', 1, ids));
         // poslední místo: mýtická zřídka (asi 1× za týden), jinak legendární nebo epická
         const r8 = rnd();
-        ids.push(...pick(r8 < ACC_CHANCE_MYTHIC ? 'mytiske' : r8 < ACC_CHANCE_MYTHIC + ACC_CHANCE_LEGEND ? 'legendarni' : 'epicke', 1, ids));
+        ids.push(...pick(r8 < ACC_CHANCE_SUPER ? 'supermytiske' : r8 < ACC_CHANCE_SUPER + ACC_CHANCE_MYTHIC ? 'mytiske' : r8 < ACC_CHANCE_SUPER + ACC_CHANCE_MYTHIC + ACC_CHANCE_LEGEND ? 'legendarni' : 'epicke', 1, ids));
         accOfferCache = { day, ids, deal: ids[Math.floor(rnd() * ids.length)] };
         return accOfferCache;
       }
@@ -10218,7 +10268,7 @@
         const deal = ACC_BY_ID[accDealId()];
         document.getElementById('accDeal').innerHTML = `🏷️ SLEVA: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za <span id="accTimeLeft">${accDealTimeLeft()}</span></span>`;
         accShownPeriod = accOfferPeriod();
-        document.getElementById('accChance').innerHTML = `ℹ️ Z každé kategorie (🎩 hlava, 😎 obličej, 👅 pusa, 🧣 krk, ✨ stopa, 🏷️ jméno) můžeš mít nasazenou <b>1 věc</b> – z různých kategorií klidně všechny najednou.<br>🎲 Šance v každé nabídce: <b class="c-leg">🟡 legendární ${Math.round(ACC_CHANCE_LEGEND * 100)} %</b> · <b class="c-myt">🔴 mýtická ${Math.round(ACC_CHANCE_MYTHIC * 100)} %</b>`;
+        document.getElementById('accChance').innerHTML = `ℹ️ Z každé kategorie (🎩 hlava, 😎 obličej, 👅 pusa, 🧣 krk, ✨ stopa, 🏷️ jméno) můžeš mít nasazenou <b>1 věc</b> – z různých kategorií klidně všechny najednou.<br>🎲 Šance v každé nabídce: <b class="c-leg">🟡 legendární ${Math.round(ACC_CHANCE_LEGEND * 100)} %</b> · <b class="c-myt">🔴 mýtická ${Math.round(ACC_CHANCE_MYTHIC * 100)} %</b> · <b class="c-sup">🌈 super mýtická ${Math.round(ACC_CHANCE_SUPER * 100)} %</b>`;
         const grid = document.getElementById('accGrid');
         grid.replaceChildren();
         accTodayOffer().ids.map((id) => ACC_BY_ID[id]).forEach((a) => {
@@ -10422,6 +10472,7 @@
         if (c === 'fire') return `hsl(${18 + Math.sin(now / 190) * 18}, 100%, 55%)`;
         if (c === 'sparkle') return `hsl(48, 100%, ${60 + Math.sin(now / 160) * 18}%)`;
         if (c === 'ice') return `hsl(190, 100%, ${72 + Math.sin(now / 220) * 18}%)`;
+        if (c === 'legend') return `hsl(${(now / 6) % 360}, 100%, ${62 + Math.sin(now / 250) * 8}%)`;
         if (c === 'royal') return `hsl(45, 100%, ${55 + Math.sin(now / 200) * 10}%)`;
         return c;
       }
@@ -10768,6 +10819,77 @@
             ctx.closePath(); ctx.fill();
             break;
           }
+          case 'galaxkoruna': {
+            const now = performance.now();
+            const x = cx - C / 2 + 1, y = top - 1, w = C - 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y); ctx.lineTo(x, y - 9); ctx.lineTo(x + w * 0.22, y - 4); ctx.lineTo(x + w * 0.5, y - 14);
+            ctx.lineTo(x + w * 0.78, y - 4); ctx.lineTo(x + w, y - 9); ctx.lineTo(x + w, y); ctx.closePath();
+            const g = ctx.createLinearGradient(x, y - 14, x + w, y);
+            g.addColorStop(0, '#2b0a5e'); g.addColorStop(0.5, '#5c2bd6'); g.addColorStop(1, '#0a1a4e');
+            ctx.fillStyle = g; ctx.shadowColor = '#c45cff'; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
+            for (let k = 0; k < 7; k++) {
+              const a = now / 500 + k * 0.9;
+              const r = 1.5 + k * 0.7;
+              ctx.fillStyle = ['#ffffff', '#7ff7ff', '#ff9af0', '#ffd23f'][k % 4];
+              ctx.beginPath(); ctx.arc(cx + Math.cos(a) * r, y - 5 + Math.sin(a) * r * 0.5, 0.9, 0, Math.PI * 2); ctx.fill();
+            }
+            break;
+          }
+          case 'dracek': {
+            const now = performance.now();
+            const flap = Math.sin(now / 110) * 4;
+            ctx.fillStyle = '#2fa84f';
+            ctx.beginPath(); ctx.moveTo(cx - 3, top - 6); ctx.lineTo(cx - 13, top - 12 - flap); ctx.lineTo(cx - 7, top - 4); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(cx + 1, top - 6); ctx.lineTo(cx + 10, top - 13 - flap); ctx.lineTo(cx + 5, top - 4); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#3bd16a';
+            ctx.beginPath(); ctx.ellipse(cx - 1, top - 4, 5.5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx + 5, top - 8, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(cx + 6, top - 9, 0.9, 0, Math.PI * 2); ctx.fill();
+            const puff = (now / 500) % 1;
+            if (puff < 0.6) {
+              ctx.globalAlpha = 1 - puff / 0.6;
+              ctx.fillStyle = puff < 0.3 ? '#ffd23f' : '#ff5a1c';
+              ctx.beginPath(); ctx.arc(cx + 9 + puff * 10, top - 8, 1.5 + puff * 4, 0, Math.PI * 2); ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+            break;
+          }
+          case 'ocivesmir': {
+            const now = performance.now();
+            [[-4.5, '#4ad8ff'], [4.5, '#ff9af0']].forEach(([ox, col], k) => {
+              ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 6;
+              ctx.beginPath(); ctx.arc(cx + ox, top + 8, 3.2, 0, Math.PI * 2); ctx.fill();
+              ctx.shadowBlur = 0;
+              ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.ellipse(cx + ox, top + 8, 5, 1.6, Math.sin(now / 400 + k) * 0.4, 0, Math.PI * 2); ctx.stroke();
+            });
+            break;
+          }
+          case 'duhdech': {
+            const cols = ['#ff6b6b', '#ffa94d', '#ffe66d', '#80ed99', '#90e0ef', '#9d4edd'];
+            const len = 14 + Math.abs(Math.sin(performance.now() / 300)) * 8;
+            ctx.lineWidth = 1.6;
+            cols.forEach((c, k) => {
+              ctx.strokeStyle = c;
+              ctx.beginPath(); ctx.arc(cx + C / 2 + len / 2, top + C - 1, Math.max(0.5, len / 2 - k * 1.2), Math.PI, 0); ctx.stroke();
+            });
+            break;
+          }
+          case 'fenix': {
+            const now = performance.now();
+            [-1, 1].forEach((sd) => {
+              for (let k = 0; k < 3; k++) {
+                const h = 8 + k * 3 + Math.sin(now / 90 + k + sd) * 2;
+                ctx.fillStyle = ['#ffd23f', '#ff8a00', '#ff3b1f'][k];
+                ctx.beginPath();
+                ctx.moveTo(cx + sd * 6, top + C - 4);
+                ctx.quadraticCurveTo(cx + sd * (12 + k * 3), top + C - 6 - h, cx + sd * (16 + k * 2), top + C - 2 - k * 2);
+                ctx.closePath(); ctx.fill();
+              }
+            });
+            break;
+          }
           case 'retez':
             ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.arc(cx, top + C - 6, 8, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
@@ -10829,7 +10951,40 @@
           const col = tr.colors === 'rainbow' ? `hsl(${(now / 8 + k * 40) % 360}, 95%, 62%)` : tr.colors[k % tr.colors.length];
           const size = 5.2 - k * 0.38;
           ctx.globalAlpha = 0.95 - k * 0.08;
-          if (tr.id === 'prskavky') {
+          if (tr.id === 'meteory') {
+            // meteor s ohnivým ocasem, občas bouchne
+            const phase = (now / 700 + k * 0.37) % 1;
+            ctx.save();
+            ctx.translate(x, y);
+            if (phase > 0.85) {
+              ctx.fillStyle = '#ffd23f';
+              ctx.globalAlpha = (1 - phase) * 5;
+              ctx.beginPath(); ctx.arc(0, 0, size + (phase - 0.85) * 40, 0, Math.PI * 2); ctx.fill();
+            } else {
+              ctx.strokeStyle = '#ff8a00';
+              ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-6, -6); ctx.stroke();
+              ctx.fillStyle = '#7a4a2a';
+              ctx.shadowColor = '#ff5a1c'; ctx.shadowBlur = 8;
+              ctx.beginPath(); ctx.arc(0, 0, Math.max(1.5, size - 1), 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+          } else if (tr.id === 'trhlina') {
+            // fialový vír
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(now / 200 + k);
+            ctx.strokeStyle = col;
+            ctx.shadowColor = '#b06bff'; ctx.shadowBlur = 8;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let a = 0; a < Math.PI * 3; a += 0.3) {
+              const r = (a / (Math.PI * 3)) * (size + 2);
+              ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            ctx.stroke();
+            ctx.restore();
+          } else if (tr.id === 'prskavky') {
             // prskavka: jiskry létají na všechny strany
             ctx.save();
             ctx.translate(x, y);

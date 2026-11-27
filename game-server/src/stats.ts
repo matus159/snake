@@ -24,7 +24,7 @@ interface ProfileProgress {
 }
 
 // Barvy jména z obchodu (doplňky), které se ukazují v žebříčku.
-const NAME_STYLES = ['ruzove', 'zlate', 'duhove', 'modre', 'zelene', 'ohnive', 'trpytive', 'fialove', 'ledove', 'kralovske'];
+const NAME_STYLES = ['ruzove', 'zlate', 'duhove', 'modre', 'zelene', 'ohnive', 'trpytive', 'fialove', 'ledove', 'kralovske', 'legenda'];
 
 interface NameStats {
   diamanty: number;
