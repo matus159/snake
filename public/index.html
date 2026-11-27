@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.58">
+  <meta name="snake-version" content="1.99.59">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -2937,9 +2937,18 @@
     }
 
     /* Adventní kalendář: tlačítko pod Přenosem, vlastní obrazovka */
-    .advent-btn {
+    /* Obchod i z hlavního menu (pod Přenosem) */
+    .menu-shop-btn {
       position: absolute;
       top: 52px;
+      left: 12px;
+      z-index: 1;
+      background: linear-gradient(135deg, #ffb300, #ff7a00);
+    }
+
+    .advent-btn {
+      position: absolute;
+      top: 92px;
       left: 12px;
       z-index: 1;
       background: linear-gradient(135deg, #e01b2a, #ff6b6b);
@@ -3261,8 +3270,13 @@
     }
 
     @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
-      .advent-btn {
+      .menu-shop-btn {
         top: 40px;
+        left: 6px;
+      }
+
+      .advent-btn {
+        top: 74px;
         left: 6px;
       }
 
@@ -4547,6 +4561,7 @@
         <button type="button" class="btn btn-small leaderboard-btn" id="leaderboardBtn">Žebříček</button>
         <button type="button" class="btn btn-small friends-btn" id="friendsBtn">Kamarádi<span class="friends-badge" id="friendsBadge" hidden></span></button>
         <button type="button" class="btn btn-small transfer-btn" id="transferBtn">Přenos</button>
+        <button type="button" class="btn btn-small menu-shop-btn" id="menuShopBtn">🛒 Obchod</button>
         <button type="button" class="btn btn-small advent-btn" id="adventBtn" hidden>🎄 Adventní kalendář<span class="advent-dot" id="adventDot" hidden></span></button>
         <div class="mode-select-wrap">
           <p id="modeSelectGreeting">Hráč: <span>—</span></p>
@@ -9362,7 +9377,20 @@
         if (!document.hidden) claimGifts();
       });
 
+      let shopFromMenu = false;
+
+      // Obchod z hlavního menu (bez hraní) – Zpět vrátí do menu
+      function openShopFromMenu() {
+        shopFromMenu = true;
+        modeSelectOverlay.classList.remove('visible');
+        showShopMain();
+        updateMikulasShop();
+        shopOverlay.classList.add('visible');
+        updateShopCurrencyDisplay();
+      }
+
       function openShop() {
+        shopFromMenu = false;
         pauseOverlay.classList.remove('visible');
         showShopMain();
         updateMikulasShop();
@@ -9374,6 +9402,12 @@
       function closeShop() {
         showShopMain();
         shopOverlay.classList.remove('visible');
+        if (shopFromMenu) {
+          shopFromMenu = false;
+          modeSelectOverlay.classList.add('visible');
+          updatePlayerNameDisplay();
+          return;
+        }
         pauseOverlay.classList.add('visible');
         tutorialOnShopClose();
       }
@@ -11448,6 +11482,7 @@
       window.addEventListener('pagehide', sendFriendsOffline);
       document.getElementById('leaderboardBackBtn').addEventListener('click', closeLeaderboard);
       document.getElementById('transferBtn').addEventListener('click', openTransfer);
+      document.getElementById('menuShopBtn').addEventListener('click', openShopFromMenu);
       document.getElementById('transferBackBtn').addEventListener('click', closeTransfer);
       document.getElementById('transferUseBtn').addEventListener('click', useTransferCode);
       transferInput.addEventListener('keydown', (e) => {
