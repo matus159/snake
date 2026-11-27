@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.61">
+  <meta name="snake-version" content="1.99.62">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -10637,24 +10637,58 @@
         return true;
       }
 
+      // Stopa se kreslí ZA ocasem (ve směru, odkud had přijel), ať ji tělo nezakryje.
       function drawAccTrail(body = snake, on = accOn) {
         const tr = ACC_BY_ID[on.stopa];
         const snake = body; // stopa za tímhle hadem (vlastní nebo jiného hráče)
         if (!tr || !snake || snake.length < 2) return;
         const now = performance.now();
-        const n = Math.min(6, snake.length);
-        for (let k = 0; k < n; k++) {
-          const seg = snake[snake.length - 1 - k];
-          for (let j = 0; j < 2; j++) {
-            const ph = now / 260 + k * 1.3 + j * 2.1;
-            const x = seg.x * CELL + CELL / 2 + Math.sin(ph) * 7;
-            const y = seg.y * CELL + CELL / 2 + Math.cos(ph * 1.3) * 7;
-            const col = tr.colors === 'rainbow' ? `hsl(${(now / 8 + k * 40 + j * 90) % 360}, 95%, 62%)` : tr.colors[(k + j) % tr.colors.length];
-            ctx.globalAlpha = 0.85 - k * 0.12;
+        const tail = snake[snake.length - 1];
+        const prev = snake[snake.length - 2];
+        let dx = tail.x - prev.x;
+        let dy = tail.y - prev.y;
+        if (Math.abs(dx) + Math.abs(dy) !== 1) { dx = 0; dy = 0; } // přes okraj / na místě
+        const px = -dy;
+        const py = dx;
+        const tx = tail.x * CELL + CELL / 2;
+        const ty = tail.y * CELL + CELL / 2;
+        const N = 8;
+        for (let k = 0; k < N; k++) {
+          const dist = CELL * (0.75 + k * 0.62);
+          const wob = Math.sin(now / 220 + k * 1.1) * (3 + k * 0.6);
+          const x = tx + dx * dist + px * wob + (dx === 0 && dy === 0 ? Math.sin(now / 300 + k) * 10 : 0);
+          const y = ty + dy * dist + py * wob + (dx === 0 && dy === 0 ? Math.cos(now / 300 + k) * 10 : 0);
+          const col = tr.colors === 'rainbow' ? `hsl(${(now / 8 + k * 40) % 360}, 95%, 62%)` : tr.colors[k % tr.colors.length];
+          const size = 5.2 - k * 0.45;
+          ctx.globalAlpha = 0.95 - k * 0.1;
+          if (tr.id === 'bonbony') {
+            // zabalený bonbon: kulička a dva cípky
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(now / 400 + k);
             ctx.fillStyle = col;
             ctx.beginPath();
-            ctx.arc(x, y, 3.2 - k * 0.3, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, size + 1, size * 0.8, 0, 0, Math.PI * 2);
             ctx.fill();
+            [-1, 1].forEach((sd) => {
+              ctx.beginPath();
+              ctx.moveTo(sd * (size + 0.5), 0);
+              ctx.lineTo(sd * (size + 4.5), -3);
+              ctx.lineTo(sd * (size + 4.5), 3);
+              ctx.closePath();
+              ctx.fill();
+            });
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.fillRect(-1.5, -size * 0.8, 1.5, size * 1.6);
+            ctx.restore();
+          } else {
+            ctx.fillStyle = col;
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(x, y, Math.max(1.2, size - 0.6), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
           }
         }
         ctx.globalAlpha = 1;
