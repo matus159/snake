@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.55">
+  <meta name="snake-version" content="1.99.56">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1514,6 +1514,44 @@
     }
 
     .profile-stat .v small {
+      font-size: 0.75rem;
+      color: #9ab;
+    }
+
+    .profile-badges {
+      margin-top: 0.6rem;
+    }
+
+    .profile-badges h3 {
+      margin: 0 0 0.3rem;
+      font-size: 0.9rem;
+      color: #ffd23f;
+    }
+
+    .profile-badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 999px;
+      background: #1e1e32;
+      border: 1px solid var(--t, #555);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .profile-badge.t1 { --t: #cd7f32; }
+    .profile-badge.t2 { --t: #c0c0c0; }
+    .profile-badge.t3 { --t: #ffd23f; box-shadow: 0 0 8px rgba(255, 210, 63, 0.5); }
+
+    .profile-badge-none {
       font-size: 0.75rem;
       color: #9ab;
     }
@@ -4479,6 +4517,7 @@
           <div class="profile-right">
             <h2>👤 Profil hráče</h2>
             <div class="profile-stats" id="profileStats"></div>
+            <div class="profile-badges" id="profileBadges"></div>
             <p class="profile-note" id="profileNote"></p>
             <div class="profile-friend" id="profileFriend" hidden>
               <button type="button" class="btn profile-friend-btn" id="profileFriendBtn">👫 Přidat do přátel</button>
@@ -5203,6 +5242,7 @@
       let accOwned = []; // koupené doplňky (id)
       let accOn = {}; // nasazené doplňky: { hlava, oblicej, krk, stopa, jmeno }
       let accLvl = {}; // vylepšené doplňky: { id: 2 nebo 3 } (bez záznamu = ⭐)
+      let cnt = { hry: 0, kostky: 0, zombie: 0, vyhry: 0 }; // počítadla pro odznaky (od verze 1.99.56)
       let diamanty = 0;
       // Adventní kalendář: otevřená okénka (dny 1–24) a vajíčka/kola zdarma z kalendáře.
       let adventOpened = [];
@@ -5453,7 +5493,7 @@
       }
 
       function defaultProfile() {
-        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {}, accLvl: {} };
+        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {}, accLvl: {}, cnt: {} };
       }
 
       function readProfiles() {
@@ -5507,6 +5547,7 @@
           accOwned = [];
           accOn = {};
           accLvl = {};
+          cnt = { hry: 0, kostky: 0, zombie: 0, vyhry: 0 };
           adventOpened = [];
           freeEggs = 0;
           freeSpins = 0;
@@ -5529,6 +5570,7 @@
         if (!skinAvailable(equippedSkin)) equippedSkin = 'default';
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
         accOwned = Array.isArray(profile.acc) ? profile.acc.filter((a) => ACC_BY_ID[a]) : [];
+        cnt = cleanCnt(profile.cnt);
         accLvl = {};
         Object.entries(profile.accLvl || {}).forEach(([a, l]) => {
           if (accOwned.includes(a) && (l === 2 || l === 3)) accLvl[a] = l;
@@ -5846,6 +5888,7 @@
           acc: [...accOwned],
           accOn: { ...accOn },
           accLvl: { ...accLvl },
+          cnt: { ...cnt },
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
@@ -5877,7 +5920,7 @@
       }
 
       function currentProgress() {
-        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn }, accLvl: { ...accLvl } };
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn }, accLvl: { ...accLvl }, cnt: { ...cnt } };
       }
 
       // Poslední stav, o kterém víme, že ho server má (uloží se až po úspěšném uložení na server).
@@ -5910,13 +5953,29 @@
           && (a.freeSpins || 0) === (b.freeSpins || 0)
           && [...(a.acc || [])].sort().join() === [...(b.acc || [])].sort().join()
           && JSON.stringify(sortedObj(a.accOn)) === JSON.stringify(sortedObj(b.accOn))
-          && JSON.stringify(sortedObj(a.accLvl)) === JSON.stringify(sortedObj(b.accLvl));
+          && JSON.stringify(sortedObj(a.accLvl)) === JSON.stringify(sortedObj(b.accLvl))
+          && JSON.stringify(sortedObj(a.cnt)) === JSON.stringify(sortedObj(b.cnt));
       }
 
       // vylepšení doplňků z obou stran – vyšší hvězdy vyhrají
       function maxLevels(a, b) {
         const out = { ...(a || {}) };
         Object.entries(b || {}).forEach(([id, l]) => { out[id] = Math.max(out[id] || 1, l); });
+        return out;
+      }
+
+      const CNT_KEYS = ['hry', 'kostky', 'zombie', 'vyhry'];
+      function cleanCnt(c) {
+        const out = {};
+        CNT_KEYS.forEach((k) => { out[k] = Math.max(0, parseInt((c || {})[k], 10) || 0); });
+        return out;
+      }
+
+      function maxCnt(a, b) {
+        const x = cleanCnt(a);
+        const y = cleanCnt(b);
+        const out = {};
+        CNT_KEYS.forEach((k) => { out[k] = Math.max(x[k], y[k]); });
         return out;
       }
 
@@ -5954,6 +6013,7 @@
             acc: [...new Set([...(server.acc || []), ...(local.acc || [])])],
             accOn: { ...(local.accOn || {}) },
             accLvl: maxLevels(local.accLvl, server.accLvl),
+            cnt: maxCnt(local.cnt, server.cnt),
           },
           upload: true,
         };
@@ -6127,6 +6187,7 @@
           acc: [...new Set([...(data.progress.acc || []), ...(local.acc || [])])],
           accOn: { ...(data.progress.accOn || {}) },
           accLvl: maxLevels(local.accLvl, data.progress.accLvl),
+          cnt: maxCnt(local.cnt, data.progress.cnt),
         };
         playerName = data.name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
@@ -6647,6 +6708,9 @@
           if (me) {
             applyMultiScoreFromServer(me.score);
             applyMultiTacosFromServer(me.tacos);
+            cnt.hry++;
+            if (winner && winner.id === multiPlayerId) cnt.vyhry++;
+            saveProgress();
           }
           if (winner && winner.id === multiPlayerId) {
             // 10 % zaokrouhleno nahoru a vždycky aspoň 1 bod – i krátké kolo s pár body má bonus.
@@ -7233,6 +7297,7 @@
       function killZombie(z) {
         zombies = zombies.filter((o) => o !== z);
         zombiesKilled++;
+        cnt.zombie++;
         playSound('zombie');
         zombieTarget = 2;
         diamanty += ZOMBIE_REWARD;
@@ -8065,6 +8130,7 @@
           updateScoreDisplay();
           playChramst();
           spawnOneKostka();
+          cnt.kostky++;
           tutorialOnEat();
         } else {
           snake.pop();
@@ -8081,6 +8147,7 @@
         showShopMain();
         shopOverlay.classList.remove('visible');
         applyAccBonus();
+        cnt.hry++;
         bankScoreToDiamanty();
         saveProgress();
         finalDiamantyEl.textContent = diamanty;
@@ -10435,6 +10502,46 @@
         ctx.globalAlpha = 1;
       }
 
+      // ===== Odznaky (v profilu) =====
+      // Odstupňované: 🥉 bronz, 🥈 stříbro, 🥇 zlato. Počítadla her/kostek/zombíků/výher běží od verze 1.99.56.
+      const BADGES = [
+        { icon: '🎮', name: 'Hráč', key: 'hry', tiers: [10, 100, 1000], unit: 'her' },
+        { icon: '🍎', name: 'Kostkožrout', key: 'kostky', tiers: [100, 1000, 10000], unit: 'kostek' },
+        { icon: '🧟', name: 'Lovec zombíků', key: 'zombie', tiers: [10, 100, 1000], unit: 'zombíků' },
+        { icon: '⚔️', name: 'Vítěz', key: 'vyhry', tiers: [1, 10, 100], unit: 'výher' },
+        { icon: '🏆', name: 'Rekordman', key: 'bestScore', tiers: [50, 150, 300], unit: 'bodů' },
+        { icon: '💎', name: 'Boháč', key: 'diamanty', tiers: [500, 2000, 5000], unit: '💎' },
+        { icon: '🎩', name: 'Módní ikona', key: 'accCount', tiers: [3, 10, 25], unit: 'doplňků' },
+        { icon: '🐍', name: 'Sběratel', key: 'skins', tiers: [3, 6, 10], unit: 'hadů' },
+        { icon: '👫', name: 'Kamarádíček', key: 'friends', tiers: [1, 5, 10], unit: 'kamarádů' },
+        { icon: '🐣', name: 'Nováček', key: 'hry', tiers: [1], once: true },
+        { icon: '🔴', name: 'Mýtický', key: 'mythic', tiers: [1], once: true },
+        { icon: '⭐', name: 'Vylepšovač', key: 'lvl3', tiers: [1], once: true },
+        { icon: '🎄', name: 'Adventník', key: 'advent', tiers: [24], once: true },
+        { icon: '🥇', name: 'Číslo 1', key: 'top1', tiers: [1], once: true },
+      ];
+      const TIER_MEDALS = ['🥉', '🥈', '🥇'];
+
+      function earnedBadges(v) {
+        const out = [];
+        BADGES.forEach((b) => {
+          const val = v[b.key] || 0;
+          let tier = 0;
+          b.tiers.forEach((t, i) => { if (val >= t) tier = i + 1; });
+          if (!tier) return;
+          out.push({ ...b, tier: b.once ? 3 : tier });
+        });
+        return out;
+      }
+
+      function renderProfileBadges(v) {
+        const list = earnedBadges(v);
+        const html = list.length
+          ? list.map((b) => `<span class="profile-badge t${b.tier}" title="${b.name}${b.once ? '' : ` – ${b.tiers[b.tier - 1]} ${b.unit}`}">${b.icon} ${b.name}${b.once ? '' : ` ${TIER_MEDALS[b.tier - 1]}`}</span>`).join('')
+          : '<span class="profile-badge-none">Zatím žádné odznaky.</span>';
+        document.getElementById('profileBadges').innerHTML = `<h3>🏅 Odznaky (${list.length} / ${BADGES.length})</h3><div class="profile-badge-list">${html}</div>`;
+      }
+
       // ===== Profil hráče =====
       // Otevře se z žebříčku (klepnutím na jméno) nebo klepnutím na své jméno v menu.
       const SKIN_PREVIEW_COLORS = {
@@ -10547,6 +10654,18 @@
           stat('🐍 Hadi', skins != null ? `${skins} <small>/ ${skinTotal}</small>` : dash),
         ].join('');
         document.getElementById('profileNote').textContent = me ? 'Tohle je tvůj profil – takhle tě vidí ostatní.' : '';
+        const c = me ? cnt : d.cnt || {};
+        const owned = me ? accOwned : d.acc || [];
+        renderProfileBadges({
+          hry: c.hry, kostky: c.kostky, zombie: c.zombie, vyhry: c.vyhry,
+          bestScore: me ? Math.max(bestGameScore || 0, d.bestScore || 0) : d.bestScore,
+          diamanty: dia, accCount, skins,
+          friends: me ? (friendsData?.friends || []).length : d.friends,
+          mythic: owned.some((id) => ACC_BY_ID[id]?.rarity === 'mytiske') ? 1 : 0,
+          lvl3: Object.values(me ? accLvl : d.accLvlAll || {}).some((l) => l === 3) ? 1 : 0,
+          advent: me ? adventOpened.length : d.advent,
+          top1: d.rank === 1 ? 1 : 0,
+        });
         // Přidat do přátel – jen u cizího profilu (na svém ne)
         const fr = document.getElementById('profileFriend');
         fr.hidden = !!me || !playerName;
