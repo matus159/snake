@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.64">
+  <meta name="snake-version" content="1.99.65">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -4982,16 +4982,16 @@
         { id: 'jmeno', label: '🏷️ JMÉNO', tab: 'doplnky' },
       ];
       const ACCESSORIES = [
-        { id: 'masle', slot: 'hlava', icon: '🎀', name: 'Mašle', rarity: 'bezne', price: 50 },
-        { id: 'ksiltovka', slot: 'hlava', icon: '🧢', name: 'Kšiltovka', rarity: 'vzacne', price: 150 },
-        { id: 'klobouk', slot: 'hlava', icon: '🎩', name: 'Kouzelnický klobouk', rarity: 'vzacne', price: 240 },
+        { id: 'masle', slot: 'hlava', icon: '🎀', name: 'Mašle', rarity: 'bezne', price: 50 , draw: 'd_masle' },
+        { id: 'ksiltovka', slot: 'hlava', icon: '🧢', name: 'Kšiltovka', rarity: 'vzacne', price: 150 , draw: 'd_ksiltovka' },
+        { id: 'klobouk', slot: 'hlava', icon: '🎩', name: 'Kouzelnický klobouk', rarity: 'vzacne', price: 240 , draw: 'd_klobouk' },
         { id: 'svatozar', slot: 'hlava', icon: '😇', name: 'Svatozář', rarity: 'epicke', price: 400 },
         { id: 'rohy', slot: 'hlava', icon: '😈', name: 'Čertí rohy', rarity: 'epicke', price: 400 },
-        { id: 'koruna', slot: 'hlava', icon: '👑', name: 'Zlatá koruna', rarity: 'legendarni', price: 1000 },
-        { id: 'bryle', slot: 'oblicej', icon: '🕶️', name: 'Brýle', rarity: 'bezne', price: 50 },
-        { id: 'lyzarske', slot: 'oblicej', icon: '🥽', name: 'Lyžařské brýle', rarity: 'vzacne', price: 150 },
-        { id: 'sala', slot: 'krk', icon: '🧣', name: 'Šála', rarity: 'bezne', price: 80 },
-        { id: 'medaile', slot: 'krk', icon: '🏅', name: 'Medaile', rarity: 'vzacne', price: 150 },
+        { id: 'koruna', slot: 'hlava', icon: '👑', name: 'Zlatá koruna', rarity: 'legendarni', price: 1000 , draw: 'd_koruna' },
+        { id: 'bryle', slot: 'oblicej', icon: '🕶️', name: 'Brýle', rarity: 'bezne', price: 50 , draw: 'd_bryle' },
+        { id: 'lyzarske', slot: 'oblicej', icon: '🥽', name: 'Lyžařské brýle', rarity: 'vzacne', price: 150 , draw: 'd_lyzarske' },
+        { id: 'sala', slot: 'krk', icon: '🧣', name: 'Šála', rarity: 'bezne', price: 80 , draw: 'd_sala' },
+        { id: 'medaile', slot: 'krk', icon: '🏅', name: 'Medaile', rarity: 'vzacne', price: 150 , draw: 'd_medaile' },
         { id: 'bubliny', slot: 'stopa', icon: '🫧', name: 'Bublinková stopa', rarity: 'bezne', price: 100, colors: ['#bfefff', '#8fd8ff', '#ffffff'] },
         { id: 'hvezdy', slot: 'stopa', icon: '✨', name: 'Hvězdná stopa', rarity: 'vzacne', price: 200, colors: ['#ffe66d', '#fff6c0', '#ffd23f'] },
         { id: 'ohen', slot: 'stopa', icon: '🔥', name: 'Ohnivá stopa', rarity: 'vzacne', price: 200, colors: ['#ff7a00', '#ffd23f', '#ff3b3b'] },
@@ -5001,8 +5001,8 @@
         { id: 'zlate', slot: 'jmeno', icon: '🌟', name: 'Zlaté jméno', rarity: 'vzacne', price: 200, color: '#ffd23f' },
         { id: 'duhove', slot: 'jmeno', icon: '🌈', name: 'Duhové jméno', rarity: 'epicke', price: 400, color: 'rainbow' },
         // 2. várka
-        { id: 'absolvent', slot: 'hlava', icon: '🎓', name: 'Absolventská čepice', rarity: 'bezne', price: 60 },
-        { id: 'helma', slot: 'hlava', icon: '🪖', name: 'Helma', rarity: 'bezne', price: 70 },
+        { id: 'absolvent', slot: 'hlava', icon: '🎓', name: 'Absolventská čepice', rarity: 'bezne', price: 60 , draw: 'd_absolvent' },
+        { id: 'helma', slot: 'hlava', icon: '🪖', name: 'Helma', rarity: 'bezne', price: 70 , draw: 'd_helma' },
         { id: 'party', slot: 'hlava', icon: '🥳', name: 'Párty čepička', rarity: 'vzacne', price: 150, draw: 'party' },
         { id: 'kovboj', slot: 'hlava', icon: '🤠', name: 'Kovbojský klobouk', rarity: 'vzacne', price: 180, draw: 'kovboj' },
         { id: 'carodej', slot: 'hlava', icon: '🧙', name: 'Čarodějnický klobouk', rarity: 'epicke', price: 400, draw: 'carodej' },
@@ -5015,8 +5015,8 @@
         { id: 'maska', slot: 'oblicej', icon: '🦸', name: 'Maska superhrdiny', rarity: 'epicke', price: 400, draw: 'maska' },
         { id: 'robooci', slot: 'oblicej', icon: '🤖', name: 'Robotí oči', rarity: 'legendarni', price: 1200, draw: 'robooci' },
         { id: 'kravata', slot: 'krk', icon: '👔', name: 'Kravata', rarity: 'bezne', price: 60, draw: 'kravata' },
-        { id: 'zvonecek', slot: 'krk', icon: '🔔', name: 'Zvoneček', rarity: 'bezne', price: 50 },
-        { id: 'korale', slot: 'krk', icon: '📿', name: 'Korále', rarity: 'vzacne', price: 150 },
+        { id: 'zvonecek', slot: 'krk', icon: '🔔', name: 'Zvoneček', rarity: 'bezne', price: 50 , draw: 'd_zvonecek' },
+        { id: 'korale', slot: 'krk', icon: '📿', name: 'Korále', rarity: 'vzacne', price: 150 , draw: 'd_korale' },
         { id: 'plast', slot: 'krk', icon: '🦸', name: 'Hrdinský plášť', rarity: 'epicke', price: 450, draw: 'plast' },
         { id: 'retez', slot: 'krk', icon: '🏆', name: 'Zlatý řetěz', rarity: 'legendarni', price: 1200, draw: 'retez' },
         { id: 'listy', slot: 'stopa', icon: '🍃', name: 'Listová stopa', rarity: 'bezne', price: 90, colors: ['#4caf50', '#8bc34a', '#c5e1a5'] },
@@ -5031,7 +5031,7 @@
         // 3. várka + mýtické
         { id: 'kulich', slot: 'hlava', icon: '🧶', name: 'Kulich s bambulí', rarity: 'bezne', price: 60, draw: 'kulich' },
         { id: 'venecek', slot: 'hlava', icon: '🌸', name: 'Věneček z kytiček', rarity: 'bezne', price: 70, draw: 'venecek' },
-        { id: 'sluchatka', slot: 'hlava', icon: '🎧', name: 'Sluchátka', rarity: 'vzacne', price: 150 },
+        { id: 'sluchatka', slot: 'hlava', icon: '🎧', name: 'Sluchátka', rarity: 'vzacne', price: 150 , draw: 'd_sluchatka' },
         { id: 'pirat', slot: 'hlava', icon: '🏴‍☠️', name: 'Pirátský šátek', rarity: 'vzacne', price: 170, draw: 'pirat' },
         { id: 'usi', slot: 'hlava', icon: '🐰', name: 'Zaječí uši', rarity: 'epicke', price: 400, draw: 'usi' },
         { id: 'santa', slot: 'hlava', icon: '🎅', name: 'Santova čepice', rarity: 'epicke', price: 400, draw: 'santa' },
@@ -5043,10 +5043,10 @@
         { id: 'neon', slot: 'oblicej', icon: '🕶️', name: 'Neonové brýle', rarity: 'vzacne', price: 180, draw: 'neon' },
         { id: 'laser', slot: 'oblicej', icon: '👁️', name: 'Laserové oči', rarity: 'legendarni', price: 1300, draw: 'laser' },
         { id: 'diamaska', slot: 'oblicej', icon: '💠', name: 'Diamantová maska', rarity: 'mytiske', price: 2800, draw: 'diamaska' },
-        { id: 'stuha', slot: 'krk', icon: '🎗️', name: 'Stuha', rarity: 'bezne', price: 50 },
-        { id: 'talisman', slot: 'krk', icon: '🧿', name: 'Talisman', rarity: 'vzacne', price: 170 },
+        { id: 'stuha', slot: 'krk', icon: '🎗️', name: 'Stuha', rarity: 'bezne', price: 50 , draw: 'd_stuha' },
+        { id: 'talisman', slot: 'krk', icon: '🧿', name: 'Talisman', rarity: 'vzacne', price: 170 , draw: 'd_talisman' },
         { id: 'kridla', slot: 'krk', icon: '🪽', name: 'Andělská křídla', rarity: 'epicke', price: 450, draw: 'kridla' },
-        { id: 'medailon', slot: 'krk', icon: '🌟', name: 'Hvězdný medailon', rarity: 'legendarni', price: 1300 },
+        { id: 'medailon', slot: 'krk', icon: '🌟', name: 'Hvězdný medailon', rarity: 'legendarni', price: 1300 , draw: 'd_medailon' },
         { id: 'duhplast', slot: 'krk', icon: '🌈', name: 'Duhový plášť', rarity: 'mytiske', price: 3000, draw: 'duhplast' },
         { id: 'kyticky', slot: 'stopa', icon: '🌸', name: 'Kytičková stopa', rarity: 'bezne', price: 90, colors: ['#ff9ad5', '#ffffff', '#ffe066'] },
         { id: 'bonbony', slot: 'stopa', icon: '🍬', name: 'Bonbonová stopa', rarity: 'vzacne', price: 200, colors: ['#ff4fa3', '#4ad8ff', '#ffd23f', '#7dff6a'] },
@@ -10645,6 +10645,127 @@
               ctx.beginPath(); ctx.ellipse(cx + ox, top - 11, 1.3, fl, 0, 0, Math.PI * 2); ctx.fill();
               ctx.shadowBlur = 0;
             });
+            break;
+          }
+          case 'd_masle':
+            ctx.fillStyle = '#ff5aa5';
+            ctx.beginPath(); ctx.moveTo(cx, top - 2); ctx.lineTo(cx - 9, top - 8); ctx.lineTo(cx - 9, top + 3); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(cx, top - 2); ctx.lineTo(cx + 9, top - 8); ctx.lineTo(cx + 9, top + 3); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#d6337f'; ctx.beginPath(); ctx.arc(cx, top - 2, 2.8, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'd_ksiltovka':
+            ctx.fillStyle = '#2a6bff';
+            ctx.beginPath(); ctx.arc(cx, top + 3, 9.5, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#1a4fd0'; ctx.beginPath(); ctx.ellipse(cx + 9, top + 3, 8, 2.6, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx, top - 6, 1.6, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'd_klobouk':
+            ctx.fillStyle = '#111';
+            ctx.beginPath(); ctx.ellipse(cx, top + 1, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillRect(cx - 7, top - 14, 14, 15);
+            ctx.fillStyle = '#c4162a'; ctx.fillRect(cx - 7, top - 4, 14, 3);
+            ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.sin(performance.now() / 200) * 0.5})`;
+            ctx.font = '7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('✦', cx + 4, top - 8);
+            break;
+          case 'd_koruna': {
+            const x = cx - C / 2 + 2, y = top - 1, w = C - 4;
+            ctx.beginPath();
+            ctx.moveTo(x, y); ctx.lineTo(x, y - 8); ctx.lineTo(x + w * 0.22, y - 3); ctx.lineTo(x + w * 0.5, y - 12);
+            ctx.lineTo(x + w * 0.78, y - 3); ctx.lineTo(x + w, y - 8); ctx.lineTo(x + w, y); ctx.closePath();
+            const g = ctx.createLinearGradient(x, y - 12, x, y);
+            g.addColorStop(0, '#fff6b0'); g.addColorStop(1, '#e0a800');
+            ctx.fillStyle = g; ctx.fill();
+            ctx.strokeStyle = '#8a6400'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = '#e0115f'; ctx.beginPath(); ctx.arc(x + w * 0.5, y - 4, 1.9, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#2a6bff'; ctx.beginPath(); ctx.arc(x + w * 0.2, y - 2.5, 1.3, 0, Math.PI * 2); ctx.arc(x + w * 0.8, y - 2.5, 1.3, 0, Math.PI * 2); ctx.fill();
+            break;
+          }
+          case 'd_bryle':
+            ctx.fillStyle = '#111';
+            ctx.beginPath(); ctx.ellipse(cx - 4.5, top + 9, 4.2, 3.2, 0, 0, Math.PI * 2); ctx.ellipse(cx + 4.5, top + 9, 4.2, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillRect(cx - 1, top + 7.5, 2, 1.5);
+            ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(cx - 6.5, top + 7.3, 2, 1.2); ctx.fillRect(cx + 2.5, top + 7.3, 2, 1.2);
+            break;
+          case 'd_lyzarske': {
+            ctx.fillStyle = '#ff7a00'; ctx.fillRect(cx - 11, top + 7, 22, 3);
+            const g = ctx.createLinearGradient(cx - 8, top + 4, cx + 8, top + 13);
+            g.addColorStop(0, '#7ff7ff'); g.addColorStop(1, '#b388ff');
+            ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, top + 8.5, 8.5, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#222'; ctx.lineWidth = 1.2; ctx.stroke();
+            break;
+          }
+          case 'd_sala':
+            ctx.fillStyle = '#e01b2a'; ctx.fillRect(cx - 10, top + C - 5, 20, 5);
+            ctx.fillStyle = '#ffffff'; for (let k = 0; k < 4; k++) ctx.fillRect(cx - 8 + k * 5, top + C - 5, 2, 5);
+            ctx.fillStyle = '#e01b2a'; ctx.fillRect(cx - 9, top + C - 1, 5, 9);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 9, top + C + 3, 5, 1.5);
+            break;
+          case 'd_medaile':
+            ctx.fillStyle = '#2a6bff';
+            ctx.beginPath(); ctx.moveTo(cx - 6, top + C - 4); ctx.lineTo(cx - 1, top + C + 3); ctx.lineTo(cx + 1, top + C + 3); ctx.lineTo(cx + 6, top + C - 4); ctx.lineTo(cx + 3, top + C - 4); ctx.lineTo(cx, top + C); ctx.lineTo(cx - 3, top + C - 4); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = '#a06a00'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.arc(cx, top + C + 6, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            break;
+          case 'd_absolvent':
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath(); ctx.moveTo(cx - 12, top - 4); ctx.lineTo(cx, top - 9); ctx.lineTo(cx + 12, top - 4); ctx.lineTo(cx, top + 1); ctx.closePath(); ctx.fill();
+            ctx.fillRect(cx - 6, top - 3, 12, 5);
+            ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.3;
+            ctx.beginPath(); ctx.moveTo(cx, top - 4); ctx.lineTo(cx + 9, top - 2); ctx.lineTo(cx + 9, top + 5); ctx.stroke();
+            ctx.fillStyle = '#ffd23f'; ctx.fillRect(cx + 8, top + 5, 2, 3);
+            break;
+          case 'd_helma':
+            ctx.fillStyle = '#556b2f';
+            ctx.beginPath(); ctx.arc(cx, top + 3, 11, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#3e4f20'; ctx.fillRect(cx - 12, top + 2, 24, 2.5);
+            ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.arc(cx - 3, top - 3, 3, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'd_zvonecek': {
+            const sw = Math.sin(performance.now() / 160) * 0.25;
+            ctx.save(); ctx.translate(cx, top + C - 2); ctx.rotate(sw);
+            ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = '#a06a00'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(-4, 6); ctx.quadraticCurveTo(-4, -1, 0, -1); ctx.quadraticCurveTo(4, -1, 4, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#a06a00'; ctx.beginPath(); ctx.arc(0, 7, 1.3, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            break;
+          }
+          case 'd_korale': {
+            const cols = ['#ff3b3b', '#ffd23f', '#3bff7a', '#3bb4ff', '#ff5ee0'];
+            for (let k = 0; k < 9; k++) {
+              const a = Math.PI * (0.12 + k * 0.095);
+              ctx.fillStyle = cols[k % cols.length];
+              ctx.beginPath(); ctx.arc(cx + Math.cos(a) * 9, top + C - 7 + Math.sin(a) * 7, 1.8, 0, Math.PI * 2); ctx.fill();
+            }
+            break;
+          }
+          case 'd_sluchatka':
+            ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(cx, top + 6, 10, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+            ctx.fillStyle = '#ff3b5c';
+            ctx.beginPath(); ctx.ellipse(cx - 10, top + 8, 3, 4.5, 0, 0, Math.PI * 2); ctx.ellipse(cx + 10, top + 8, 3, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+            break;
+          case 'd_stuha':
+            ctx.strokeStyle = '#ff5aa5'; ctx.lineWidth = 2.6;
+            ctx.beginPath(); ctx.moveTo(cx - 4, top + C + 7); ctx.quadraticCurveTo(cx - 6, top + C - 6, cx, top + C - 2); ctx.quadraticCurveTo(cx + 6, top + C - 6, cx + 4, top + C + 7); ctx.stroke();
+            break;
+          case 'd_talisman':
+            ctx.strokeStyle = '#ddd'; ctx.lineWidth = 0.8;
+            ctx.beginPath(); ctx.moveTo(cx - 7, top + C - 4); ctx.lineTo(cx, top + C + 1); ctx.lineTo(cx + 7, top + C - 4); ctx.stroke();
+            [['#1a4fd0', 4.2], ['#ffffff', 2.8], ['#4ad8ff', 1.9], ['#111', 0.9]].forEach(([c, r]) => {
+              ctx.fillStyle = c; ctx.beginPath(); ctx.arc(cx, top + C + 4, r, 0, Math.PI * 2); ctx.fill();
+            });
+            break;
+          case 'd_medailon': {
+            ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx - 7, top + C - 4); ctx.lineTo(cx, top + C + 1); ctx.lineTo(cx + 7, top + C - 4); ctx.stroke();
+            ctx.fillStyle = '#ffd23f'; ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 6 + Math.sin(performance.now() / 180) * 3;
+            ctx.beginPath();
+            for (let k = 0; k < 10; k++) {
+              const r = k % 2 ? 2 : 5;
+              const a = -Math.PI / 2 + (k * Math.PI) / 5;
+              ctx.lineTo(cx + Math.cos(a) * r, top + C + 5 + Math.sin(a) * r);
+            }
+            ctx.closePath(); ctx.fill();
             break;
           }
           case 'retez':
