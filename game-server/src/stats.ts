@@ -12,6 +12,15 @@ const WATCHED_NAMES = ['robine'];
 // Jména, která se v žebříčku nikdy neukážou (kromě ownerů).
 const LEADERBOARD_HIDDEN = ['adam', 'sss'];
 
+interface ProfileProgress {
+  wardrobe?: string[];
+  equippedSkin?: string;
+  acc?: string[];
+  accOn?: Record<string, string>;
+  accLvl?: Record<string, number>;
+  diamanty?: number;
+}
+
 // Barvy jména z obchodu (doplňky), které se ukazují v žebříčku.
 const NAME_STYLES = ['ruzove', 'zlate', 'duhove', 'modre', 'zelene', 'ohnive', 'trpytive', 'fialove', 'ledove', 'kralovske'];
 
@@ -175,6 +184,57 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       .sort((a, b) => b.diamanty - a.diamanty)
       .map(({ name, diamanty }) => ({ name, diamanty, nameStyle: nameStyles.get(name.toLowerCase()) ?? null }));
     return json({ players });
+  }
+
+  if (action === 'profile' && request.method === 'GET') {
+    // Profil hráče: diamanty, rekord, pořadí, od kdy hraje a nasazené doplňky (z uloženého postupu).
+    const name = (new URL(request.url).searchParams.get('name') ?? '').trim().slice(0, 20);
+    const lower = name.toLowerCase();
+    if (!lower) return json({ error: 'Chybí jméno.' }, 400);
+    let shownName = name;
+    let diamanty = 0;
+    let bestScore = 0;
+    let since: number | null = null;
+    let found = false;
+    const best = new Map<string, number>();
+    for (const d of (await storage.list<Device>({ prefix: 'seen:' })).values()) {
+      for (const [n, st] of Object.entries(d.stats ?? {})) {
+        const k = n.toLowerCase();
+        if (!k.includes('owner') && !LEADERBOARD_HIDDEN.includes(k) && !isVulgarName(n)) best.set(k, Math.max(best.get(k) ?? 0, st.diamanty));
+        if (k !== lower) continue;
+        found = true;
+        if (st.diamanty >= diamanty) shownName = n;
+        diamanty = Math.max(diamanty, st.diamanty);
+        bestScore = Math.max(bestScore, st.bestScore ?? 0);
+      }
+      if (d.names.some((n) => n.toLowerCase() === lower)) {
+        found = true;
+        since = since === null ? d.first : Math.min(since, d.first);
+      }
+    }
+    if (!found) return json({ error: 'Hráč nenalezen.' }, 404);
+    const rank = best.has(lower) ? [...best.values()].filter((v) => v > (best.get(lower) ?? 0)).length + 1 : null;
+    let progress: ProfileProgress | null = null;
+    for (const st of (await storage.list<{ name: string; progress?: ProfileProgress }>({ prefix: 'pcode:' })).values()) {
+      const pr = st.progress;
+      if (st.name?.toLowerCase() !== lower || !pr) continue;
+      if (progress === null || (pr.diamanty ?? 0) > ((progress as ProfileProgress).diamanty ?? 0)) progress = pr;
+    }
+    const pp = progress as ProfileProgress | null;
+    const accOn = pp?.accOn ?? {};
+    const accLvl = Object.fromEntries(Object.entries(pp?.accLvl ?? {}).filter(([id]) => Object.values(accOn).includes(id)));
+    return json({
+      name: shownName,
+      diamanty,
+      bestScore,
+      rank,
+      since,
+      skins: pp?.wardrobe?.length ?? null,
+      equippedSkin: pp?.equippedSkin ?? 'default',
+      accCount: pp?.acc?.length ?? null,
+      accOn,
+      accLvl,
+    });
   }
 
   if (action === 'report' && request.method === 'GET') {
