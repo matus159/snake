@@ -138,6 +138,9 @@ export async function handleFriendsRequest(action: string, request: Request, sto
     const otherLower = fc.length === 5 ? await storage.get<string>(`fcode:${fc}`) : undefined;
     if (!otherLower) return json({ error: 'Tenhle kamarádský kód neexistuje.' }, 404);
     if (otherLower === meLower) return json({ error: 'To je tvůj vlastní kód 🙂' }, 400);
+    // z profilu hráče: kód musí patřit tomu, na jehož profilu jsi
+    const expect = low(String(body.expectName ?? '').slice(0, 20));
+    if (expect && expect !== otherLower) return json({ error: 'Tenhle kód patří jinému hráči.' }, 400);
     if (me.friends.includes(otherLower)) return json({ ok: true, message: 'Už jste kamarádi.' });
     const other = await loadData(storage, otherLower);
     // on už mi žádost poslal → rovnou kamarádi

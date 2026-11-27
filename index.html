@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.52">
+  <meta name="snake-version" content="1.99.53">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1510,6 +1510,44 @@
       margin: 0.5rem 0 0;
       font-size: 0.75rem;
       color: #9ab;
+    }
+
+    .profile-friend {
+      margin-top: 0.7rem;
+    }
+
+    .profile-friend[hidden],
+    .profile-friend-form[hidden] {
+      display: none;
+    }
+
+    .profile-friend-btn {
+      background: linear-gradient(135deg, #ff4fa3, #ffb300);
+    }
+
+    .profile-friend-form p {
+      margin: 0.5rem 0 0.3rem;
+      font-size: 0.75rem;
+      color: #c9d3f0;
+    }
+
+    .profile-friend-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .profile-friend-row input {
+      flex: 1;
+      min-width: 0;
+      text-transform: uppercase;
+    }
+
+    .profile-friend-msg {
+      margin: 0.4rem 0 0;
+      min-height: 1em;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #00ff88;
     }
 
     #leaderboardList li[data-name] {
@@ -4430,6 +4468,17 @@
             <h2>👤 Profil hráče</h2>
             <div class="profile-stats" id="profileStats"></div>
             <p class="profile-note" id="profileNote"></p>
+            <div class="profile-friend" id="profileFriend" hidden>
+              <button type="button" class="btn profile-friend-btn" id="profileFriendBtn">👫 Přidat do přátel</button>
+              <div class="profile-friend-form" id="profileFriendForm" hidden>
+                <p>Napiš kamarádský kód hráče (třeba K-7P2QX). Řekne ti ho on sám – najde ho v Kamarádech.</p>
+                <div class="profile-friend-row">
+                  <input type="text" id="profileFriendCode" class="name-input" maxlength="7" placeholder="K-XXXXX" autocomplete="off">
+                  <button type="button" class="btn" id="profileFriendSend">Poslat</button>
+                </div>
+              </div>
+              <p class="profile-friend-msg" id="profileFriendMsg"></p>
+            </div>
           </div>
         </div>
         <button type="button" class="btn leaderboard-back" id="profileBackBtn">Zpět</button>
@@ -10488,7 +10537,51 @@
           stat('📅 Hraje od', loading ? '…' : since),
         ].join('');
         document.getElementById('profileNote').textContent = me ? 'Tohle je tvůj profil – takhle tě vidí ostatní.' : '';
+        // Přidat do přátel – jen u cizího profilu (na svém ne)
+        const fr = document.getElementById('profileFriend');
+        fr.hidden = !!me || !playerName;
+        if (!me && loading) {
+          profileFriendName = d.name;
+          document.getElementById('profileFriendForm').hidden = true;
+          document.getElementById('profileFriendMsg').textContent = '';
+          document.getElementById('profileFriendCode').value = '';
+        }
+        const already = friendsData && (friendsData.friends || []).some((f) => f.name.toLowerCase() === d.name.toLowerCase());
+        const btn = document.getElementById('profileFriendBtn');
+        btn.disabled = !!already;
+        btn.textContent = already ? '✔ Už jste kamarádi' : '👫 Přidat do přátel';
       }
+
+      let profileFriendName = '';
+      document.getElementById('profileFriendBtn').addEventListener('click', () => {
+        const form = document.getElementById('profileFriendForm');
+        form.hidden = false;
+        document.getElementById('profileFriendCode').focus();
+      });
+      async function sendProfileFriend() {
+        const msg = document.getElementById('profileFriendMsg');
+        const input = document.getElementById('profileFriendCode');
+        const code = input.value.trim();
+        msg.style.color = '';
+        if (!/^K?-?[A-Z0-9]{5}$/i.test(code)) {
+          msg.style.color = '#ff7a8c';
+          msg.textContent = 'Kód má tvar K-XXXXX (5 znaků).';
+          return;
+        }
+        msg.textContent = 'Posílám…';
+        try {
+          const r = await friendsCall('add', { friendCode: code, expectName: profileFriendName });
+          msg.textContent = r.message || 'Žádost poslána!';
+          document.getElementById('profileFriendForm').hidden = true;
+        } catch (e) {
+          msg.style.color = '#ff7a8c';
+          msg.textContent = e.message;
+        }
+      }
+      document.getElementById('profileFriendSend').addEventListener('click', sendProfileFriend);
+      document.getElementById('profileFriendCode').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendProfileFriend();
+      });
 
       function closeProfile() {
         document.getElementById('profileOverlay').classList.remove('visible');
