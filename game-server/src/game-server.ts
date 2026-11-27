@@ -29,7 +29,7 @@ function setAttachment(ws: WebSocket, attachment: WsAttachment) {
   ws.serializeAttachment(attachment);
 }
 
-const ACC_SLOTS = ['hlava', 'oblicej', 'krk', 'stopa', 'jmeno'];
+const ACC_SLOTS = ['hlava', 'oblicej', 'pusa', 'krk', 'stopa', 'jmeno'];
 
 // Doplňky z klienta: jen známá místa a krátká id (co id znamená, ví hra u ostatních hráčů).
 function cleanAcc(raw: unknown): Record<string, string> {
