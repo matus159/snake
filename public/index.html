@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.62">
+  <meta name="snake-version" content="1.99.63">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -6935,7 +6935,7 @@
         (multiServerState.players || []).forEach((p) => {
           if (!p.alive || !p.snake || !p.snake.length) return;
           const pAcc = p.id === multiPlayerId ? accOn : p.acc || {};
-          drawAccTrail(p.snake, pAcc);
+          drawAccTrail(p.snake, pAcc, p.id);
           const base = MULTI_COLORS[p.colorIndex % MULTI_COLORS.length];
           p.snake.forEach((seg, i) => {
             const t = i / Math.max(p.snake.length - 1, 1);
@@ -10637,30 +10637,54 @@
         return true;
       }
 
-      // Stopa se kreslí ZA ocasem (ve směru, odkud had přijel), ať ji tělo nezakryje.
-      function drawAccTrail(body = snake, on = accOn) {
+      // Stopa jde po cestě, kudy had jel (i v zatáčkách) – pamatuje si, kde byl ocas.
+      const trailHist = new Map();
+
+      function trailPath(key, body) {
+        const tail = body[body.length - 1];
+        let h = trailHist.get(key);
+        const last = h && h.cells[0];
+        if (!h || !h.tail) {
+          h = { tail: { ...tail }, cells: [] };
+        } else if (h.tail.x !== tail.x || h.tail.y !== tail.y) {
+          // ocas se posunul: kde byl, tam teď vede stopa (skok = nová hra, začni znovu)
+          const jump = Math.abs(h.tail.x - tail.x) + Math.abs(h.tail.y - tail.y) > 1;
+          h.cells = jump ? [] : [{ ...h.tail }, ...h.cells].slice(0, 6);
+          h.tail = { ...tail };
+        }
+        if (last && h.cells.length && Math.abs(h.cells[0].x - tail.x) + Math.abs(h.cells[0].y - tail.y) > 1) h.cells = [];
+        trailHist.set(key, h);
+        // když ještě žádná cesta není (začátek hry), stopa jde rovně za ocasem
+        if (!h.cells.length && body.length >= 2) {
+          const prev = body[body.length - 2];
+          const dx = tail.x - prev.x;
+          const dy = tail.y - prev.y;
+          if (Math.abs(dx) + Math.abs(dy) === 1) {
+            return [1, 2, 3, 4].map((k) => ({ x: tail.x + dx * k, y: tail.y + dy * k }));
+          }
+        }
+        return h.cells;
+      }
+
+      function drawAccTrail(body = snake, on = accOn, key = 'me') {
         const tr = ACC_BY_ID[on.stopa];
-        const snake = body; // stopa za tímhle hadem (vlastní nebo jiného hráče)
-        if (!tr || !snake || snake.length < 2) return;
+        if (!tr || !body || body.length < 2) return;
         const now = performance.now();
-        const tail = snake[snake.length - 1];
-        const prev = snake[snake.length - 2];
-        let dx = tail.x - prev.x;
-        let dy = tail.y - prev.y;
-        if (Math.abs(dx) + Math.abs(dy) !== 1) { dx = 0; dy = 0; } // přes okraj / na místě
-        const px = -dy;
-        const py = dx;
-        const tx = tail.x * CELL + CELL / 2;
-        const ty = tail.y * CELL + CELL / 2;
-        const N = 8;
-        for (let k = 0; k < N; k++) {
-          const dist = CELL * (0.75 + k * 0.62);
-          const wob = Math.sin(now / 220 + k * 1.1) * (3 + k * 0.6);
-          const x = tx + dx * dist + px * wob + (dx === 0 && dy === 0 ? Math.sin(now / 300 + k) * 10 : 0);
-          const y = ty + dy * dist + py * wob + (dx === 0 && dy === 0 ? Math.cos(now / 300 + k) * 10 : 0);
+        const tail = body[body.length - 1];
+        const path = [tail, ...trailPath(key, body)];
+        // body podél cesty: 2 kousky na každé políčko (plynule i přes zatáčky)
+        const pts = [];
+        for (let c = 0; c < path.length - 1; c++) {
+          const a = path[c];
+          const b = path[c + 1];
+          for (const t of [0.5, 1]) pts.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+        }
+        pts.slice(0, 10).forEach((pt, k) => {
+          const x = pt.x * CELL + CELL / 2 + Math.sin(now / 220 + k * 1.1) * 3;
+          const y = pt.y * CELL + CELL / 2 + Math.cos(now / 260 + k * 1.3) * 3;
           const col = tr.colors === 'rainbow' ? `hsl(${(now / 8 + k * 40) % 360}, 95%, 62%)` : tr.colors[k % tr.colors.length];
-          const size = 5.2 - k * 0.45;
-          ctx.globalAlpha = 0.95 - k * 0.1;
+          const size = 5.2 - k * 0.38;
+          ctx.globalAlpha = 0.95 - k * 0.08;
           if (tr.id === 'bonbony') {
             // zabalený bonbon: kulička a dva cípky
             ctx.save();
@@ -10690,7 +10714,7 @@
             ctx.fill();
             ctx.shadowBlur = 0;
           }
-        }
+        });
         ctx.globalAlpha = 1;
       }
 
