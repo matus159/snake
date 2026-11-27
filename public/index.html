@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.51">
+  <meta name="snake-version" content="1.99.52">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1402,6 +1402,137 @@
       font-weight: 800;
       font-size: 0.72rem;
       text-align: center;
+    }
+
+    /* Profil hráče */
+    #profileOverlay {
+      z-index: 31;
+    }
+
+    .profile-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1rem;
+      width: min(880px, 94%);
+      max-height: calc(100% - 70px);
+      overflow-y: auto;
+      padding: 0.9rem 1.1rem;
+      border-radius: 18px;
+      background: rgba(15, 15, 28, 0.96);
+      border: 2px solid #ffd23f;
+      box-shadow: 0 0 26px rgba(255, 210, 63, 0.25);
+    }
+
+    .profile-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+
+    #profileCanvas {
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 19 / 10;
+      height: auto;
+      border-radius: 12px;
+      background: radial-gradient(ellipse at 50% 45%, #1d2a4a, #0e1222);
+      border: 1px solid #2c3c66;
+    }
+
+    .profile-name {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #e8e8e8;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-rank {
+      font-weight: 800;
+      color: #ffd23f;
+      font-size: 0.9rem;
+    }
+
+    .profile-acc {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.3rem;
+      font-size: 1.1rem;
+    }
+
+    .profile-acc span {
+      padding: 0.1rem 0.35rem;
+      border-radius: 8px;
+      background: #1e1e32;
+      border: 1px solid #333;
+    }
+
+    .profile-right h2 {
+      margin: 0 0 0.6rem;
+      color: #00d9ff;
+      font-size: 1.2rem;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .profile-stat {
+      padding: 0.45rem 0.6rem;
+      border-radius: 10px;
+      background: #141424;
+      border: 1px solid #2c2c44;
+    }
+
+    .profile-stat .l {
+      font-size: 0.7rem;
+      color: #9ab;
+    }
+
+    .profile-stat .v {
+      font-size: 1.2rem;
+      font-weight: 900;
+    }
+
+    .profile-stat .v small {
+      font-size: 0.75rem;
+      color: #9ab;
+    }
+
+    .profile-note {
+      margin: 0.5rem 0 0;
+      font-size: 0.75rem;
+      color: #9ab;
+    }
+
+    #leaderboardList li[data-name] {
+      cursor: pointer;
+    }
+
+    #modeSelectGreeting span {
+      cursor: pointer;
+    }
+
+    @media (max-height: 500px), (max-width: 640px) {
+      .profile-card {
+        gap: 0.6rem;
+        padding: 0.5rem 0.7rem;
+      }
+
+      .profile-name {
+        font-size: 1.1rem;
+      }
+
+      .profile-stat .v {
+        font-size: 0.95rem;
+      }
     }
 
     #gameOverOverlay .acc-result {
@@ -4287,6 +4418,22 @@
         </div>
         <button type="button" class="btn leaderboard-back" id="leaderboardBackBtn">Zpět</button>
       </div>
+      <div id="profileOverlay" class="overlay">
+        <div class="profile-card">
+          <div class="profile-left">
+            <canvas id="profileCanvas" width="380" height="200"></canvas>
+            <div class="profile-name" id="profileName">—</div>
+            <div class="profile-rank" id="profileRank"></div>
+            <div class="profile-acc" id="profileAcc"></div>
+          </div>
+          <div class="profile-right">
+            <h2>👤 Profil hráče</h2>
+            <div class="profile-stats" id="profileStats"></div>
+            <p class="profile-note" id="profileNote"></p>
+          </div>
+        </div>
+        <button type="button" class="btn leaderboard-back" id="profileBackBtn">Zpět</button>
+      </div>
       <div id="adventOverlay" class="overlay">
         <div class="advent-snow" id="adventSnow" aria-hidden="true"></div>
         <div class="advent-box">
@@ -6064,6 +6211,7 @@
         transferOverlay.classList.remove('visible');
         document.getElementById('friendsOverlay').classList.remove('visible');
         document.getElementById('adventOverlay').classList.remove('visible');
+        document.getElementById('profileOverlay').classList.remove('visible');
       }
 
       function showModeSelect() {
@@ -6147,6 +6295,8 @@
           dia.innerHTML = '<svg class="currency-icon" aria-hidden="true"><use href="#iconDiamond"/></svg>';
           dia.append(String(p.diamanty));
           li.append(left, dia);
+          li.dataset.name = p.name;
+          li.addEventListener('click', () => openProfile(p.name, 'leaderboard', { rank: i + 1, diamanty: p.diamanty, nameStyle: p.nameStyle }));
           leaderboardList.append(li);
         });
       }
@@ -10223,6 +10373,134 @@
         }
         ctx.globalAlpha = 1;
       }
+
+      // ===== Profil hráče =====
+      // Otevře se z žebříčku (klepnutím na jméno) nebo klepnutím na své jméno v menu.
+      const SKIN_PREVIEW_COLORS = {
+        default: ['#00d9ff', '#b4ff58'], red: ['#ff4444', '#c33'], white: ['#ffffff', '#c3c3c3'], blue: ['#1e78ff', '#0a50c3'],
+        pink: ['#ff69b4', '#cd3282'], yellow: ['#ffe132', '#e1a50a'], black: ['#787878', '#323232'], gold: ['#ffe680', '#e0a800'],
+        kral: ['#fff3a0', '#c99700'], melon: ['#3fbf4f', '#e8364a'], fire: ['#ffd23f', '#ff4a1c'], devil: ['#cfcfd6', '#a2a2a9'],
+        vanocni: ['#e01b2a', '#ffffff'],
+      };
+
+      function drawProfilePreview(cv, skin, on) {
+        const g = cv.getContext('2d');
+        const W = cv.width, H = cv.height, S = 30, n = 7;
+        g.clearRect(0, 0, W, H);
+        const y = H / 2 + 12;
+        const x0 = W / 2 + (n / 2 - 1) * S;
+        const tr = ACC_BY_ID[on.stopa];
+        if (tr) {
+          for (let k = 0; k < 9; k++) {
+            g.globalAlpha = 1 - k / 9;
+            g.fillStyle = tr.colors === 'rainbow' ? `hsl(${k * 40}, 95%, 62%)` : tr.colors[k % tr.colors.length];
+            g.beginPath();
+            g.arc(x0 - n * S - 6 - k * 11, y + S / 2 + Math.sin(k * 1.6) * 8, 5 - k * 0.35, 0, Math.PI * 2);
+            g.fill();
+          }
+          g.globalAlpha = 1;
+        }
+        for (let i = n - 1; i >= 0; i--) {
+          const t = i / (n - 1);
+          let col;
+          if (skin === 'rainbow' || skin === 'angel') col = `hsl(${i * 45}, 92%, 58%)`;
+          else if (skin === 'vanocni') col = i % 2 ? '#ffffff' : '#e01b2a';
+          else if (skin === 'melon') col = i === 0 ? '#e8364a' : '#3fbf4f';
+          else {
+            const [a, b] = SKIN_PREVIEW_COLORS[skin] || SKIN_PREVIEW_COLORS.default;
+            col = t < 0.5 ? a : b;
+          }
+          g.fillStyle = col;
+          g.fillRect(x0 - i * S + 1, y + 1, S - 2, S - 2);
+        }
+        const hx = x0 + S / 2;
+        g.fillStyle = '#0a0a12';
+        g.beginPath();
+        g.arc(hx, y + S / 2, 5, 0, Math.PI * 2);
+        g.fill();
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        const emoji = (e, cx, cy, size) => {
+          g.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+          g.fillText(e, cx, cy);
+        };
+        const neck = ACC_BY_ID[on.krk];
+        if (neck) emoji(neck.icon, hx, y + S + 2, 20);
+        const face = ACC_BY_ID[on.oblicej];
+        if (face) emoji(face.icon, hx, y + S * 0.45, 24);
+        const hat = ACC_BY_ID[on.hlava];
+        if (hat) emoji(hat.icon, hx, y - 10, 28);
+      }
+
+      let profileFrom = 'menu';
+
+      async function openProfile(name, from = 'menu', known = {}) {
+        if (!name) return;
+        profileFrom = from;
+        hideAllMenuOverlays();
+        const ov = document.getElementById('profileOverlay');
+        const z = parseFloat(document.body.style.zoom) || 1;
+        ov.style.zoom = '';
+        ov.classList.add('visible');
+        const me = playerName && name.toLowerCase() === playerName.toLowerCase();
+        // nejdřív to, co víme hned (vlastní postup nebo řádek z žebříčku), pak údaje ze serveru
+        let data = { name, diamanty: known.diamanty ?? null, rank: known.rank ?? null, accOn: {}, accLvl: {}, equippedSkin: 'default' };
+        if (known.nameStyle) data.accOn = { jmeno: known.nameStyle };
+        renderProfile(data, me, true);
+        try {
+          const res = await fetch(`/api/hra/profile?name=${encodeURIComponent(name)}`, { cache: 'no-store' });
+          if (res.ok) data = { ...data, ...(await res.json()) };
+        } catch {}
+        if (!document.getElementById('profileOverlay').classList.contains('visible')) return;
+        renderProfile(data, me, false);
+      }
+
+      function renderProfile(d, me, loading) {
+        // vlastní profil vždy podle téhle hry (nejaktuálnější)
+        const on = me ? accOn : d.accOn || {};
+        const lvls = me ? accLvl : d.accLvl || {};
+        const skin = me ? (skinAvailable(equippedSkin) ? equippedSkin : 'default') : d.equippedSkin || 'default';
+        drawProfilePreview(document.getElementById('profileCanvas'), skin, on);
+        const nameEl = document.getElementById('profileName');
+        setNameWithBadge(nameEl, d.name);
+        applyNameStyle(nameEl, on.jmeno);
+        const rank = d.rank;
+        document.getElementById('profileRank').textContent = rank ? `${rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : '🏅'} ${rank}. místo v žebříčku` : '';
+        document.getElementById('profileAcc').innerHTML = ACC_SLOTS.map((sl) => on[sl.id] && ACC_BY_ID[on[sl.id]])
+          .filter(Boolean).map((a) => `<span title="${a.name}">${a.icon}${(lvls[a.id] || 1) > 1 ? '⭐'.repeat(lvls[a.id]) : ''}</span>`).join('');
+        const bonus = Object.values(on).reduce((t, id) => {
+          const a = ACC_BY_ID[id];
+          return t + (a ? ACC_RARITY[a.rarity].bonus + ((lvls[id] || 1) - 1) : 0);
+        }, 0);
+        const dia = me ? diamanty : d.diamanty;
+        const accCount = me ? accOwned.length : d.accCount;
+        const skins = me ? wardrobe.filter(skinAvailable).length : d.skins;
+        const skinTotal = Object.keys(SKIN_NAMES).length - 1;
+        const since = d.since ? new Date(d.since).toLocaleDateString('cs-CZ') : '—';
+        const dash = loading ? '…' : '—';
+        const stat = (l, v, color = '') => `<div class="profile-stat"><div class="l">${l}</div><div class="v"${color ? ` style="color:${color}"` : ''}>${v}</div></div>`;
+        document.getElementById('profileStats').innerHTML = [
+          stat('💎 Diamanty', dia ?? dash, '#7ff7ff'),
+          stat('🏆 Nejlepší skóre', d.bestScore ?? dash, '#00ff88'),
+          stat('🎩 Doplňky', accCount != null ? `${accCount} <small>/ ${ACCESSORIES.length}</small>` : dash),
+          stat('⭐ Bonus bodů', `+${bonus} %`, '#ffd23f'),
+          stat('🐍 Hadi', skins != null ? `${skins} <small>/ ${skinTotal}</small>` : dash),
+          stat('📅 Hraje od', loading ? '…' : since),
+        ].join('');
+        document.getElementById('profileNote').textContent = me ? 'Tohle je tvůj profil – takhle tě vidí ostatní.' : '';
+      }
+
+      function closeProfile() {
+        document.getElementById('profileOverlay').classList.remove('visible');
+        if (profileFrom === 'leaderboard') {
+          leaderboardOverlay.classList.add('visible');
+        } else {
+          modeSelectOverlay.classList.add('visible');
+        }
+      }
+
+      document.getElementById('profileBackBtn').addEventListener('click', closeProfile);
+      modeSelectGreeting.addEventListener('click', () => { if (playerName) openProfile(playerName, 'menu'); });
 
       // ===== Adventní kalendář =====
       // 1.–24. prosince (český čas) jedno okénko denně – jen v ten den, jinak propadne.
