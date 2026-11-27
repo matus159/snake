@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.56">
+  <meta name="snake-version" content="1.99.57">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1554,6 +1554,98 @@
     .profile-badge-none {
       font-size: 0.75rem;
       color: #9ab;
+    }
+
+    .profile-badges-btn {
+      margin-top: 0.4rem;
+      background: linear-gradient(135deg, #ffb300, #ff7a00);
+    }
+
+    #badgesOverlay {
+      z-index: 32;
+    }
+
+    .badges-box {
+      width: min(860px, 94%);
+      max-height: calc(100% - 70px);
+      overflow-y: auto;
+      padding: 0.8rem 1rem;
+      text-align: center;
+    }
+
+    .badges-box h2 {
+      margin: 0 0 0.6rem;
+      color: #ffd23f;
+    }
+
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .badge-card {
+      --t: #555;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 12px;
+      background: #141424;
+      border: 2px solid var(--t);
+      text-align: left;
+    }
+
+    .badge-card.t1 { --t: #cd7f32; }
+    .badge-card.t2 { --t: #c0c0c0; }
+    .badge-card.t3 { --t: #ffd23f; box-shadow: 0 0 10px rgba(255, 210, 63, 0.45); }
+
+    .badge-card .bi {
+      font-size: 1.8rem;
+      position: relative;
+    }
+
+    .badge-card.locked .bi {
+      filter: grayscale(1);
+      opacity: 0.35;
+    }
+
+    .badge-card.locked .bi::after {
+      content: '🔒';
+      position: absolute;
+      right: -6px;
+      bottom: -4px;
+      font-size: 0.85rem;
+      filter: none;
+      opacity: 1;
+    }
+
+    .badge-card.locked {
+      opacity: 0.75;
+    }
+
+    .badge-card .bn {
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .badge-card .bd {
+      font-size: 0.7rem;
+      color: #9ab;
+    }
+
+    .badge-card .bp {
+      margin-top: 0.15rem;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .badge-card .bp span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #ffb300, #ffd23f);
     }
 
     .profile-note {
@@ -4534,6 +4626,13 @@
         </div>
         <button type="button" class="btn leaderboard-back" id="profileBackBtn">Zpět</button>
       </div>
+      <div id="badgesOverlay" class="overlay">
+        <div class="badges-box">
+          <h2 id="badgesTitle">🏅 Odznaky</h2>
+          <div class="badges-grid" id="badgesGrid"></div>
+        </div>
+        <button type="button" class="btn leaderboard-back" id="badgesBackBtn">Zpět</button>
+      </div>
       <div id="adventOverlay" class="overlay">
         <div class="advent-snow" id="adventSnow" aria-hidden="true"></div>
         <div class="advent-box">
@@ -6334,6 +6433,7 @@
         document.getElementById('friendsOverlay').classList.remove('visible');
         document.getElementById('adventOverlay').classList.remove('visible');
         document.getElementById('profileOverlay').classList.remove('visible');
+        document.getElementById('badgesOverlay').classList.remove('visible');
       }
 
       function showModeSelect() {
@@ -10514,11 +10614,11 @@
         { icon: '🎩', name: 'Módní ikona', key: 'accCount', tiers: [3, 10, 25], unit: 'doplňků' },
         { icon: '🐍', name: 'Sběratel', key: 'skins', tiers: [3, 6, 10], unit: 'hadů' },
         { icon: '👫', name: 'Kamarádíček', key: 'friends', tiers: [1, 5, 10], unit: 'kamarádů' },
-        { icon: '🐣', name: 'Nováček', key: 'hry', tiers: [1], once: true },
-        { icon: '🔴', name: 'Mýtický', key: 'mythic', tiers: [1], once: true },
-        { icon: '⭐', name: 'Vylepšovač', key: 'lvl3', tiers: [1], once: true },
-        { icon: '🎄', name: 'Adventník', key: 'advent', tiers: [24], once: true },
-        { icon: '🥇', name: 'Číslo 1', key: 'top1', tiers: [1], once: true },
+        { icon: '🐣', name: 'Nováček', key: 'hry', tiers: [1], once: true, desc: 'Odehraj první hru' },
+        { icon: '🔴', name: 'Mýtický', key: 'mythic', tiers: [1], once: true, desc: 'Kup si mýtický doplněk' },
+        { icon: '⭐', name: 'Vylepšovač', key: 'lvl3', tiers: [1], once: true, desc: 'Vylepši doplněk na ⭐⭐⭐' },
+        { icon: '🎄', name: 'Adventník', key: 'advent', tiers: [24], once: true, desc: 'Otevři všech 24 okének adventu' },
+        { icon: '🥇', name: 'Číslo 1', key: 'top1', tiers: [1], once: true, desc: 'Buď první v žebříčku' },
       ];
       const TIER_MEDALS = ['🥉', '🥈', '🥇'];
 
@@ -10534,13 +10634,50 @@
         return out;
       }
 
+      let badgeValues = {};
+      let badgeOwner = '';
+
       function renderProfileBadges(v) {
+        badgeValues = v;
         const list = earnedBadges(v);
         const html = list.length
-          ? list.map((b) => `<span class="profile-badge t${b.tier}" title="${b.name}${b.once ? '' : ` – ${b.tiers[b.tier - 1]} ${b.unit}`}">${b.icon} ${b.name}${b.once ? '' : ` ${TIER_MEDALS[b.tier - 1]}`}</span>`).join('')
+          ? list.map((b) => `<span class="profile-badge t${b.tier}" title="${b.name}">${b.icon}${b.once ? '' : TIER_MEDALS[b.tier - 1]}</span>`).join('')
           : '<span class="profile-badge-none">Zatím žádné odznaky.</span>';
-        document.getElementById('profileBadges').innerHTML = `<h3>🏅 Odznaky (${list.length} / ${BADGES.length})</h3><div class="profile-badge-list">${html}</div>`;
+        document.getElementById('profileBadges').innerHTML = `<h3>🏅 Odznaky (${list.length} / ${BADGES.length})</h3><div class="profile-badge-list">${html}</div>
+          <button type="button" class="btn btn-small profile-badges-btn" id="profileBadgesBtn">🏅 Odznaky</button>`;
+        document.getElementById('profileBadgesBtn').addEventListener('click', openBadges);
       }
+
+      // Všechny odznaky: získané barevně, nezískané šedě se zámkem a s tím, kolik chybí
+      function openBadges() {
+        document.getElementById('profileOverlay').classList.remove('visible');
+        document.getElementById('badgesOverlay').classList.add('visible');
+        const v = badgeValues;
+        const earned = earnedBadges(v);
+        document.getElementById('badgesTitle').textContent = `🏅 Odznaky – ${badgeOwner} (${earned.length} / ${BADGES.length})`;
+        document.getElementById('badgesGrid').innerHTML = BADGES.map((b) => {
+          const val = v[b.key] || 0;
+          let tier = 0;
+          b.tiers.forEach((t, i) => { if (val >= t) tier = i + 1; });
+          const done = tier === b.tiers.length;
+          const next = b.tiers[Math.min(tier, b.tiers.length - 1)];
+          let desc;
+          if (b.once) desc = b.desc;
+          else if (done) desc = `Hotovo! ${b.tiers[b.tiers.length - 1]} ${b.unit}`;
+          else desc = `${Math.min(val, next)} / ${next} ${b.unit} → ${TIER_MEDALS[tier]}`;
+          const pct = done ? 100 : Math.round((Math.min(val, next) / next) * 100);
+          const cls = tier ? `t${b.once ? 3 : tier}` : 'locked';
+          const medal = tier && !b.once ? ` ${TIER_MEDALS[tier - 1]}` : '';
+          return `<div class="badge-card ${cls}"><div class="bi">${b.icon}</div><div style="flex:1;min-width:0">
+            <div class="bn">${b.name}${medal}</div><div class="bd">${desc}</div>
+            ${b.once || done ? '' : `<div class="bp"><span style="width:${pct}%"></span></div>`}</div></div>`;
+        }).join('');
+      }
+
+      document.getElementById('badgesBackBtn').addEventListener('click', () => {
+        document.getElementById('badgesOverlay').classList.remove('visible');
+        document.getElementById('profileOverlay').classList.add('visible');
+      });
 
       // ===== Profil hráče =====
       // Otevře se z žebříčku (klepnutím na jméno) nebo klepnutím na své jméno v menu.
@@ -10654,6 +10791,7 @@
           stat('🐍 Hadi', skins != null ? `${skins} <small>/ ${skinTotal}</small>` : dash),
         ].join('');
         document.getElementById('profileNote').textContent = me ? 'Tohle je tvůj profil – takhle tě vidí ostatní.' : '';
+        badgeOwner = d.name;
         const c = me ? cnt : d.cnt || {};
         const owned = me ? accOwned : d.acc || [];
         renderProfileBadges({
