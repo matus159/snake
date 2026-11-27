@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.53">
+  <meta name="snake-version" content="1.99.54">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -1489,6 +1489,10 @@
       border-radius: 10px;
       background: #141424;
       border: 1px solid #2c2c44;
+    }
+
+    .profile-stat:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
     }
 
     .profile-stat .l {
@@ -10525,7 +10529,6 @@
         const accCount = me ? accOwned.length : d.accCount;
         const skins = me ? wardrobe.filter(skinAvailable).length : d.skins;
         const skinTotal = Object.keys(SKIN_NAMES).length - 1;
-        const since = d.since ? new Date(d.since).toLocaleDateString('cs-CZ') : '—';
         const dash = loading ? '…' : '—';
         const stat = (l, v, color = '') => `<div class="profile-stat"><div class="l">${l}</div><div class="v"${color ? ` style="color:${color}"` : ''}>${v}</div></div>`;
         document.getElementById('profileStats').innerHTML = [
@@ -10534,7 +10537,6 @@
           stat('🎩 Doplňky', accCount != null ? `${accCount} <small>/ ${ACCESSORIES.length}</small>` : dash),
           stat('⭐ Bonus bodů', `+${bonus} %`, '#ffd23f'),
           stat('🐍 Hadi', skins != null ? `${skins} <small>/ ${skinTotal}</small>` : dash),
-          stat('📅 Hraje od', loading ? '…' : since),
         ].join('');
         document.getElementById('profileNote').textContent = me ? 'Tohle je tvůj profil – takhle tě vidí ostatní.' : '';
         // Přidat do přátel – jen u cizího profilu (na svém ne)
