@@ -19,6 +19,8 @@ interface ProfileProgress {
   accOn?: Record<string, string>;
   accLvl?: Record<string, number>;
   diamanty?: number;
+  cnt?: Record<string, number>;
+  advent?: number[];
 }
 
 // Barvy jména z obchodu (doplňky), které se ukazují v žebříčku.
@@ -234,6 +236,12 @@ export async function handleStatsRequest(request: Request, storage: DurableObjec
       accCount: pp?.acc?.length ?? null,
       accOn,
       accLvl,
+      // pro odznaky
+      acc: pp?.acc ?? [],
+      accLvlAll: pp?.accLvl ?? {},
+      cnt: pp?.cnt ?? {},
+      advent: pp?.advent?.length ?? 0,
+      friends: ((await storage.get<{ friends?: string[] }>(`friends:${lower}`))?.friends ?? []).length,
     });
   }
 

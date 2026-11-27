@@ -17,7 +17,11 @@ export interface Progress {
   accOn: Record<string, string>;
   // vylepšené doplňky: id → 2 nebo 3 hvězdy
   accLvl: Record<string, number>;
+  // počítadla pro odznaky: hry, kostky, zombie, výhry
+  cnt: Record<string, number>;
 }
+
+const CNT_KEYS = ['hry', 'kostky', 'zombie', 'vyhry'];
 
 const ACC_SLOTS = ['hlava', 'oblicej', 'krk', 'stopa', 'jmeno'];
 
@@ -71,6 +75,9 @@ function cleanProgress(raw: unknown): Progress {
         .filter(([id, l]) => id.length <= 20 && (l === 2 || l === 3))
         .slice(0, 100),
     ) as Record<string, number>,
+    cnt: Object.fromEntries(
+      CNT_KEYS.map((k) => [k, count(p.cnt && typeof p.cnt === 'object' ? (p.cnt as Record<string, unknown>)[k] : 0)]),
+    ),
   };
 }
 
