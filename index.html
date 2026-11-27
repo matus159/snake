@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.50">
+  <meta name="snake-version" content="1.99.51">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -9779,7 +9779,8 @@
       function renderAccShop() {
         renderAccWardrobe();
         const deal = ACC_BY_ID[accDealId()];
-        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za ${accDealTimeLeft()}</span>`;
+        document.getElementById('accDeal').innerHTML = `🏷️ SLEVA: ${deal.icon} ${deal.name} <s>${deal.price} 💎</s> <b>${accPrice(deal)} 💎 (−50 %)</b> <span style="color:#ffb3bd;font-weight:400">🔄 nová nabídka za <span id="accTimeLeft">${accDealTimeLeft()}</span></span>`;
+        accShownPeriod = accOfferPeriod();
         document.getElementById('accChance').innerHTML = `🎲 Šance v každé nabídce: <b class="c-leg">🟡 legendární ${Math.round(ACC_CHANCE_LEGEND * 100)} %</b> · <b class="c-myt">🔴 mýtická ${Math.round(ACC_CHANCE_MYTHIC * 100)} %</b>`;
         const grid = document.getElementById('accGrid');
         grid.replaceChildren();
@@ -9879,6 +9880,19 @@
         updatePlayerNameDisplay();
         draw();
       });
+
+      // Odpočet v obchodě běží sám; když nabídka skončí, hned se ukáže nová.
+      let accShownPeriod = null;
+      setInterval(() => {
+        const view = document.getElementById('accShopView');
+        if (!view || view.classList.contains('hidden') || !shopOverlay.classList.contains('visible')) return;
+        if (accOfferPeriod() !== accShownPeriod) {
+          renderAccShop();
+          return;
+        }
+        const el = document.getElementById('accTimeLeft');
+        if (el) el.textContent = accDealTimeLeft();
+      }, 15000);
 
       document.getElementById('shopTabs').addEventListener('click', (e) => {
         const tab = e.target.closest('.shop-tab');
