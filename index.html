@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.63">
+  <meta name="snake-version" content="1.99.64">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5055,6 +5055,9 @@
         { id: 'fialove', slot: 'jmeno', icon: '💜', name: 'Fialové jméno', rarity: 'bezne', price: 80, color: '#b57bff' },
         { id: 'ledove', slot: 'jmeno', icon: '❄️', name: 'Ledové jméno', rarity: 'epicke', price: 400, color: 'ice' },
         { id: 'kralovske', slot: 'jmeno', icon: '👑', name: 'Královské jméno', rarity: 'mytiske', price: 2500, color: 'royal' },
+        // jen z adventního kalendáře (v obchodě nejsou)
+        { id: 'venec', slot: 'hlava', icon: '🕯️', name: 'Adventní věneček', rarity: 'legendarni', price: 0, advent: true, draw: 'venec' },
+        { id: 'prskavky', slot: 'stopa', icon: '🎇', name: 'Prskavková stopa', rarity: 'mytiske', price: 0, advent: true, colors: ['#fff6c0', '#ffd23f', '#ffffff', '#ffb300'] },
       ];
       const ACC_BY_ID = Object.fromEntries(ACCESSORIES.map((a) => [a.id, a]));
       let shopTab = 'hadi';
@@ -10134,7 +10137,9 @@
         const a = ACC_BY_ID[id];
         const lvl = accLvl[id] || 1;
         if (!a || lvl >= 3) return null;
-        return lvl === 1 ? Math.ceil(a.price / 2) : a.price;
+        // doplňky z adventu nemají cenu – vylepšení stojí jako běžná věc té vzácnosti
+        const base = a.price || { legendarni: 1300, mytiske: 3000 }[a.rarity] || 400;
+        return lvl === 1 ? Math.ceil(base / 2) : base;
       }
 
       function accStars(id) {
@@ -10164,7 +10169,7 @@
         if (accOfferCache.day === day) return accOfferCache;
         const rnd = accRandom(day * 2654435761);
         const pick = (rarity, n, taken) => {
-          const pool = ACCESSORIES.filter((a) => a.rarity === rarity && !taken.includes(a.id));
+          const pool = ACCESSORIES.filter((a) => a.rarity === rarity && !a.advent && !taken.includes(a.id));
           const out = [];
           while (out.length < n && pool.length) out.push(pool.splice(Math.floor(rnd() * pool.length), 1)[0].id);
           return out;
@@ -10624,6 +10629,24 @@
             });
             break;
           }
+          case 'venec': {
+            const now = performance.now();
+            ctx.fillStyle = '#1f7a3a';
+            ctx.beginPath(); ctx.ellipse(cx, top, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#e01b2a';
+            [-7, -2, 3, 8].forEach((ox) => { ctx.beginPath(); ctx.arc(cx + ox, top + 1.5, 1.4, 0, Math.PI * 2); ctx.fill(); });
+            [-7, -2.5, 2.5, 7].forEach((ox, k) => {
+              ctx.fillStyle = k % 2 ? '#ffffff' : '#c4162a';
+              ctx.fillRect(cx + ox - 1.3, top - 9, 2.6, 8);
+              ctx.fillStyle = k % 2 ? '#ffd23f' : '#ffb300';
+              const fl = 2.5 + Math.sin(now / 90 + k * 1.7) * 0.8;
+              ctx.shadowColor = '#ffd23f';
+              ctx.shadowBlur = 6;
+              ctx.beginPath(); ctx.ellipse(cx + ox, top - 11, 1.3, fl, 0, 0, Math.PI * 2); ctx.fill();
+              ctx.shadowBlur = 0;
+            });
+            break;
+          }
           case 'retez':
             ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.arc(cx, top + C - 6, 8, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
@@ -10685,7 +10708,26 @@
           const col = tr.colors === 'rainbow' ? `hsl(${(now / 8 + k * 40) % 360}, 95%, 62%)` : tr.colors[k % tr.colors.length];
           const size = 5.2 - k * 0.38;
           ctx.globalAlpha = 0.95 - k * 0.08;
-          if (tr.id === 'bonbony') {
+          if (tr.id === 'prskavky') {
+            // prskavka: jiskry létají na všechny strany
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.strokeStyle = col;
+            ctx.shadowColor = '#ffd23f';
+            ctx.shadowBlur = 8;
+            ctx.lineWidth = 1.4;
+            for (let r = 0; r < 6; r++) {
+              const ang = now / 120 + k * 0.9 + r * (Math.PI / 3) + Math.sin(now / 70 + r) * 0.4;
+              const len = size + 2 + Math.abs(Math.sin(now / 90 + r + k)) * 5;
+              ctx.beginPath();
+              ctx.moveTo(Math.cos(ang) * 1.5, Math.sin(ang) * 1.5);
+              ctx.lineTo(Math.cos(ang) * len, Math.sin(ang) * len);
+              ctx.stroke();
+            }
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(0, 0, 1.8, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+          } else if (tr.id === 'bonbony') {
             // zabalený bonbon: kulička a dva cípky
             ctx.save();
             ctx.translate(x, y);
@@ -11036,8 +11078,8 @@
       const ADVENT_REWARDS = [
         { dia: 30 }, { dia: 40 }, { dia: 50 }, { egg: 1 }, { dia: 60 }, { dia: 100 },
         { dia: 40 }, { dia: 50 }, { dia: 60 }, { spin: 1 }, { dia: 50 }, { dia: 70 },
-        { dia: 80 }, { dia: 70 }, { dia: 60 }, { dia: 70 }, { dia: 80 }, { spin: 1 },
-        { dia: 90 }, { dia: 100 }, { egg: 1 }, { dia: 120 }, { dia: 150 }, { skin: 'vanocni', dia: 200 },
+        { acc: 'venec', dia: 50 }, { dia: 70 }, { dia: 60 }, { dia: 70 }, { dia: 80 }, { spin: 1 },
+        { dia: 90 }, { dia: 100 }, { egg: 1 }, { dia: 120 }, { acc: 'prskavky', dia: 50 }, { skin: 'vanocni', dia: 200 },
       ];
       const ADVENT_ALL_BONUS = 500;
 
@@ -11081,6 +11123,7 @@
       }
 
       function adventRewardIcon(r) {
+        if (r.acc) return ACC_BY_ID[r.acc].icon;
         if (r.skin) return '🎅';
         if (r.egg) return '🥚';
         if (r.spin) return '🎡';
@@ -11088,6 +11131,11 @@
       }
 
       function adventRewardText(r) {
+        if (r.acc) {
+          const a = ACC_BY_ID[r.acc];
+          const kind = { legendarni: 'legendární', mytiske: 'mýtický' }[a.rarity] || '';
+          return `${a.icon} ${a.name} (${kind} doplněk, jen z adventu!) a ${r.dia} 💎`;
+        }
         if (r.skin) return `🎅 Vánočního hada a ${r.dia} 💎`;
         if (r.egg) return '🥚 vajíčko štěstí zdarma (najdeš ho v Šatně)';
         if (r.spin) return '🎡 kolo štěstí zdarma (najdeš ho v Šatně)';
@@ -11199,6 +11247,11 @@
         if (r.skin && !wardrobe.includes(r.skin)) {
           wardrobe.push(r.skin);
           equippedSkin = r.skin;
+        }
+        if (r.acc && ACC_BY_ID[r.acc] && !accOwned.includes(r.acc)) {
+          accOwned.push(r.acc);
+          accOn[ACC_BY_ID[r.acc].slot] = r.acc; // rovnou nasadit
+          updatePlayerNameDisplay();
         }
         adventOpened.push(day);
         let msg = `🎁 ${adventDateText(day)}: dostáváš ${adventRewardText(r)}!`;
