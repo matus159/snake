@@ -19,6 +19,8 @@ export interface Progress {
   accLvl: Record<string, number>;
   // počítadla pro odznaky: hry, kostky, zombie, výhry
   cnt: Record<string, number>;
+  // odměny za odznaky už vyzvednuté (název odznaku → úroveň 1–3)
+  badgeRew: Record<string, number>;
 }
 
 const CNT_KEYS = ['hry', 'kostky', 'zombie', 'vyhry'];
@@ -74,6 +76,11 @@ function cleanProgress(raw: unknown): Progress {
       Object.entries(p.accLvl && typeof p.accLvl === 'object' ? (p.accLvl as Record<string, unknown>) : {})
         .filter(([id, l]) => id.length <= 20 && (l === 2 || l === 3))
         .slice(0, 100),
+    ) as Record<string, number>,
+    badgeRew: Object.fromEntries(
+      Object.entries(p.badgeRew && typeof p.badgeRew === 'object' ? (p.badgeRew as Record<string, unknown>) : {})
+        .filter(([k, l]) => k.length <= 30 && (l === 1 || l === 2 || l === 3))
+        .slice(0, 40),
     ) as Record<string, number>,
     cnt: Object.fromEntries(
       CNT_KEYS.map((k) => [k, count(p.cnt && typeof p.cnt === 'object' ? (p.cnt as Record<string, unknown>)[k] : 0)]),

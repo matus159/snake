@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Změna verze = hráčům s otevřenou hrou se ukáže „Upravování“ a hra se načte znovu. -->
-  <meta name="snake-version" content="1.99.57">
+  <meta name="snake-version" content="1.99.58">
   <title>Had – sbírej kostky</title>
   <!-- Ikona hry: hlava duhového hada (soubory v public/) -->
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -5342,6 +5342,7 @@
       let accOn = {}; // nasazené doplňky: { hlava, oblicej, krk, stopa, jmeno }
       let accLvl = {}; // vylepšené doplňky: { id: 2 nebo 3 } (bez záznamu = ⭐)
       let cnt = { hry: 0, kostky: 0, zombie: 0, vyhry: 0 }; // počítadla pro odznaky (od verze 1.99.56)
+      let badgeRew = {}; // odměny za odznaky už vyzvednuté: { název odznaku: úroveň 1–3 }
       let diamanty = 0;
       // Adventní kalendář: otevřená okénka (dny 1–24) a vajíčka/kola zdarma z kalendáře.
       let adventOpened = [];
@@ -5592,7 +5593,7 @@
       }
 
       function defaultProfile() {
-        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {}, accLvl: {}, cnt: {} };
+        return { diamanty: 0, wardrobe: [], equippedSkin: 'default', weekendWheelSpinDate: null, advent: [], freeEggs: 0, freeSpins: 0, acc: [], accOn: {}, accLvl: {}, cnt: {}, badgeRew: {} };
       }
 
       function readProfiles() {
@@ -5647,6 +5648,7 @@
           accOn = {};
           accLvl = {};
           cnt = { hry: 0, kostky: 0, zombie: 0, vyhry: 0 };
+          badgeRew = {};
           adventOpened = [];
           freeEggs = 0;
           freeSpins = 0;
@@ -5670,6 +5672,8 @@
         weekendWheelSpinDate = profile.weekendWheelSpinDate || null;
         accOwned = Array.isArray(profile.acc) ? profile.acc.filter((a) => ACC_BY_ID[a]) : [];
         cnt = cleanCnt(profile.cnt);
+        badgeRew = {};
+        Object.entries(profile.badgeRew || {}).forEach(([k, l]) => { if (l >= 1 && l <= 3) badgeRew[k] = l; });
         accLvl = {};
         Object.entries(profile.accLvl || {}).forEach(([a, l]) => {
           if (accOwned.includes(a) && (l === 2 || l === 3)) accLvl[a] = l;
@@ -5988,6 +5992,7 @@
           accOn: { ...accOn },
           accLvl: { ...accLvl },
           cnt: { ...cnt },
+          badgeRew: { ...badgeRew },
         };
         writeProfiles(profiles);
         scheduleDiamondReport();
@@ -6019,7 +6024,7 @@
       }
 
       function currentProgress() {
-        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn }, accLvl: { ...accLvl }, cnt: { ...cnt } };
+        return { diamanty, wardrobe: [...wardrobe], equippedSkin, weekendWheelSpinDate, advent: [...adventOpened], freeEggs, freeSpins, acc: [...accOwned], accOn: { ...accOn }, accLvl: { ...accLvl }, cnt: { ...cnt }, badgeRew: { ...badgeRew } };
       }
 
       // Poslední stav, o kterém víme, že ho server má (uloží se až po úspěšném uložení na server).
@@ -6053,7 +6058,8 @@
           && [...(a.acc || [])].sort().join() === [...(b.acc || [])].sort().join()
           && JSON.stringify(sortedObj(a.accOn)) === JSON.stringify(sortedObj(b.accOn))
           && JSON.stringify(sortedObj(a.accLvl)) === JSON.stringify(sortedObj(b.accLvl))
-          && JSON.stringify(sortedObj(a.cnt)) === JSON.stringify(sortedObj(b.cnt));
+          && JSON.stringify(sortedObj(a.cnt)) === JSON.stringify(sortedObj(b.cnt))
+          && JSON.stringify(sortedObj(a.badgeRew)) === JSON.stringify(sortedObj(b.badgeRew));
       }
 
       // vylepšení doplňků z obou stran – vyšší hvězdy vyhrají
@@ -6113,6 +6119,7 @@
             accOn: { ...(local.accOn || {}) },
             accLvl: maxLevels(local.accLvl, server.accLvl),
             cnt: maxCnt(local.cnt, server.cnt),
+            badgeRew: maxLevels(local.badgeRew, server.badgeRew),
           },
           upload: true,
         };
@@ -6287,6 +6294,7 @@
           accOn: { ...(data.progress.accOn || {}) },
           accLvl: maxLevels(local.accLvl, data.progress.accLvl),
           cnt: maxCnt(local.cnt, data.progress.cnt),
+          badgeRew: maxLevels(local.badgeRew, data.progress.badgeRew),
         };
         playerName = data.name;
         localStorage.setItem(PLAYER_NAME_KEY, playerName);
@@ -6811,6 +6819,7 @@
             cnt.hry++;
             if (winner && winner.id === multiPlayerId) cnt.vyhry++;
             saveProgress();
+            checkBadgeRewards();
           }
           if (winner && winner.id === multiPlayerId) {
             // 10 % zaokrouhleno nahoru a vždycky aspoň 1 bod – i krátké kolo s pár body má bonus.
@@ -8249,6 +8258,7 @@
         applyAccBonus();
         cnt.hry++;
         bankScoreToDiamanty();
+        checkBadgeRewards();
         saveProgress();
         finalDiamantyEl.textContent = diamanty;
         showZombieResult();
@@ -10648,6 +10658,51 @@
         document.getElementById('profileBadgesBtn').addEventListener('click', openBadges);
       }
 
+      // Odměny za odznaky: 🥉 20 💎, 🥈 50 💎, 🥇 100 💎, jednorázový odznak 50 💎.
+      // Nejvýš 2 odměny najednou (kdo měl odznaky už dřív, dostane je postupně po hrách).
+      const BADGE_REWARDS = [20, 50, 100];
+      const BADGE_ONCE_REWARD = 50;
+
+      function ownBadgeValues(extra = {}) {
+        return {
+          hry: cnt.hry, kostky: cnt.kostky, zombie: cnt.zombie, vyhry: cnt.vyhry,
+          bestScore: Math.max(bestGameScore || 0, extra.bestScore || 0),
+          diamanty,
+          accCount: accOwned.length,
+          skins: wardrobe.filter(skinAvailable).length,
+          friends: extra.friends ?? (friendsData?.friends || []).length,
+          mythic: accOwned.some((id) => ACC_BY_ID[id]?.rarity === 'mytiske') ? 1 : 0,
+          lvl3: Object.values(accLvl).some((l) => l === 3) ? 1 : 0,
+          advent: adventOpened.length,
+          top1: extra.top1 || 0,
+        };
+      }
+
+      function checkBadgeRewards(extra = {}) {
+        if (!playerName) return;
+        const v = ownBadgeValues(extra);
+        let given = 0;
+        const msgs = [];
+        for (const b of BADGES) {
+          if (given >= 2) break;
+          const val = v[b.key] || 0;
+          let tier = 0;
+          b.tiers.forEach((t, i) => { if (val >= t) tier = i + 1; });
+          const claimed = badgeRew[b.name] || 0;
+          if (tier <= claimed) continue;
+          const next = claimed + 1;
+          const reward = b.once ? BADGE_ONCE_REWARD : BADGE_REWARDS[next - 1];
+          badgeRew[b.name] = next;
+          diamanty += reward;
+          given++;
+          msgs.push(`🏅 ${b.icon} ${b.name}${b.once ? '' : ` ${TIER_MEDALS[next - 1]}`} +${reward} 💎`);
+        }
+        if (!given) return;
+        saveProgress();
+        refreshCurrencyUI();
+        showPlayerNotice(`Nový odznak! ${msgs.join(' · ')}`);
+      }
+
       // Všechny odznaky: získané barevně, nezískané šedě se zámkem a s tím, kolik chybí
       function openBadges() {
         document.getElementById('profileOverlay').classList.remove('visible');
@@ -10662,9 +10717,9 @@
           const done = tier === b.tiers.length;
           const next = b.tiers[Math.min(tier, b.tiers.length - 1)];
           let desc;
-          if (b.once) desc = b.desc;
+          if (b.once) desc = `${b.desc} (+${BADGE_ONCE_REWARD} 💎)`;
           else if (done) desc = `Hotovo! ${b.tiers[b.tiers.length - 1]} ${b.unit}`;
-          else desc = `${Math.min(val, next)} / ${next} ${b.unit} → ${TIER_MEDALS[tier]}`;
+          else desc = `${Math.min(val, next)} / ${next} ${b.unit} → ${TIER_MEDALS[tier]} +${BADGE_REWARDS[tier]} 💎`;
           const pct = done ? 100 : Math.round((Math.min(val, next) / next) * 100);
           const cls = tier ? `t${b.once ? 3 : tier}` : 'locked';
           const medal = tier && !b.once ? ` ${TIER_MEDALS[tier - 1]}` : '';
@@ -10792,6 +10847,7 @@
         ].join('');
         document.getElementById('profileNote').textContent = me ? 'Tohle je tvůj profil – takhle tě vidí ostatní.' : '';
         badgeOwner = d.name;
+        if (me && !loading) checkBadgeRewards({ bestScore: d.bestScore, top1: d.rank === 1 ? 1 : 0, friends: d.friends });
         const c = me ? cnt : d.cnt || {};
         const owned = me ? accOwned : d.acc || [];
         renderProfileBadges({
