@@ -97,7 +97,7 @@ export class GameServer implements DurableObject {
       }
       // Žebříček a profil berou diamanty ze záznamů zařízení (seen:) – i tam 500.
       // Majda má mít jen základního hada (ostatní hady jí to vezme).
-      if (!(await this.state.storage.get('fix:majda500b'))) {
+      if (!(await this.state.storage.get('fix:majda500c'))) {
         const codes = await this.state.storage.list<{ name: string; progress: { diamanty: number; wardrobe: string[]; equippedSkin: string } }>({ prefix: 'pcode:' });
         for (const [key, stored] of codes) {
           if (stored.name.trim().toLowerCase() !== 'majda') continue;
@@ -116,7 +116,7 @@ export class GameServer implements DurableObject {
           }
           if (changed) await this.state.storage.put(key, d);
         }
-        await this.state.storage.put('fix:majda500b', true);
+        await this.state.storage.put('fix:majda500c', true);
       }
     });
   }
