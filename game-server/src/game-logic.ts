@@ -9,6 +9,22 @@ export const KOSTKA_SPAWN_MS = 2000;
 export const TACOS_EVENT = true;
 export const TACO_CHANCE = 0.45;
 export const TACO_SCORE = 2;
+// Body za kostku podle hada, kterého má hráč na sobě (stejně jako ve hře pro jednoho).
+export const SKIN_SCORE_PER_KOSTKA: Record<string, number> = {
+  default: 1,
+  white: 2,
+  blue: 2,
+  pink: 2,
+  yellow: 2,
+  red: 3,
+  black: 4,
+  gold: 5,
+  rainbow: 10,
+  kral: 15,
+  melon: 4,
+  fire: 4,
+  vanocni: 11,
+};
 // Tacos event běží jen v určitý čas (český čas, Europe/Prague):
 // po–pá 16:00–16:15, so–ne celý den. Musí sedět s index.html.
 export const TACOS_TIME_ZONE = 'Europe/Prague';
@@ -171,7 +187,7 @@ export function tickGame(players: Map<string, Player>, kostky: Kostka[]): TickRe
         player.score += TACO_SCORE;
         player.tacos += 1;
       } else {
-        player.score += 1;
+        player.score += SKIN_SCORE_PER_KOSTKA[player.skin] || 1;
       }
     } else {
       player.snake.pop();
