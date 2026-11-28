@@ -85,6 +85,16 @@ export class GameServer implements DurableObject {
     this.state.blockConcurrencyWhile(async () => {
       // Dárky už ve hře nejsou: smaže starou frontu nedoručených dárků.
       await this.state.storage.delete('giftQueue');
+      // Jednorázová úprava od majitele hry: hráč Majda má mít 500 💎 (místo 11079).
+      if (!(await this.state.storage.get('fix:majda500'))) {
+        const codes = await this.state.storage.list<{ name: string; progress: { diamanty: number } }>({ prefix: 'pcode:' });
+        for (const [key, stored] of codes) {
+          if (stored.name.trim().toLowerCase() !== 'majda') continue;
+          stored.progress.diamanty = 500;
+          await this.state.storage.put(key, stored);
+        }
+        await this.state.storage.put('fix:majda500', true);
+      }
     });
   }
 
