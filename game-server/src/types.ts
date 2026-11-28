@@ -32,6 +32,8 @@ export interface Player {
   colorIndex: number;
   // nasazené doplňky (hlava, obličej, pusa, krk, stopa, jméno) – ostatní je vidí na hadovi
   acc: Record<string, string>;
+  // nasazený had (barva/skin) – ostatní ho vidí ve hře
+  skin: string;
 }
 
 export interface WsAttachment {
@@ -40,4 +42,5 @@ export interface WsAttachment {
   name?: string;
   colorIndex?: number;
   acc?: Record<string, string>;
+  skin?: string;
 }

@@ -41,9 +41,15 @@ function cleanAcc(raw: unknown): Record<string, string> {
   ) as Record<string, string>;
 }
 
-function newPlayer(id: string, ws: WebSocket, name: string, colorIndex: number, acc: Record<string, string> = {}): Player {
+// Had (skin) z klienta: jen krátké id, jinak obyčejný had.
+function cleanSkin(raw: unknown): string {
+  return typeof raw === 'string' && /^[a-z0-9]{1,20}$/.test(raw) ? raw : 'default';
+}
+
+function newPlayer(id: string, ws: WebSocket, name: string, colorIndex: number, acc: Record<string, string> = {}, skin = 'default'): Player {
   return {
     acc,
+    skin,
     id,
     ws,
     name,
@@ -74,7 +80,7 @@ export class GameServer implements DurableObject {
     for (const ws of this.state.getWebSockets()) {
       const att = getAttachment(ws);
       if (!att.playerId || !att.name || this.players.has(att.playerId)) continue;
-      this.players.set(att.playerId, newPlayer(att.playerId, ws, att.name, att.colorIndex ?? this.players.size % 8, cleanAcc(att.acc)));
+      this.players.set(att.playerId, newPlayer(att.playerId, ws, att.name, att.colorIndex ?? this.players.size % 8, cleanAcc(att.acc), cleanSkin(att.skin)));
     }
     this.state.blockConcurrencyWhile(async () => {
       // Dárky už ve hře nejsou: smaže starou frontu nedoručených dárků.
@@ -172,6 +178,7 @@ export class GameServer implements DurableObject {
   private async handleJoin(ws: WebSocket, msg: Record<string, unknown>) {
     const name = String(msg.name || '').trim().slice(0, 20);
     const acc = cleanAcc(msg.acc);
+    const skin = cleanSkin(msg.skin);
     if (!name) {
       send(ws, { type: 'error', message: 'Chybí jméno.' });
       return;
@@ -201,7 +208,8 @@ export class GameServer implements DurableObject {
     if (existing) {
       existing[1].name = name;
       existing[1].acc = acc;
-      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex, acc });
+      existing[1].skin = skin;
+      setAttachment(ws, { playerId: existing[0], name, colorIndex: existing[1].colorIndex, acc, skin });
       this.sendWelcome(ws, existing[0]);
       this.broadcastLobby();
       return;
@@ -209,11 +217,11 @@ export class GameServer implements DurableObject {
 
     const id = `p_${Date.now()}_${randInt(1000, 9999)}`;
     const colorIndex = this.players.size % 8;
-    const player = newPlayer(id, ws, name, colorIndex, acc);
+    const player = newPlayer(id, ws, name, colorIndex, acc, skin);
     // Kdo přijde, když kolo běží, počká na další kolo (dřív to shodilo celou hru).
     if (this.gameStatus === 'playing') player.alive = false;
     this.players.set(id, player);
-    setAttachment(ws, { playerId: id, name, colorIndex, acc });
+    setAttachment(ws, { playerId: id, name, colorIndex, acc, skin });
     this.sendWelcome(ws, id);
     this.broadcastLobby();
   }
@@ -260,6 +268,7 @@ export class GameServer implements DurableObject {
         alive: p.alive,
         colorIndex: p.colorIndex,
         acc: p.acc,
+        skin: p.skin,
       })),
     };
   }
